@@ -1,0 +1,4 @@
+# Check out every file exactly as committed, with no line-ending conversion.
+# The crosswalk test suite (grc/zero-trust-healthcare/tests/run-tests.ps1) compares
+# fixture text that contains LF line breaks, so a CRLF checkout would fail it.
+* -text

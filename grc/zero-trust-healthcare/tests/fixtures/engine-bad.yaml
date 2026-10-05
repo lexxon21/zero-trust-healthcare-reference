@@ -1,0 +1,28 @@
+# Test fixture for validate-crosswalk.ps1 with engine.schema.json. Every *_ok and *_null key must
+# pass and every *_bad or *_dup key must fail, each with exactly one finding.
+nullable_ok: "text"
+nullable_null: null
+nullable_bad: true
+objects_unique:
+  - a: "1"
+  - a: "2"
+objects_dup:
+  - a: "1"
+    b: "2"
+  - b: "2"
+    a: "1"
+const_ok:
+  b: ["2", "3"]
+  a: "1"
+const_bad:
+  a: "1"
+  b: ["3", "2"]
+enum_ok: ["p", "q"]
+enum_bad: ["q", "p"]
+single_ok:
+  only: "x"
+single_bad:
+  other: "y"
+# maxlen_ok is one character written as a surrogate-pair escape (two UTF-16 units).
+maxlen_ok: "\uD83D\uDE00"
+maxlen_bad: "ab"

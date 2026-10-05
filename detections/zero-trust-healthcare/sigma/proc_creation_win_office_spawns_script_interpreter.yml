@@ -1,0 +1,54 @@
+# Reference rule. Not deployed in any employer environment.
+# Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+# Rule ID: SG-03 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Answers: detection-priorities.md item 14 (Priority 3, the file-open half); attack-paths.md AP-4 steps 1 and 2
+# Companion controls: SVC-EMAIL filtering upstream and PEP-HOST application control; the email delivery half of
+#   item 14 (EmailEvents, UrlClickEvents) is a coverage gap recorded in coverage-map.md.
+# Conversion note: process_creation log source, targeted by the pySigma Kusto backend's microsoft_xdr pipeline.
+#   On 2026-10-04, "sigma convert -t kusto -p microsoft_xdr" (pySigma-backend-kusto 1.0.1) converted this rule
+#   to a DeviceProcessEvents query. The converted query has not been run against data.
+# Tuning: clinical document templates, EHR add-ins, and finance macros can start helper processes. Baseline the
+#   parent and child pairs on clinical workstations (Z-CLIN-USER) for two weeks and exclude documented pairs by
+#   full child command line, not by child image alone.
+# Validation: not run. On a lab workstation, open a benign test document whose macro starts cmd.exe; expect a
+#   process creation event with an Office parent. Microsoft Defender for Office 365 Attack simulation training
+#   covers the delivery step for consenting test users (purple-team-plan.md exercise PX-07).
+title: Office Application Starts a Script Interpreter or System Binary Proxy
+id: 0e9a7c3b-5d12-4e8f-a6b4-3c2d1f0e9b77
+status: experimental
+description: Reference rule. Detects Word, Excel, PowerPoint, or Outlook starting a command shell, PowerShell, a script host, or a system binary often used to proxy execution, which follows a user opening a malicious attachment. Written for the fictional Contoso Regional Health reference architecture and not deployed in any employer environment.
+references:
+    - https://attack.mitre.org/techniques/T1204/002/
+    - https://attack.mitre.org/techniques/T1566/001/
+author: Jacob Welch
+date: 2026-10-04
+tags:
+    - attack.execution
+    - attack.initial-access
+    - attack.t1204.002
+    - attack.t1566.001
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_parent:
+        ParentImage|endswith:
+            - '\WINWORD.EXE'
+            - '\EXCEL.EXE'
+            - '\POWERPNT.EXE'
+            - '\OUTLOOK.EXE'
+    selection_child:
+        Image|endswith:
+            - '\cmd.exe'
+            - '\powershell.exe'
+            - '\pwsh.exe'
+            - '\wscript.exe'
+            - '\cscript.exe'
+            - '\mshta.exe'
+            - '\rundll32.exe'
+            - '\regsvr32.exe'
+    condition: selection_parent and selection_child
+falsepositives:
+    - Clinical document templates or EHR add-ins that start helper processes
+    - Finance or reporting macros approved through change control
+level: medium

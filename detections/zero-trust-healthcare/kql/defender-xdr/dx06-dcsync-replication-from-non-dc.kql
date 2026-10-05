@@ -1,0 +1,78 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Directory replication requested by a host that is not a domain controller, or by the wrong account from an Entra Connect server
+// Status: untested template
+// ATT&CK: T1003.006 (OS Credential Dumping: DCSync); ATT&CK v19.2
+// Data sources: Microsoft Defender XDR advanced hunting, IdentityDirectoryEvents (Microsoft Defender for Identity sensors on domain controllers)
+// Licensing assumptions: Microsoft Defender for Identity within the scenario's Defender XDR stack (Microsoft 365 E5), sensors on every domain controller
+// Rule ID: DX-06 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High
+// Tactic: Credential Access (TA0006)
+// Answers: detection-priorities.md item 7 (Priority 2); attack-paths.md AP-5 step 4
+// Architecture context: IDS-AD, IDS-SYNC, Z-T0, PIP-ID-RISK; residual risk RR-07; risk register R-05
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   Replication of directory secrets is a Tier 0 objective with few legitimate sources: domain controllers,
+//   and the Entra Connect servers, because password hash synchronization (assumption A-01) needs the
+//   Replicate Directory Changes and Replicate Directory Changes All permissions on the AD DS Connector
+//   account. This raw-telemetry rule complements the Defender for Identity alert (DX-05) and keeps the
+//   documented hybrid pivot visible: the connector account replicating from anywhere other than IDS-SYNC.
+//
+// Logic
+//   1. IdentityDirectoryEvents rows whose ActionType contains the term "replication". Microsoft documents
+//      the monitored activity as "Directory Service Replication" and defers exact ActionType strings to the
+//      in-portal schema reference, so the term match avoids depending on one exact spelling. Confirm the
+//      value in the portal schema reference before saving this as a custom detection.
+//   2. DeviceName is the requesting device; DestinationDeviceName is the domain controller that served it.
+//   3. Requests from a domain controller are expected. Requests from an IDS-SYNC server by the connector
+//      account are expected. Everything else is returned.
+//
+// Known false positives
+//   - A newly promoted domain controller missing from DomainControllers.
+//   - A new or rebuilt Entra Connect staging server missing from SyncServers.
+//   - Identity backup or directory management products that read secrets through replication; these need
+//     a documented exception with an owner and expiry (principle P-5), not a silent filter.
+//
+// Tuning knobs (let statements below)
+//   DomainControllers, SyncServers   lower-case device names as Defender for Identity reports them.
+//   SyncConnectorAccounts            lower-case AD DS Connector account names. Express installations
+//                                    create an account with an MSOL_ prefix; custom installations use a
+//                                    named account (the value shown is a placeholder).
+//
+// Response notes
+//   Treat as a suspected Tier 0 compromise (RR-07) and follow the Tier 0 branch of the identity compromise
+//   playbook. Do not disable the Entra Connect connector account without planning for the synchronization
+//   outage it causes; contain the requesting host first. If that host is a clinical workstation or a
+//   server that clinical systems depend on, the clinical lead sets the timing of its containment (clinical
+//   safety gate, ADR-008; playbook decision point D5).
+//
+// Validation notes
+//   Not run against any tenant. Validate in an isolated lab domain: grant a test account replication
+//   rights, request replication from a lab workstation, then remove the rights. Expected telemetry: an
+//   IdentityDirectoryEvents row for the replication activity with the workstation in DeviceName and a
+//   Defender for Identity DCSync alert. Public library: Atomic Red Team tests mapped to T1003.006, selected
+//   by the operator (purple-team-plan.md exercise PX-05).
+//
+// References
+//   https://attack.mitre.org/techniques/T1003/006/
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-identitydirectoryevents-table
+//   https://learn.microsoft.com/en-us/defender-for-identity/monitored-activities
+//   https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-accounts-permissions
+//
+let LookbackWindow = 1d;
+// Lower-case device names (placeholders on a reserved TLD)
+let DomainControllers = dynamic(["dc01.corp.contoso.example", "dc02.corp.contoso.example"]);
+let SyncServers = dynamic(["sync01.corp.contoso.example", "sync02.corp.contoso.example"]);
+let SyncConnectorAccounts = dynamic(["msol_placeholder"]);
+IdentityDirectoryEvents
+| where Timestamp > ago(LookbackWindow)
+| where ActionType has "replication"
+| extend SourceDevice = tolower(DeviceName), ServingDomainController = tolower(DestinationDeviceName), Account = tolower(AccountName)
+| where SourceDevice !in (DomainControllers)
+| extend FromSyncServer = SourceDevice in (SyncServers), ByConnectorAccount = Account in (SyncConnectorAccounts)
+| where not(FromSyncServer and ByConnectorAccount)
+| extend SuggestedSeverity = case(
+    ByConnectorAccount, "High: Entra Connect connector account replicating from a host that is not an IDS-SYNC server",
+    FromSyncServer, "High: replication from an IDS-SYNC server by an account other than the connector account",
+    "High: replication requested by a host that is not a domain controller")
+| project Timestamp, ReportId, ActionType, SuggestedSeverity, AccountName, AccountDomain, AccountUpn, AccountSid, AccountObjectId,
+    SourceDevice, IPAddress, ServingDomainController, Protocol, AdditionalFields

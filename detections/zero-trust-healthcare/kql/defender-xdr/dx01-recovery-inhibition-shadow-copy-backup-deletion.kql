@@ -1,0 +1,118 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Recovery inhibition on Windows workstations and servers (shadow copy deletion, backup catalog deletion, boot recovery or Windows Recovery Environment disabled)
+// Status: untested template
+// ATT&CK: T1490 (Inhibit System Recovery); ATT&CK v19.2
+// Data sources: Microsoft Defender XDR advanced hunting, DeviceProcessEvents (Microsoft Defender for Endpoint)
+// Licensing assumptions: Defender for Endpoint on Windows workstations (scenario A-05, Microsoft 365 E5). Windows servers need separate server licensing (Microsoft lists Defender for Servers Plan 1 or 2, or Defender for Endpoint Server); this pack assumes Contoso holds it for the servers in PEP-HOST's zones (Z-CLIN-APP, Z-CORP-APP, Z-MGMT). Z-T0 servers (the domain controllers, IDS-SYNC, and the PIP-PKI issuing CAs) wait on the open design question in threat-model.md TM-A4 and section 9 item 8.
+// Rule ID: DX-01 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High
+// Tactic: Impact (TA0040)
+// Answers: detection-priorities.md item 1 (Priority 1); attack-paths.md AP-4 step 10 and the on-premises part of AP-5 step 9
+// Architecture context: PEP-HOST, PIP-EDR, SVC-BACKUP (requirements set in ADR-009, implementation not designed, assumption A-19), residual risk RR-11; risk register R-03 and R-05
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   Find built-in Windows utilities used to delete volume shadow copies, delete the Windows Backup
+//   catalog, turn off automatic boot recovery, or disable the Windows Recovery Environment (WinRE).
+//   Sector reporting shows adversaries destroy recovery capability before or during encryption, and
+//   Contoso's recovery capability is unverified (RR-11), so this is the last high-confidence signal
+//   before impact on clinical systems.
+//
+// Logic
+//   1. Process creations for vssadmin, wmic, wbadmin, bcdedit, reagentc, and PowerShell (Windows
+//      PowerShell and PowerShell 7).
+//   2. Command line classified into one behavior per row (shadow copy deletion, shadow storage resize,
+//      backup catalog deletion, boot recovery disabled, WinRE disabled, PowerShell WMI or CIM shadow
+//      copy deletion). The image is taken from the original file name when Defender records one, so a
+//      renamed utility is still classified. PowerShell issue #14614 reports that value as pwsh.dll for
+//      pwsh.exe, so the PowerShell branch accepts pwsh.exe and pwsh.dll. The reagentc.exe original file
+//      name follows SigmaHQ rule "Windows Recovery Environment Disabled Via Reagentc"
+//      (id db1c21e4-cd66-4b4e-85ca-590f0780529c) by Daniel Koifman (KoifSec), Michael Vilshin, licensed
+//      under the Detection Rule License (DRL) 1.1 (https://github.com/SigmaHQ/Detection-Rule-License);
+//      link in References.
+//   3. Rows rolled up per device. Two or more distinct behaviors on one device in the window is the
+//      ransomware staging pattern and raises severity.
+//   The utility list and command fragments follow the T1490 technique page (ATT&CK v19.2), which lists
+//   vssadmin, wmic, wbadmin, bcdedit, REAgentC, and diskshadow. diskshadow is the one exception: the
+//   query does not classify it (see Known false positives).
+//
+// Known false positives
+//   - Backup and imaging products that manage shadow copies on servers (add their initiating process
+//     to ApprovedInitiators after confirming the binary path and signer).
+//   - Administrators resizing shadow storage on file servers (RES-FILES) during change windows.
+//   - Kiosk or reimaging workflows that set bcdedit recovery options on build hosts.
+//   - WinRE maintenance: Microsoft's KB5028997 procedure for resizing the recovery partition runs
+//     reagentc /disable and then reagentc /enable. A disable followed by an enable on the same device
+//     under a change record is that procedure.
+//   - diskshadow in script mode hides its commands from the command line; the query cannot classify it
+//     and does not alert on it. Review diskshadow.exe executions separately on servers.
+//
+// Tuning knobs (let statements below)
+//   LookbackWindow       hunting window. Remove the Timestamp filter when saving as a custom detection:
+//                        Microsoft documents that the service applies the rule lookback itself.
+//   ApprovedInitiators   initiating process names for sanctioned backup or imaging tools.
+//   ExcludedDevices      build or imaging hosts where recovery changes are expected.
+//
+// Response notes (clinical safety gate, ADR-008 and 04-segmentation.md section 3)
+//   - Non-medical workstations: device isolation through PEP-HOST is allowed as an automated action.
+//     Add the clinical notification step when the device is a shared clinical workstation (Z-CLIN-USER).
+//   - Servers in Z-CLIN-APP (for example the RES-EHR application tier): isolation takes a clinical system
+//     offline, so the incident commander and the clinical lead decide, and EHR downtime procedures start.
+//   - Check SVC-BACKUP immediately: if backups are reachable from the affected host's credentials, treat
+//     recovery as at risk and escalate per the identity compromise playbook (Branch D step 5). A copy
+//     that production credentials can reach also fails ADR-009 decision 2 (isolation from Tier 0
+//     administrative reach), so record it as a finding in its own right, even after containment.
+//
+// Validation notes
+//   Not run against any tenant. To validate, execute recovery-inhibition behaviors on an isolated lab
+//   Windows VM that has a restorable snapshot, never on a clinical or production system. Expected
+//   telemetry: DeviceProcessEvents rows for vssadmin.exe, wbadmin.exe, bcdedit.exe, or reagentc.exe with
+//   the matching command lines, and one output row for the device. If the lab uses PowerShell 7, record
+//   the ProcessVersionInfoOriginalFileName value it shows for pwsh.exe. Public library: Atomic Red Team
+//   tests mapped to T1490 (operator selects and runs them; purple-team-plan.md exercise PX-01).
+//
+// References
+//   https://attack.mitre.org/techniques/T1490/
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table
+//   https://learn.microsoft.com/en-us/defender-xdr/custom-detection-rules
+//   https://learn.microsoft.com/en-us/defender-endpoint/minimum-requirements
+//   https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/reagentc-command-line-options
+//   https://support.microsoft.com/en-us/topic/kb5028997-instructions-to-manually-resize-your-partition-to-install-the-winre-update-400faa27-9343-461c-ada9-24c8229763bf
+//   https://github.com/PowerShell/PowerShell/issues/14614
+//   https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_reagentc_disable_windows_recovery_environment.yml
+//
+let LookbackWindow = 1h;
+// Sanctioned backup or imaging tools that legitimately manage shadow copies (example placeholder value)
+let ApprovedInitiators = dynamic(["example-backup-agent.exe"]);
+// Build or imaging hosts where recovery configuration changes are expected (empty by default)
+let ExcludedDevices = dynamic([]);
+DeviceProcessEvents
+| where Timestamp > ago(LookbackWindow)
+| where FileName in~ ("vssadmin.exe", "wmic.exe", "wbadmin.exe", "bcdedit.exe", "reagentc.exe", "powershell.exe", "pwsh.exe")
+    or ProcessVersionInfoOriginalFileName in~ ("vssadmin.exe", "wmic.exe", "wbadmin.exe", "bcdedit.exe", "reagentc.exe", "powershell.exe", "pwsh.exe", "pwsh.dll")
+| where DeviceName !in~ (ExcludedDevices)
+| where InitiatingProcessFileName !in~ (ApprovedInitiators)
+// Normalize: prefer the original file name so a renamed utility is still classified; strip quotes.
+// For pwsh.exe the original file name is pwsh.dll (PowerShell issue #14614), so the PowerShell branch accepts both.
+| extend Image = tolower(iff(isnotempty(ProcessVersionInfoOriginalFileName), ProcessVersionInfoOriginalFileName, FileName))
+| extend Cmd = tolower(replace_string(ProcessCommandLine, "\"", ""))
+| extend Behavior = case(
+    Image == "vssadmin.exe" and Cmd has "delete" and Cmd has "shadows", "Shadow copy deletion (vssadmin)",
+    Image == "vssadmin.exe" and Cmd has "resize" and Cmd has "shadowstorage", "Shadow storage resize (vssadmin)",
+    Image == "wmic.exe" and Cmd has "shadowcopy" and Cmd has "delete", "Shadow copy deletion (wmic)",
+    Image == "wbadmin.exe" and Cmd has "delete" and (Cmd has "catalog" or Cmd has "systemstatebackup" or Cmd has "backup"), "Backup catalog or backup deletion (wbadmin)",
+    Image == "bcdedit.exe" and Cmd has "recoveryenabled" and Cmd has "no", "Automatic recovery disabled (bcdedit)",
+    Image == "bcdedit.exe" and Cmd has "bootstatuspolicy" and Cmd has "ignoreallfailures", "Boot failure handling suppressed (bcdedit)",
+    Image == "reagentc.exe" and Cmd has "disable", "Windows Recovery Environment disabled (reagentc)",
+    Image in ("powershell.exe", "pwsh.exe", "pwsh.dll") and Cmd has "win32_shadowcopy" and (Cmd has "delete" or Cmd contains "remove-ciminstance" or Cmd contains "remove-wmiobject"), "Shadow copy deletion (PowerShell WMI or CIM)",
+    "")
+| where isnotempty(Behavior)
+// One row per device, keeping the latest event's Timestamp, ReportId, and DeviceId for custom detection mapping
+| summarize arg_max(Timestamp, ReportId, AccountDomain, AccountName, InitiatingProcessFileName, InitiatingProcessCommandLine, ProcessCommandLine),
+    FirstSeen = min(Timestamp),
+    DistinctBehaviors = dcount(Behavior),
+    Behaviors = make_set(Behavior, 10),
+    EventCount = count()
+    by DeviceId, DeviceName
+| extend SuggestedSeverity = iff(DistinctBehaviors >= 2, "High: multiple recovery-inhibition behaviors on one device", "Medium: single behavior, check change records before closing")
+| project Timestamp, ReportId, DeviceId, DeviceName, SuggestedSeverity, Behaviors, DistinctBehaviors, EventCount, FirstSeen,
+    AccountDomain, AccountName, InitiatingProcessFileName, InitiatingProcessCommandLine, ProcessCommandLine

@@ -1,0 +1,3933 @@
+# yaml-language-server: $schema=./crosswalk.schema.json
+# Reference work. Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice.
+#
+# Contoso Regional Health (fictional): HIPAA Security Rule crosswalk.
+# Source rows: every standard and implementation specification in 45 CFR 164.308, 164.310, 164.312, 164.314, and 164.316.
+# Hub: NIST CSF 2.0. Also mapped: the reference architecture's components and documents, the detection pack's
+# rules and playbook where they support a row, and PCI DSS v4.0.1 for the Z-CDE segment only.
+#
+# Format rules, enforced by validate-crosswalk.ps1 (Windows PowerShell 5.1, no modules):
+#   2-space indentation; block mappings and block sequences only;
+#   every string value in double quotes; bare values limited to true, false, null and [];
+#   flow lists contain only double-quoted strings; comments only on their own lines; ASCII only.
+schema_version: "1.0"
+metadata:
+  title: "Contoso Regional Health (fictional): HIPAA Security Rule crosswalk to NIST CSF 2.0, the reference architecture, and PCI DSS v4.0.1 (CDE only)"
+  reference_label: "Reference work. Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice."
+  scenario: "Contoso Regional Health (fictional)"
+  project: "zero-trust-healthcare"
+  status: "Reference mapping, status as of 2026-10-04"
+  prepared: "2026-10-04"
+  statement: "A reference mapping for a fictional scenario, prepared for a public portfolio. It is not an audit, an assessment, an attestation, or an evaluation under 45 CFR 164.308(a)(8), and it certifies nothing. Relationship strengths are an analysis of the published texts."
+  frameworks:
+    - key: "hipaa-security-rule"
+      name: "HIPAA Security Rule"
+      version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      role: "Source: every standard and implementation specification in 164.308, 164.310, 164.312, 164.314, and 164.316"
+    - key: "nist-csf"
+      name: "NIST Cybersecurity Framework"
+      version: "2.0 (NIST CSWP 29, February 26, 2024)"
+      role: "Hub: each applicable HIPAA row maps to CSF 2.0 subcategories"
+    - key: "pci-dss"
+      name: "PCI DSS"
+      version: "v4.0.1 (June 2024)"
+      role: "Target for the Z-CDE segment only, under the validation path assumed in A-16"
+  pci_numbering_basis: "PCI SSC states that v4.0.1 added and deleted no requirements (SRC-PCI-V401-BLOG), so the numbering verified in the v4.0 SAQs and the v3.2.1 to v4.0 Summary of Changes carries over. v4.0.1 did reword some requirements, so every summary was also checked against PCI SSC's Summary of Changes from v4.0 to v4.0.1 (SRC-PCI-SOC-401-R1). It lists changes to seven of the requirements here (8.4.1, 8.4.2, 8.4.3, 8.5.1, 9.5.1, 12.3.1, and 12.8.2), and those seven list it in verified_against. The 12.3.1 and 8.4.3 summaries follow the v4.0.1 wording it describes; the other five already matched. PCI SSC says that summary does not detail every revision, and the v4.0.1 standard returned HTTP 403 to automated retrieval. Requirement summaries are paraphrased, never reproduced."
+  hitrust:
+    identifiers_included: false
+    decision: "No HITRUST CSF identifiers appear in this crosswalk. The HITRUST CSF License Agreement (HITRUST CSF Version 11.9, effective 2026-09-24) limits use to a licensee's internal purposes, prohibits disclosing the CSF or any data in it, in whole or part, to anyone who is not a licensee or authorized user, and prohibits derivative works, compilations included, without written consent. Public reference is therefore not clearly permitted. See crosswalk.md section 4."
+    sources: ["SRC-HITRUST-LICENSE", "SRC-HITRUST-TOU"]
+  paths:
+    architecture: "../../architecture/zero-trust-healthcare"
+    grc: "."
+    threat_models: "../../threat-models/zero-trust-healthcare"
+    detections: "../../detections/zero-trust-healthcare"
+    research: "../../research/zero-trust-healthcare"
+  relationship_types:
+    - key: "equivalent"
+      definition: "The CSF outcome and the HIPAA provision address the same objective at comparable scope for ePHI. Used sparingly; the HIPAA wording still governs."
+    - key: "partial"
+      definition: "Substantial overlap, but one side has elements the other lacks (scope, specificity, or a required action). Meeting one does not by itself establish the other."
+    - key: "related"
+      definition: "Same subject area or a supporting relationship. Useful for organizing evidence and context, not for claiming coverage."
+  coverage_types:
+    - key: "designed"
+      definition: "The design set names components that implement the technical substance. The policies and procedures the provision also requires remain organizational work."
+    - key: "partial"
+      definition: "The design set implements part of the provision; the rest depends on procedures or on systems the design does not cover."
+    - key: "procedural"
+      definition: "Met by policy, process, or people. The architecture supplies supporting evidence at most."
+    - key: "out-of-scope"
+      definition: "The design set excludes the subject on purpose (01-scenario-and-assumptions.md, Out of scope). The gap is stated, not hidden."
+    - key: "not-applicable"
+      definition: "The provision does not apply to Contoso as the scenario defines it."
+  applicability_types:
+    - key: "applicable"
+      definition: "Applies to Contoso as a covered entity."
+    - key: "indirect"
+      definition: "Binds Contoso's business associates; Contoso's part is the contract term that flows it down."
+    - key: "not-applicable"
+      definition: "Does not apply as the scenario is defined. The row stays so that coverage of 164.308 to 164.316 is complete."
+  pci_path_statuses:
+    - key: "required"
+      definition: "On SAQ P2PE, the assumed validation path for the card-present channel (A-16)."
+    - key: "performed-anyway"
+      definition: "Not on SAQ P2PE; the design performs it anyway (04-segmentation.md section 7)."
+    - key: "defense-in-depth"
+      definition: "Not on SAQ P2PE; the Z-CDE network control is kept as defense in depth."
+    - key: "not-applicable-by-design"
+      definition: "No Contoso account and no remote path into Z-CDE exists, so the requirement has nothing to act on unless access is created."
+    - key: "not-on-saq-p2pe"
+      definition: "Not on SAQ P2PE and not performed under the assumed path; required under a full assessment when its condition applies."
+  pci_requirements:
+    - id: "1.2.3"
+      summary: "Keep an accurate network diagram that shows every connection between the CDE and other networks, wireless included."
+      verified_against: ["SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-03"
+    - id: "1.2.4"
+      summary: "Keep an accurate diagram of how account data flows across systems and networks, and update it when the environment changes."
+      verified_against: ["SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-03"
+    - id: "1.3.1"
+      summary: "Allow only necessary inbound traffic into the CDE and deny the rest."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-04"
+    - id: "1.3.2"
+      summary: "Allow only necessary outbound traffic from the CDE and deny the rest."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-04"
+    - id: "1.3.3"
+      summary: "Place network security controls between every wireless network and the CDE so wireless traffic is denied unless it has an authorized business purpose."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-04"
+    - id: "1.4.1"
+      summary: "Place network security controls between trusted and untrusted networks."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-04"
+    - id: "1.5.1"
+      summary: "Apply defined, enforced security controls to any computing device that connects both to untrusted networks and to the CDE."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-04"
+    - id: "7.2.1"
+      summary: "Define an access control model based on business need, job classification and function, and least privilege."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-04"
+    - id: "7.2.2"
+      summary: "Assign access, privileged access included, by job classification and function with the least privileges needed."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-04"
+    - id: "7.2.4"
+      summary: "Review all user accounts and their access, third-party and vendor accounts included, at least every six months; correct inappropriate access and have management acknowledge the result."
+      verified_against: ["SRC-PCI-SOC-R1"]
+      checked: "2026-10-04"
+    - id: "8.2.7"
+      summary: "Enable third-party remote access accounts only for the time needed, disable them otherwise, and monitor their use."
+      verified_against: ["SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-03"
+    - id: "8.4.1"
+      summary: "Require multi-factor authentication for non-console administrative access into the CDE."
+      verified_against: ["SRC-PCI-SAQ-AEP-40", "SRC-PCI-SOC-401-R1"]
+      checked: "2026-10-04"
+    - id: "8.4.2"
+      summary: "Require multi-factor authentication for all non-console access into the CDE, not only for administrators."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SOC-401-R1"]
+      checked: "2026-10-04"
+    - id: "8.4.3"
+      summary: "Require multi-factor authentication for all remote access from outside the entity's network that could reach or affect the CDE, third-party and vendor access included."
+      verified_against: ["SRC-PCI-SAQ-AEP-40", "SRC-PCI-SOC-401-R1"]
+      checked: "2026-10-04"
+    - id: "8.5.1"
+      summary: "Configure multi-factor authentication so it resists replay, cannot be bypassed without a documented and time-limited management exception, uses at least two different factor types, and requires every factor to succeed."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SOC-401-R1"]
+      checked: "2026-10-04"
+    - id: "9.5.1"
+      summary: "Protect point-of-interaction devices that read cards by physical interaction from tampering and substitution, through a device list, periodic inspection, and staff training."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40", "SRC-PCI-SOC-R1", "SRC-PCI-SOC-401-R1"]
+      checked: "2026-10-04"
+    - id: "9.5.1.1"
+      summary: "Keep an up-to-date list of point-of-interaction devices with make and model, location, and serial number or another unique identifier."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40"]
+      checked: "2026-10-04"
+    - id: "9.5.1.2"
+      summary: "Inspect point-of-interaction device surfaces periodically for tampering and substitution."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40"]
+      checked: "2026-10-04"
+    - id: "9.5.1.2.1"
+      summary: "Set the frequency and type of point-of-interaction inspections through a targeted risk analysis that meets Requirement 12.3.1."
+      verified_against: ["SRC-PCI-SOC-R1"]
+      checked: "2026-10-04"
+    - id: "9.5.1.3"
+      summary: "Train staff in point-of-interaction environments to recognize and report tampering or substitution, including verifying the identity of anyone who claims to service a device."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40"]
+      checked: "2026-10-04"
+    - id: "10.2.1"
+      summary: "Enable audit logs and keep them active for all system components and cardholder data."
+      verified_against: ["SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-03"
+    - id: "11.4.5"
+      summary: "Where segmentation isolates the CDE, penetration-test the segmentation controls at least every 12 months and after changes to them."
+      verified_against: ["SRC-PCI-SAQ-AEP-40"]
+      checked: "2026-10-03"
+    - id: "12.3.1"
+      summary: "For each requirement that calls for a targeted risk analysis, document the analysis and use it to justify how the frequency or process the entity chose limits the likelihood or impact of the threat."
+      verified_against: ["SRC-PCI-SOC-R1", "SRC-PCI-SOC-401-R1"]
+      checked: "2026-10-04"
+    - id: "12.5.2"
+      summary: "Document and confirm PCI DSS scope at least every 12 months and after significant change to the in-scope environment."
+      verified_against: ["SRC-PCI-SOC-R1"]
+      checked: "2026-10-04"
+    - id: "12.8.1"
+      summary: "Keep a list of third-party service providers that receive account data or could affect its security, with the services each provides."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40"]
+      checked: "2026-10-04"
+    - id: "12.8.2"
+      summary: "Keep written agreements in which those providers acknowledge responsibility for the security of account data they handle or could affect."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40", "SRC-PCI-SOC-401-R1"]
+      checked: "2026-10-04"
+    - id: "12.8.3"
+      summary: "Follow an established process, due diligence included, before engaging a provider."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40"]
+      checked: "2026-10-04"
+    - id: "12.8.4"
+      summary: "Monitor each provider's PCI DSS compliance status at least every 12 months."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40"]
+      checked: "2026-10-04"
+    - id: "12.8.5"
+      summary: "Record which requirements each provider manages, which the entity manages, and which are shared."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40"]
+      checked: "2026-10-04"
+    - id: "12.10.1"
+      summary: "Keep an incident response plan that is ready to activate for suspected or confirmed security incidents."
+      verified_against: ["SRC-PCI-SAQ-P2PE-40", "SRC-PCI-SOC-R1"]
+      checked: "2026-10-04"
+  csf_subcategories:
+    - id: "GV.OC-04"
+      outcome: "Critical objectives, capabilities, and services that external stakeholders depend on or expect from the organization are understood and communicated"
+    - id: "GV.RM-01"
+      outcome: "Risk management objectives are established and agreed to by organizational stakeholders"
+    - id: "GV.RM-02"
+      outcome: "Risk appetite and risk tolerance statements are established, communicated, and maintained"
+    - id: "GV.RR-01"
+      outcome: "Organizational leadership is responsible and accountable for cybersecurity risk and fosters a culture that is risk-aware, ethical, and continually improving"
+    - id: "GV.RR-02"
+      outcome: "Roles, responsibilities, and authorities related to cybersecurity risk management are established, communicated, understood, and enforced"
+    - id: "GV.RR-04"
+      outcome: "Cybersecurity is included in human resources practices"
+    - id: "GV.PO-01"
+      outcome: "Policy for managing cybersecurity risks is established based on organizational context, cybersecurity strategy, and priorities and is communicated and enforced"
+    - id: "GV.PO-02"
+      outcome: "Policy for managing cybersecurity risks is reviewed, updated, communicated, and enforced to reflect changes in requirements, threats, technology, and organizational mission"
+    - id: "GV.OV-03"
+      outcome: "Organizational cybersecurity risk management performance is evaluated and reviewed for adjustments needed"
+    - id: "GV.SC-02"
+      outcome: "Cybersecurity roles and responsibilities for suppliers, customers, and partners are established, communicated, and coordinated internally and externally"
+    - id: "GV.SC-05"
+      outcome: "Requirements to address cybersecurity risks in supply chains are established, prioritized, and integrated into contracts and other types of agreements with suppliers and other relevant third parties"
+    - id: "GV.SC-06"
+      outcome: "Planning and due diligence are performed to reduce risks before entering into formal supplier or other third-party relationships"
+    - id: "GV.SC-07"
+      outcome: "The risks posed by a supplier, their products and services, and other third parties are understood, recorded, prioritized, assessed, responded to, and monitored over the course of the relationship"
+    - id: "GV.SC-08"
+      outcome: "Relevant suppliers and other third parties are included in incident planning, response, and recovery activities"
+    - id: "ID.AM-01"
+      outcome: "Inventories of hardware managed by the organization are maintained"
+    - id: "ID.AM-03"
+      outcome: "Representations of the organization's authorized network communication and internal and external network data flows are maintained"
+    - id: "ID.AM-04"
+      outcome: "Inventories of services provided by suppliers are maintained"
+    - id: "ID.AM-05"
+      outcome: "Assets are prioritized based on classification, criticality, resources, and impact on the mission"
+    - id: "ID.AM-07"
+      outcome: "Inventories of data and corresponding metadata for designated data types are maintained"
+    - id: "ID.AM-08"
+      outcome: "Systems, hardware, software, services, and data are managed throughout their life cycles"
+    - id: "ID.RA-01"
+      outcome: "Vulnerabilities in assets are identified, validated, and recorded"
+    - id: "ID.RA-03"
+      outcome: "Internal and external threats to the organization are identified and recorded"
+    - id: "ID.RA-04"
+      outcome: "Potential impacts and likelihoods of threats exploiting vulnerabilities are identified and recorded"
+    - id: "ID.RA-05"
+      outcome: "Threats, vulnerabilities, likelihoods, and impacts are used to understand inherent risk and inform risk response prioritization"
+    - id: "ID.RA-06"
+      outcome: "Risk responses are chosen, prioritized, planned, tracked, and communicated"
+    - id: "ID.RA-07"
+      outcome: "Changes and exceptions are managed, assessed for risk impact, recorded, and tracked"
+    - id: "ID.IM-01"
+      outcome: "Improvements are identified from evaluations"
+    - id: "ID.IM-02"
+      outcome: "Improvements are identified from security tests and exercises, including those done in coordination with suppliers and relevant third parties"
+    - id: "ID.IM-04"
+      outcome: "Incident response plans and other cybersecurity plans that affect operations are established, communicated, maintained, and improved"
+    - id: "PR.AA-01"
+      outcome: "Identities and credentials for authorized users, services, and hardware are managed by the organization"
+    - id: "PR.AA-02"
+      outcome: "Identities are proofed and bound to credentials based on the context of interactions"
+    - id: "PR.AA-03"
+      outcome: "Users, services, and hardware are authenticated"
+    - id: "PR.AA-04"
+      outcome: "Identity assertions are protected, conveyed, and verified"
+    - id: "PR.AA-05"
+      outcome: "Access permissions, entitlements, and authorizations are defined in a policy, managed, enforced, and reviewed, and incorporate the principles of least privilege and separation of duties"
+    - id: "PR.AA-06"
+      outcome: "Physical access to assets is managed, monitored, and enforced commensurate with risk"
+    - id: "PR.AT-01"
+      outcome: "Personnel are provided with awareness and training so that they possess the knowledge and skills to perform general tasks with cybersecurity risks in mind"
+    - id: "PR.AT-02"
+      outcome: "Individuals in specialized roles are provided with awareness and training so that they possess the knowledge and skills to perform relevant tasks with cybersecurity risks in mind"
+    - id: "PR.DS-01"
+      outcome: "The confidentiality, integrity, and availability of data-at-rest are protected"
+    - id: "PR.DS-02"
+      outcome: "The confidentiality, integrity, and availability of data-in-transit are protected"
+    - id: "PR.DS-10"
+      outcome: "The confidentiality, integrity, and availability of data-in-use are protected"
+    - id: "PR.DS-11"
+      outcome: "Backups of data are created, protected, maintained, and tested"
+    - id: "PR.PS-01"
+      outcome: "Configuration management practices are established and applied"
+    - id: "PR.PS-03"
+      outcome: "Hardware is maintained, replaced, and removed commensurate with risk"
+    - id: "PR.PS-04"
+      outcome: "Log records are generated and made available for continuous monitoring"
+    - id: "PR.PS-05"
+      outcome: "Installation and execution of unauthorized software are prevented"
+    - id: "PR.IR-01"
+      outcome: "Networks and environments are protected from unauthorized logical access and usage"
+    - id: "PR.IR-03"
+      outcome: "Mechanisms are implemented to achieve resilience requirements in normal and adverse situations"
+    - id: "DE.CM-02"
+      outcome: "The physical environment is monitored to find potentially adverse events"
+    - id: "DE.CM-03"
+      outcome: "Personnel activity and technology usage are monitored to find potentially adverse events"
+    - id: "DE.CM-06"
+      outcome: "External service provider activities and services are monitored to find potentially adverse events"
+    - id: "DE.CM-09"
+      outcome: "Computing hardware and software, runtime environments, and their data are monitored to find potentially adverse events"
+    - id: "DE.AE-02"
+      outcome: "Potentially adverse events are analyzed to better understand associated activities"
+    - id: "DE.AE-03"
+      outcome: "Information is correlated from multiple sources"
+    - id: "DE.AE-08"
+      outcome: "Incidents are declared when adverse events meet the defined incident criteria"
+    - id: "RS.MA-01"
+      outcome: "The incident response plan is executed in coordination with relevant third parties once an incident is declared"
+    - id: "RS.AN-06"
+      outcome: "Actions performed during an investigation are recorded, and the records' integrity and provenance are preserved"
+    - id: "RS.CO-02"
+      outcome: "Internal and external stakeholders are notified of incidents"
+    - id: "RS.MI-01"
+      outcome: "Incidents are contained"
+    - id: "RC.RP-01"
+      outcome: "The recovery portion of the incident response plan is executed once initiated from the incident response process"
+    - id: "RC.RP-03"
+      outcome: "The integrity of backups and other restoration assets is verified before using them for restoration"
+    - id: "RC.RP-05"
+      outcome: "The integrity of restored assets is verified, systems and services are restored, and normal operating status is confirmed"
+  sources:
+    - key: "SRC-ECFR-164-308"
+      title: "45 CFR 164.308, Administrative safeguards"
+      publisher: "Office of the Federal Register, eCFR"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.308"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-310"
+      title: "45 CFR 164.310, Physical safeguards"
+      publisher: "Office of the Federal Register, eCFR"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.310"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-312"
+      title: "45 CFR 164.312, Technical safeguards"
+      publisher: "Office of the Federal Register, eCFR"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.312"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-314"
+      title: "45 CFR 164.314, Organizational requirements"
+      publisher: "Office of the Federal Register, eCFR"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.314"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-316"
+      title: "45 CFR 164.316, Policies and procedures and documentation requirements"
+      publisher: "Office of the Federal Register, eCFR"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.316"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-SUBPART-C"
+      title: "45 CFR Part 164 Subpart C, including 164.306 (general rules, addressable specifications) and Appendix A to Subpart C (Security Standards: Matrix)"
+      publisher: "Office of the Federal Register, eCFR"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-160-103"
+      title: "45 CFR 160.103, Definitions (workforce, subcontractor, business associate)"
+      publisher: "Office of the Federal Register, eCFR"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-160/subpart-A/section-160.103"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-504"
+      title: "45 CFR 164.504(e)(3), Other arrangements"
+      publisher: "Office of the Federal Register, eCFR"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-E/section-164.504"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-NIST-CSWP29"
+      title: "The NIST Cybersecurity Framework (CSF) 2.0, NIST CSWP 29, Appendix A (CSF Core)"
+      publisher: "NIST"
+      url: "https://doi.org/10.6028/NIST.CSWP.29"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-PCI-DSS-401"
+      title: "PCI DSS v4.0.1 (June 2024), Requirements and Testing Procedures; automated retrieval returned HTTP 403, so identifiers were verified through the PCI SSC documents listed with each requirement"
+      publisher: "PCI Security Standards Council"
+      url: "https://www.pcisecuritystandards.org/document_library/"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-PCI-V401-BLOG"
+      title: "Just Published: PCI DSS v4.0.1 (2024-06-11): a limited revision with no added or deleted requirements"
+      publisher: "PCI Security Standards Council"
+      url: "https://blog.pcisecuritystandards.org/just-published-pci-dss-v4-0-1"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-PCI-SOC-R1"
+      title: "Summary of Changes from PCI DSS Version 3.2.1 to 4.0, Revision 1 (May 2022), which describes changes from the superseded v3.2.1"
+      publisher: "PCI Security Standards Council"
+      url: "https://listings.pcisecuritystandards.org/documents/PCI-DSS-v3-2-1-to-v4-0-Summary-of-Changes-r1.pdf"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-PCI-SOC-401-R1"
+      title: "Summary of Changes from PCI DSS Version 4.0 to 4.0.1, Revision 1 (August 2024; first released June 2024), published in the PCI SSC document library. PCI SSC's own hosts did not return it on 2026-10-04, so the copy read is PCI SSC's PDF as posted at commerce.uwo.ca/documentation/PCI-DSS-v4-0-to-v4-0-1-Summary-of-Changes-r1-1.pdf"
+      publisher: "PCI Security Standards Council"
+      url: "https://www.pcisecuritystandards.org/document_library/"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-PCI-SAQ-P2PE-40"
+      title: "Self-Assessment Questionnaire P2PE and Attestation of Compliance for PCI DSS v4.0 (April 2022), superseded by the v4.0.1 SAQs and used for its requirement list"
+      publisher: "PCI Security Standards Council"
+      url: "https://listings.pcisecuritystandards.org/documents/PCI-DSS-v4-0-SAQ-P2PE.pdf"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-PCI-SAQ-AEP-40"
+      title: "Self-Assessment Questionnaire A-EP for PCI DSS v4.0, superseded by the v4.0.1 SAQs and used for requirement wording"
+      publisher: "PCI Security Standards Council"
+      url: "https://listings.pcisecuritystandards.org/documents/PCI-DSS-v4-0-SAQ-A-EP.pdf"
+      checked: "2026-10-03"
+      quality: "primary"
+    - key: "SRC-HITRUST-LICENSE"
+      title: "HITRUST CSF License Agreement (HITRUST CSF Version 11.9, effective September 24, 2026)"
+      publisher: "HITRUST Alliance"
+      url: "https://hitrustalliance.net/hubfs/Agreements/HITRUST%20CSF%20License%20Agreement.pdf"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-HITRUST-TOU"
+      title: "HITRUST Terms of Use for Site and Services (last modified January 8, 2024)"
+      publisher: "HITRUST Alliance"
+      url: "https://hitrustalliance.net/terms-of-use"
+      checked: "2026-10-04"
+      quality: "primary"
+mappings:
+# ---------------------------------------------------------------- 45 CFR 164.308 Administrative safeguards
+  - id: "XW-01"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(1)(i)"
+      kind: "standard"
+      title: "Security management process"
+      designation: "standard"
+      summary: "Have policies and procedures that prevent, detect, contain, and correct security violations."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(i)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "The design supplies prevention (identity and segmentation enforcement points), detection (PIP-SIEM, PIP-XDR), and containment (PEP-HOST, PE-NETWORK). The governing policies and the program around them are organizational work, started in 05 WP-0.1."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Covers the policy half of the standard; the prevent, detect, contain, and correct outcomes map on the implementation specification rows."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+      - id: "GV.RM-01"
+        relationship: "related"
+        rationale: "Agreed risk management objectives frame what the security management process has to achieve."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.RM-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-SIEM", "PIP-XDR", "PEP-HOST", "PE-NETWORK"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Design principles"
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "4"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "13"
+    detections:
+      - doc: "detections"
+        file: "playbooks/ir-identity-compromise.md"
+        purpose: "Reference procedure to contain, eradicate, and recover from identity compromise: the contain and correct elements of this standard, for one incident class"
+    notes: ""
+  - id: "XW-02"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(1)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Risk analysis"
+      designation: "required"
+      summary: "Accurately and thoroughly assess the risks and vulnerabilities to the confidentiality, integrity, and availability of the ePHI the entity holds."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(ii)(A)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "The design builds the inputs a risk analysis needs: one asset inventory that includes medical devices, documented data flows, vulnerability data gathered without active scanning, and a stated residual-risk list (02 section 13). At the 22 clinics, medical device inventory and classification come from NAC profiling and clinical engineering records, because the clinics are outside passive sensor coverage (RR-14). risk-register.md is a reference example of the method, not Contoso's risk analysis."
+    csf_targets:
+      - id: "ID.RA-05"
+        relationship: "partial"
+        rationale: "Closest outcome: threats, vulnerabilities, likelihoods, and impacts used to understand inherent risk. HIPAA adds the accurate-and-thorough test and scopes it to ePHI confidentiality, integrity, and availability."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.RA-05"
+      - id: "ID.RA-01"
+        relationship: "partial"
+        rationale: "Identifying and recording vulnerabilities is one required input, including passive data for medical devices."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.RA-01"
+      - id: "ID.RA-03"
+        relationship: "partial"
+        rationale: "Identifying internal and external threats is one required input."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.RA-03"
+      - id: "ID.RA-04"
+        relationship: "partial"
+        rationale: "Impacts and likelihoods are the remaining inputs the analysis needs."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.RA-04"
+      - id: "ID.AM-07"
+        relationship: "related"
+        rationale: "An inventory of where ePHI lives sets the scope of the analysis."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.AM-07"
+    cde_scope: true
+    pci_targets:
+      - id: "1.2.3"
+        relationship: "related"
+        shared_csf: ["ID.AM-03"]
+        saq_path_status: "performed-anyway"
+        full_assessment_status: "required"
+        rationale: "Both depend on an accurate picture of connections; the PCI diagram covers Z-CDE, the HIPAA analysis covers systems that hold ePHI."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 1.2.3"
+      - id: "1.2.4"
+        relationship: "related"
+        shared_csf: ["ID.AM-03"]
+        saq_path_status: "performed-anyway"
+        full_assessment_status: "required"
+        rationale: "Data-flow documentation feeds both; Diagram 6 in 04-segmentation.md is the account-data starting point."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 1.2.4"
+      - id: "12.3.1"
+        relationship: "related"
+        shared_csf: ["ID.RA-04"]
+        saq_path_status: "performed-anyway"
+        full_assessment_status: "required"
+        rationale: "A targeted risk analysis for one activity's frequency (here POI inspection under 9.5.1.2.1) is far narrower than the HIPAA risk analysis but uses the same method."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 12.3.1"
+      - id: "12.5.2"
+        relationship: "related"
+        shared_csf: ["ID.AM-03"]
+        saq_path_status: "performed-anyway"
+        full_assessment_status: "required"
+        rationale: "Confirming PCI scope each year parallels keeping the HIPAA analysis scope accurate; the ePHI and account-data scopes differ by design."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 12.5.2"
+    architecture:
+      components: ["PIP-ASSET-INV", "PIP-IOMT-SENSOR", "PIP-VULN", "PIP-DATA-CLASS", "RES-POI"]
+      zones: ["Z-IOMT", "Z-CDE"]
+      policies: []
+      flows: []
+      residual_risks: ["RR-14"]
+      artifacts:
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "3"
+        - doc: "architecture"
+          file: "adr/ADR-006-iomt-network-enforced-segmentation.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "13"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+        - doc: "grc"
+          file: "risk-register.md"
+          section: "3"
+    detections: []
+    notes: ""
+  - id: "XW-03"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(1)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Risk management"
+      designation: "required"
+      summary: "Put security measures in place that reduce risks and vulnerabilities to a reasonable and appropriate level."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(ii)(B)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Most of the design set is risk reduction: segmentation, phishing-resistant MFA, just-in-time access, and the legacy enclave. Deciding what is reasonable and appropriate, and tracking treatment, is the risk management process; risk-register.md shows the form."
+    csf_targets:
+      - id: "ID.RA-06"
+        relationship: "partial"
+        rationale: "Risk responses are chosen, planned, and tracked; HIPAA sets the bar at reduction to a reasonable and appropriate level."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.RA-06"
+      - id: "GV.RM-02"
+        relationship: "related"
+        rationale: "Risk appetite and tolerance statements give 'reasonable and appropriate' a working definition."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.RM-02"
+      - id: "ID.RA-07"
+        relationship: "related"
+        rationale: "Exceptions with an owner, an expiry date, and a log entry (principle P-5) are tracked risk decisions."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.RA-07"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PE-IDENTITY", "IGA-ENTRA", "PE-NETWORK", "PEP-NET-ZONE", "PEP-ENCLAVE-GW"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "4"
+        - doc: "architecture"
+          file: "adr/ADR-005-legacy-kerberos-ntlm-enclave.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-006-iomt-network-enforced-segmentation.md"
+          section: "Decision"
+        - doc: "grc"
+          file: "risk-register.md"
+          section: "3"
+    detections:
+      - doc: "detections"
+        file: "kql/defender-xdr/dx03-entra-session-reuse-new-country-or-client.kql"
+        purpose: "Compensating detection for session token replay where continuous access evaluation does not reach the EHR (RR-03); risk-register.md lists it as a control for R-01"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx04-exchange-inbox-rule-hide-or-forward.kql"
+        purpose: "Compensating detection for mail-hiding and forwarding rules in the help-desk takeover path, where detections-index.md says prevention has a gap"
+      - doc: "detections"
+        file: "kql/sentinel/sn01-mfa-method-change-then-new-country-or-inbox-rule.kql"
+        purpose: "Compensating detection for help-desk MFA enrollment fraud (R-02); its banking-change link is not built because payer, payroll, and ERP logs are not in Sentinel (A-17)"
+      - doc: "detections"
+        file: "kql/sentinel/sn03-oauth-consent-and-service-principal-credential-add.kql"
+        purpose: "Compensating detection for illicit consent and new service principal credentials (R-06); managed identity sign-in monitoring is not built (coverage-map.md section 3, item 11)"
+    notes: ""
+  - id: "XW-04"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(1)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Sanction policy"
+      designation: "required"
+      summary: "Apply appropriate sanctions to workforce members who do not follow the security policies and procedures."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(ii)(C)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "An HR and compliance process. The design only supplies evidence an investigation would use, such as sign-in logs, EHR audit trails, and PIM records."
+    csf_targets:
+      - id: "GV.RR-04"
+        relationship: "partial"
+        rationale: "Human resources practices include disciplinary processes; HIPAA specifically requires sanctions for policy violations."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.RR-04"
+      - id: "GV.PO-01"
+        relationship: "related"
+        rationale: "A policy that is enforced implies consequences for violating it."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-05"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(1)(ii)(D)"
+      kind: "implementation-specification"
+      title: "Information system activity review"
+      designation: "required"
+      summary: "Regularly review records of system activity, such as audit logs, access reports, and security incident tracking reports."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(ii)(D)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Collection and correlation are designed: identity, endpoint, zone firewall, NAC, IoMT sensor, and broker session logs in PIP-SIEM and PIP-XDR. IoMT sensor records exist for the three hospitals only, because clinic medical devices are outside passive sensor coverage (RR-14). The detection pack's 22 rules, all untested templates, automate part of the review. The review cadence, who performs it, triage, and review of the records no rule covers yet (coverage-map.md section 4) are procedural."
+    csf_targets:
+      - id: "DE.CM-03"
+        relationship: "partial"
+        rationale: "Monitoring personnel activity and technology usage; HIPAA requires a procedure for regular review of activity records."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.CM-03"
+      - id: "DE.AE-02"
+        relationship: "partial"
+        rationale: "Analyzing potentially adverse events is the substance of the review."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.AE-02"
+      - id: "PR.PS-04"
+        relationship: "related"
+        rationale: "Log records must exist and be available before anyone can review them."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.PS-04"
+      - id: "DE.AE-03"
+        relationship: "related"
+        rationale: "Correlating identity, endpoint, network, and IoMT sources makes review practical at Contoso's scale."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.AE-03"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-SIEM", "PIP-XDR", "PIP-ID-RISK", "PEP-NET-ZONE", "PEP-VENDOR-BROKER"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-14"]
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "3"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "4"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "6"
+    detections:
+      - doc: "detections"
+        file: "kql/defender-xdr/dx01-recovery-inhibition-shadow-copy-backup-deletion.kql"
+        purpose: "Automates review of endpoint process records for shadow copy deletion, backup catalog deletion, and boot recovery changes"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx02-mass-file-rename-encryption-burst.kql"
+        purpose: "Automates review of file activity records for one process renaming many files to a new extension across many folders"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx03-entra-session-reuse-new-country-or-client.kql"
+        purpose: "Automates review of Entra sign-in records for one session used from several countries, or from a new network and client"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx04-exchange-inbox-rule-hide-or-forward.kql"
+        purpose: "Automates review of Exchange Online records for inbox rules and mailbox settings that forward, delete, or hide mail"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx05-mdi-tier0-credential-access-alert-chain.kql"
+        purpose: "Automates review of Defender for Identity alerts from Tier 0 servers, chained per account, device, or address"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx06-dcsync-replication-from-non-dc.kql"
+        purpose: "Automates review of directory replication records for requests from hosts that are not domain controllers"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx07-entra-connect-sync-server-anomalies.kql"
+        purpose: "Automates review of logon and process records on the Entra Connect servers, plus sync-identity alerts. The logon and process records need Defender for Endpoint on the IDS-SYNC servers, which the design does not yet state (threat-model.md TM-A4); until it does, this review rests on the Defender for Identity sync-identity alerts"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx08-workstation-peer-smb-and-tool-transfer.kql"
+        purpose: "Automates review of network and file records for SMB between workstations and executables written over SMB"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx09-endpoint-protection-tampering.kql"
+        purpose: "Automates review of tamper protection events, tamper alerts, and Defender Antivirus preference commands"
+      - doc: "detections"
+        file: "kql/sentinel/sn01-mfa-method-change-then-new-country-or-inbox-rule.kql"
+        purpose: "Automates review of audit, sign-in, and mailbox records for an MFA method change followed by a new-country sign-in or a mail rule"
+      - doc: "detections"
+        file: "kql/sentinel/sn02-entra-control-plane-and-vendor-activation-changes.kql"
+        purpose: "Automates review of Entra audit records for control-plane changes and off-hours vendor session group activations"
+      - doc: "detections"
+        file: "kql/sentinel/sn03-oauth-consent-and-service-principal-credential-add.kql"
+        purpose: "Automates review of Entra audit records for sensitive consent grants and new application or service principal credentials"
+      - doc: "detections"
+        file: "kql/sentinel/sn04-device-code-and-authentication-transfer-signins.kql"
+        purpose: "Automates review of sign-in records for device code and authentication transfer flows outside the CA-20 exception"
+      - doc: "detections"
+        file: "kql/sentinel/sn05-azure-backup-and-restore-point-deletion.kql"
+        purpose: "Automates review of Azure activity records for deletion of recovery assets and vault security changes"
+      - doc: "detections"
+        file: "kql/sentinel/sn06-emergency-access-account-signin.kql"
+        purpose: "Automates review of interactive and non-interactive sign-in records for every sign-in, successful or failed, by the two tenant emergency access accounts"
+      - doc: "detections"
+        file: "kql/sentinel/sn07-emergency-access-group-and-account-audit-activity.kql"
+        purpose: "Automates review of Entra audit records for every change to grp-ca-emergency-access, grp-admins-t0, and grp-admins-t1, and all audit activity by or on the two tenant emergency access accounts, matched by object ID"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_recovery_inhibition_utilities.yml"
+        purpose: "Portable Sigma form of DX-01 over Windows process creation events"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_defender_preference_tampering.yml"
+        purpose: "Automates review of process creation events for PowerShell commands that weaken Defender Antivirus"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_office_spawns_script_interpreter.yml"
+        purpose: "Automates review of process creation events for Office applications starting script interpreters"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_domain_trust_and_group_discovery.yml"
+        purpose: "Automates review of process creation events for domain trust, group, and user enumeration"
+      - doc: "detections"
+        file: "sigma/win_security_kerberos_rc4_service_ticket_user_spn.yml"
+        purpose: "Automates review of domain controller event 4769 for RC4 service tickets; runs only where that event is collected"
+      - doc: "detections"
+        file: "sigma/win_security_replication_rights_non_computer_account.yml"
+        purpose: "Automates review of domain controller event 4662 for replication rights use; needs that event collected and a SACL on the domain object"
+      - doc: "detections"
+        file: "coverage-map.md"
+        purpose: "Section 4 lists the behaviors no rule reviews yet, such as medical device segment anomalies and EHR audit and broker session activity"
+    notes: ""
+  - id: "XW-06"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(2)"
+      kind: "standard"
+      title: "Assigned security responsibility"
+      designation: "standard"
+      summary: "Name the security official responsible for developing and implementing the Security Rule policies and procedures."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(2)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Naming the security official is a governance act. The ADRs carry fictional decision-owner roles and 05 WP-0.1 forms a steering group; neither names the official."
+    csf_targets:
+      - id: "GV.RR-02"
+        relationship: "partial"
+        rationale: "Roles, responsibilities, and authorities are established; HIPAA requires one identified security official."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.RR-02"
+      - id: "GV.RR-01"
+        relationship: "related"
+        rationale: "Leadership accountability for cybersecurity risk."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.RR-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "4"
+    detections: []
+    notes: ""
+  - id: "XW-07"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(3)(i)"
+      kind: "standard"
+      title: "Workforce security"
+      designation: "standard"
+      summary: "Make sure workforce members have appropriate access to ePHI and that those without authorized access cannot obtain it."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(3)(i)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Joiner, mover, and leaver events come from the systems of record; access is granted through access packages, PIM, and EHR roles, and enforced by the Conditional Access set."
+    csf_targets:
+      - id: "PR.AA-05"
+        relationship: "partial"
+        rationale: "Access defined in policy, enforced, and reviewed with least privilege; HIPAA frames it as appropriate access for each workforce member."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+      - id: "PR.AA-01"
+        relationship: "related"
+        rationale: "Identities and credentials that the organization manages are a precondition."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["IDS-SOR", "IGA-ENTRA", "PE-IDENTITY", "PEP-SSO-APP"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "1"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "3"
+    detections: []
+    notes: ""
+  - id: "XW-08"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(3)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Authorization and/or supervision"
+      designation: "addressable"
+      summary: "Authorize or supervise workforce members who work with ePHI or in places where it can be accessed."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(3)(ii)(A)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Authorization runs through access packages, PIM approval, and EHR roles. Supervision in clinical areas is managerial. Vendor engineers are outside this row: under 45 CFR 160.103 they are their employers' workforce, and those employers are business associates (03 section 7), so the vendor model maps to 164.308(b)(1) (XW-29) and 164.314(a)(1) (XW-55), and the recorded broker sessions to audit controls (XW-48), as 03 section 9 and 02 section 12 also map them."
+    csf_targets:
+      - id: "PR.AA-05"
+        relationship: "partial"
+        rationale: "Authorization is covered; supervision of work in places where ePHI can be accessed is not a CSF outcome."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+      - id: "DE.CM-03"
+        relationship: "related"
+        rationale: "Monitoring personnel activity supports supervision."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.CM-03"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["IGA-ENTRA", "PEP-SSO-APP"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "4"
+    detections: []
+    notes: "Basis for leaving vendor engineers out of this row: the workforce definition in 45 CFR 160.103 (SRC-ECFR-160-103). See crosswalk.md section 8."
+  - id: "XW-09"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(3)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Workforce clearance procedure"
+      designation: "addressable"
+      summary: "Have a procedure to determine that a workforce member's access to ePHI is appropriate."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(3)(ii)(B)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Identity proofing before credential issuance and sponsor approval for contractors and vendors are designed (03 sections 1 and 2). Screening and role determination are HR and medical staff credentialing processes that feed IDS-SOR."
+    csf_targets:
+      - id: "GV.RR-04"
+        relationship: "partial"
+        rationale: "Screening is a human resources practice; HIPAA asks for a procedure to decide that each member's access is appropriate."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.RR-04"
+      - id: "PR.AA-02"
+        relationship: "related"
+        rationale: "Identities are proofed before a credential is issued."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-02"
+      - id: "PR.AA-05"
+        relationship: "related"
+        rationale: "The access decision itself."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["IDS-SOR", "IGA-ENTRA"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "1"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "2"
+    detections: []
+    notes: ""
+  - id: "XW-10"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(3)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Termination procedures"
+      designation: "addressable"
+      summary: "End access to ePHI when employment or another arrangement ends, or when a clearance determination requires it."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(3)(ii)(C)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Leavers flow from IDS-SOR to IDS-AD and IDS-ENTRA, and sessions are revoked where continuous access evaluation applies. Kerberos tickets already issued stay valid until they expire, so the EHR session termination step in 02 section 9 matters on the local plane."
+    csf_targets:
+      - id: "PR.AA-01"
+        relationship: "partial"
+        rationale: "Managing credentials includes revoking them; HIPAA ties termination to the end of employment or another arrangement."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-01"
+      - id: "PR.AA-05"
+        relationship: "partial"
+        rationale: "Entitlements are removed and access is reviewed."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+      - id: "GV.RR-04"
+        relationship: "related"
+        rationale: "Offboarding is a human resources practice."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.RR-04"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["IDS-SOR", "IDS-AD", "IDS-SYNC", "IDS-ENTRA", "PA-IDENTITY", "IGA-ENTRA"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "1"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "9"
+    detections: []
+    notes: ""
+  - id: "XW-11"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(4)(i)"
+      kind: "standard"
+      title: "Information access management"
+      designation: "standard"
+      summary: "Have policies and procedures for authorizing access to ePHI that are consistent with the Privacy Rule (Subpart E)."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(4)(i)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Authorization is enforced at three layers: Conditional Access, network admission and zones, and EHR roles. Privacy Rule consistency (minimum necessary) lives in EHR role design, which is out of scope (01)."
+    csf_targets:
+      - id: "PR.AA-05"
+        relationship: "partial"
+        rationale: "Access authorization defined in policy and enforced; HIPAA also requires consistency with the Privacy Rule, which the CSF does not address."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+      - id: "GV.PO-01"
+        relationship: "related"
+        rationale: "The authorizing policy itself."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PE-IDENTITY", "IGA-ENTRA", "PEP-SSO-APP", "PE-NETWORK"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "3"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "2"
+    detections: []
+    notes: ""
+  - id: "XW-12"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(4)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Isolating health care clearinghouse functions"
+      designation: "required"
+      summary: "If a health care clearinghouse is part of a larger organization, protect the clearinghouse's ePHI from unauthorized access by the rest of the organization."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(4)(ii)(A)"
+    applicability: "not-applicable"
+    coverage: "not-applicable"
+    coverage_note: "The scenario defines no clearinghouse function inside Contoso. If one were added, it would need its own segment and access policy; PR.IR-01 and PR.AA-05 would be the starting targets."
+    csf_targets: []
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Scenario (fixed)"
+    detections: []
+    notes: ""
+  - id: "XW-13"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(4)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Access authorization"
+      designation: "addressable"
+      summary: "Have policies and procedures for granting access to ePHI, for example through a workstation, transaction, program, or process."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(4)(ii)(B)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Access is granted through access packages with approval and expiry, eligible-only PIM assignments, persona-targeted Conditional Access, and EHR roles."
+    csf_targets:
+      - id: "PR.AA-05"
+        relationship: "partial"
+        rationale: "Granting access through defined mechanisms; HIPAA leaves the mechanism (workstation, transaction, program, process) open."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+    cde_scope: true
+    pci_targets:
+      - id: "7.2.1"
+        relationship: "related"
+        shared_csf: ["PR.AA-05"]
+        saq_path_status: "not-applicable-by-design"
+        full_assessment_status: "required-where-access-exists"
+        rationale: "Both require a defined access model; the PCI model applies to CDE components, where no Contoso user holds access by design."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 7.2.1"
+      - id: "7.2.2"
+        relationship: "related"
+        shared_csf: ["PR.AA-05"]
+        saq_path_status: "not-applicable-by-design"
+        full_assessment_status: "required-where-access-exists"
+        rationale: "Least-privilege assignment by job function, the same principle applied to account data."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 7.2.2"
+    architecture:
+      components: ["IGA-ENTRA", "PE-IDENTITY", "PEP-SSO-APP", "PEP-PAW"]
+      zones: ["Z-CDE"]
+      policies: ["CA-03", "CA-07", "CA-08", "CA-11", "CA-13"]
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "3"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "4"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "7"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+    detections:
+      - doc: "detections"
+        file: "kql/sentinel/sn03-oauth-consent-and-service-principal-credential-add.kql"
+        purpose: "Flags consent and permission grants that give an application a Tier 0 permission from the table in 03 section 6, or a mail or file permission, so each is checked against the admin consent workflow"
+    notes: ""
+  - id: "XW-14"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(4)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Access establishment and modification"
+      designation: "addressable"
+      summary: "Based on the access authorization policies, establish, document, review, and change each user's access rights."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(4)(ii)(C)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "PIM eligibility expiry, access reviews (quarterly for Tier 0 as an example cadence), and mover events from IDS-SOR establish and modify access; IGA-ENTRA keeps the records. Membership of grp-ca-emergency-access exempts an account from every enforced Conditional Access policy that blocks or restricts sign-in, so the design treats a change to it as a Tier 0 access modification: an administrator makes it through an approved Tier 0 activation against a change record, and every change alerts, including those an emergency account or a Tier 0 workload identity can make without approval (03 section 5, ADR-004 decision 9). On those unapproved paths the alert is the only control (RR-16)."
+    csf_targets:
+      - id: "PR.AA-05"
+        relationship: "partial"
+        rationale: "Permissions defined, managed, and reviewed; HIPAA adds documenting each establishment and change."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+      - id: "PR.AA-01"
+        relationship: "related"
+        rationale: "Identity lifecycle events drive the changes."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-01"
+    cde_scope: true
+    pci_targets:
+      - id: "7.2.4"
+        relationship: "related"
+        shared_csf: ["PR.AA-05"]
+        saq_path_status: "not-applicable-by-design"
+        full_assessment_status: "required-where-access-exists"
+        rationale: "Periodic review of accounts and privileges, vendor accounts included; PCI sets at least every six months for CDE access, of which there is none by design."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 7.2.4"
+    architecture:
+      components: ["IGA-ENTRA", "IDS-SOR"]
+      zones: ["Z-CDE"]
+      policies: []
+      flows: []
+      residual_risks: ["RR-16"]
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "4"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "5"
+        - doc: "architecture"
+          file: "adr/ADR-004-privileged-access-tiering-and-pim.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+    detections:
+      - doc: "detections"
+        file: "kql/sentinel/sn02-entra-control-plane-and-vendor-activation-changes.kql"
+        purpose: "Flags assignments and activations of the Tier 0 Entra roles in 03 section 4, scoped assignments included, permanent assignments outside PIM, any assignment of a role the design never assigns (Partner Tier1 Support, Partner Tier2 Support, Windows 365 Administrator, External Identity Provider Administrator; 03 section 4), and vendor session group activations outside expected hours. The entries in the Tier 0 row of 03 section 4 that are not Entra directory roles are outside SN-02 (coverage-map.md section 3, item 10)"
+      - doc: "detections"
+        file: "kql/sentinel/sn07-emergency-access-group-and-account-audit-activity.kql"
+        purpose: "Flags every modification of the access that grp-ca-emergency-access grants (a member or owner added or removed), of the two emergency access accounts' own access (an account disabled or deleted, or its Global Administrator assignment removed), and of the admin groups grp-admins-t0 and grp-admins-t1, which the PAW-only policies target (ADR-004 decision 6; 03 section 4), so each is matched to a change, test, or incident record"
+    notes: ""
+  - id: "XW-15"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(5)(i)"
+      kind: "standard"
+      title: "Security awareness and training"
+      designation: "standard"
+      summary: "Run a security awareness and training program for the whole workforce, management included."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Not designed in this set. The only training the design names is terminal tamper awareness for registration staff (04 section 7)."
+    csf_targets:
+      - id: "PR.AT-01"
+        relationship: "equivalent"
+        rationale: "Both call for awareness and training for all personnel. HIPAA's implementation specifications add specific topics, mapped on their own rows."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AT-01"
+      - id: "PR.AT-02"
+        relationship: "related"
+        rationale: "Role-specific training for administrators, clinical engineering, and incident responders."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AT-02"
+    cde_scope: true
+    pci_targets:
+      - id: "9.5.1.3"
+        relationship: "related"
+        shared_csf: ["PR.AT-01"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "Training registration staff to spot terminal tampering is a narrow, role-specific part of a workforce awareness program."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 9.5.1.3"
+    architecture:
+      components: []
+      zones: ["Z-CDE"]
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+    detections: []
+    notes: ""
+  - id: "XW-16"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(5)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Security reminders"
+      designation: "addressable"
+      summary: "Give the workforce periodic security updates."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(ii)(A)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Part of the awareness program; not designed in this set."
+    csf_targets:
+      - id: "PR.AT-01"
+        relationship: "partial"
+        rationale: "Periodic updates are one way to keep personnel awareness current."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AT-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-17"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(5)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Protection from malicious software"
+      designation: "addressable"
+      summary: "Have procedures for guarding against, detecting, and reporting malicious software."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(ii)(B)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Endpoint detection and response, application control, and email filtering are designed for managed systems, with threat intelligence (PIP-TI) feeding detection and blocking. Most medical devices cannot run an agent, so device-class segments and passive monitoring compensate (ADR-006); at the 22 clinics, which are outside passive sensor coverage, segments and allow-lists compensate without sensor-based anomaly detection (RR-14). The detection pack adds behavior rules for ransomware staging and encryption, tampering, malicious document execution, and tool transfer between workstations; medical device segments have no rule yet (coverage-map.md section 4)."
+    csf_targets:
+      - id: "DE.CM-09"
+        relationship: "partial"
+        rationale: "Monitoring computing hardware and software to detect malicious code; HIPAA also asks for procedures to report it."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.CM-09"
+      - id: "PR.PS-05"
+        relationship: "partial"
+        rationale: "Preventing unauthorized software, here through application control on managed hosts."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.PS-05"
+      - id: "PR.AT-01"
+        relationship: "related"
+        rationale: "HIPAA places this specification under awareness and training, so staff need to know how to report suspected malware."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AT-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-EDR", "PEP-HOST", "SVC-EMAIL", "PIP-XDR", "PIP-TI", "PIP-IOMT-SENSOR"]
+      zones: ["Z-IOMT"]
+      policies: []
+      flows: []
+      residual_risks: ["RR-14"]
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "11"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "6"
+        - doc: "architecture"
+          file: "adr/ADR-006-iomt-network-enforced-segmentation.md"
+          section: "Decision"
+    detections:
+      - doc: "detections"
+        file: "kql/defender-xdr/dx01-recovery-inhibition-shadow-copy-backup-deletion.kql"
+        purpose: "Detects ransomware staging: built-in utilities deleting shadow copies or backup catalogs, or turning off boot recovery"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx02-mass-file-rename-encryption-burst.kql"
+        purpose: "Detects the encryption stage of ransomware from file renames, independent of any malware signature, joined to Defender alerts"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx08-workstation-peer-smb-and-tool-transfer.kql"
+        purpose: "Detects executables and scripts copied between workstations over SMB, and confirms that host east-west blocking holds"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx09-endpoint-protection-tampering.kql"
+        purpose: "Detects attempts to turn off or weaken Defender Antivirus, which usually precede encryption"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_recovery_inhibition_utilities.yml"
+        purpose: "Portable Sigma form of DX-01 for ransomware staging commands"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_defender_preference_tampering.yml"
+        purpose: "Detects PowerShell commands that turn off Defender Antivirus protections or add exclusions"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_office_spawns_script_interpreter.yml"
+        purpose: "Detects Office applications starting script interpreters or proxy binaries, the pattern that follows opening a malicious attachment"
+    notes: ""
+  - id: "XW-18"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(5)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Log-in monitoring"
+      designation: "addressable"
+      summary: "Have procedures for monitoring log-in attempts and reporting discrepancies."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(ii)(C)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Risk-based Conditional Access (CA-17, CA-18) and identity risk signals for cloud and on-premises sign-ins. The detection pack adds five log-in rules (DX-03, DX-07, SN-01, SN-04, SN-06), all untested templates. DX-07's logon signal needs Defender for Endpoint on the IDS-SYNC servers, which the design does not yet state (threat-model.md TM-A4), so it has no data until the architecture decides. SN-06 is the alert on every emergency access account sign-in, successful or failed, that 03 section 5 specifies. Reporting discrepancies is procedural."
+    csf_targets:
+      - id: "DE.CM-03"
+        relationship: "partial"
+        rationale: "Monitoring personnel activity, sign-ins included; HIPAA also asks for procedures to report discrepancies."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.CM-03"
+      - id: "DE.AE-02"
+        relationship: "related"
+        rationale: "Analyzing anomalous sign-ins."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.AE-02"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-ID-RISK", "PE-IDENTITY", "PIP-SIEM"]
+      zones: []
+      policies: ["CA-17", "CA-18"]
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "3"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "4"
+    detections:
+      - doc: "detections"
+        file: "kql/defender-xdr/dx03-entra-session-reuse-new-country-or-client.kql"
+        purpose: "Monitors successful sign-ins for one session used from more than one country, or from a new network and client"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx07-entra-connect-sync-server-anomalies.kql"
+        purpose: "Its first signal flags interactive logons to the Entra Connect servers by accounts outside the Tier 0 administrator list. That signal reads DeviceLogonEvents, a Defender for Endpoint table, so it needs Defender for Endpoint on the IDS-SYNC servers; the design does not yet state that (threat-model.md TM-A4), and until it does the signal has no data"
+      - doc: "detections"
+        file: "kql/sentinel/sn01-mfa-method-change-then-new-country-or-inbox-rule.kql"
+        purpose: "Flags a sign-in from a country new for the user within 24 hours of an MFA method change"
+      - doc: "detections"
+        file: "kql/sentinel/sn04-device-code-and-authentication-transfer-signins.kql"
+        purpose: "Monitors device code and authentication transfer sign-ins outside the CA-20 exception, blocked attempts included"
+      - doc: "detections"
+        file: "kql/sentinel/sn06-emergency-access-account-signin.kql"
+        purpose: "Monitors every log-in attempt by the two tenant emergency access accounts, successful or failed, interactive or not, and alerts on them, as 03 section 5 requires"
+    notes: ""
+  - id: "XW-19"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(5)(ii)(D)"
+      kind: "implementation-specification"
+      title: "Password management"
+      designation: "addressable"
+      summary: "Have procedures for creating, changing, and safeguarding passwords."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(ii)(D)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "The design reduces dependence on passwords (phishing-resistant methods by persona, certificate badges, a Temporary Access Pass only to register a method) and covers the passwords that remain: Windows LAPS, service accounts, and sealed AD recovery credentials."
+    csf_targets:
+      - id: "PR.AA-01"
+        relationship: "partial"
+        rationale: "Credentials are managed; HIPAA names password creation, change, and safeguarding."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-01"
+      - id: "PR.AA-03"
+        relationship: "related"
+        rationale: "Phishing-resistant authentication reduces reliance on passwords."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-03"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["IDS-AD", "IDS-ENTRA", "PA-IDENTITY", "PIP-PKI"]
+      zones: []
+      policies: ["CA-19"]
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "2"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "4"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "5"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "6"
+    detections:
+      - doc: "detections"
+        file: "kql/defender-xdr/dx05-mdi-tier0-credential-access-alert-chain.kql"
+        purpose: "Chains Defender for Identity Kerberoasting and DCSync alerts, the stages that steal service account passwords and directory password hashes"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx06-dcsync-replication-from-non-dc.kql"
+        purpose: "Detects directory replication requested by a host that is not a domain controller, or by the wrong account from a sync server, the DCSync route to password hashes"
+      - doc: "detections"
+        file: "sigma/win_security_kerberos_rc4_service_ticket_user_spn.yml"
+        purpose: "Detects RC4 service tickets for user-based service accounts, a Kerberoasting indicator against service account passwords"
+      - doc: "detections"
+        file: "sigma/win_security_replication_rights_non_computer_account.yml"
+        purpose: "Detects replication rights used by an account that is not a computer account, the DCSync pattern for extracting password hashes"
+    notes: ""
+  - id: "XW-20"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(6)(i)"
+      kind: "standard"
+      title: "Security incident procedures"
+      designation: "standard"
+      summary: "Have policies and procedures to address security incidents."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(6)(i)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Response mechanisms and clinical safety gates are designed (04 section 6, ADR-008). The detection pack's identity-compromise playbook is a reference procedure for one incident class and has not been exercised; ransomware and medical device incidents have no playbook yet. The incident response plan itself is organizational."
+    csf_targets:
+      - id: "ID.IM-04"
+        relationship: "partial"
+        rationale: "Incident response plans established, communicated, maintained, and improved; HIPAA asks for the policies and procedures."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.IM-04"
+      - id: "RS.MA-01"
+        relationship: "related"
+        rationale: "Executing the plan once an incident is declared."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, RS.MA-01"
+    cde_scope: true
+    pci_targets:
+      - id: "12.10.1"
+        relationship: "partial"
+        shared_csf: ["ID.IM-04"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "One incident response plan can serve both if it carries the HIPAA breach procedures and the card brand and acquirer notifications; the protected data differs."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 12.10.1"
+    architecture:
+      components: ["PIP-SIEM", "PIP-XDR"]
+      zones: ["Z-CDE"]
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "6"
+        - doc: "architecture"
+          file: "adr/ADR-008-clinical-continuity-failure-modes.md"
+          section: "Decision"
+        - doc: "grc"
+          file: "notification-clocks.md"
+          section: "4"
+    detections:
+      - doc: "detections"
+        file: "playbooks/ir-identity-compromise.md"
+        purpose: "Reference procedure for identity compromise: decision points, severity and escalation, response branches, notification, and closure; not exercised"
+    notes: ""
+  - id: "XW-21"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(6)(ii)"
+      kind: "implementation-specification"
+      title: "Response and reporting"
+      designation: "required"
+      summary: "Identify and respond to suspected or known security incidents, mitigate their harmful effects where practicable, and document incidents and their outcomes."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(6)(ii)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Containment is designed per subject type: session revocation, endpoint isolation, NAC quarantine, and a clinical safety gate before any action on a medical device in use. Automatic attack disruption is configured to match: the medical device segments and named clinical accounts are excluded from its automatic actions, each exclusion owned and dated, so those containment decisions stay with people (ADR-008). The identity-compromise playbook adds reference steps to identify, contain, notify, and document identity incidents. Documenting incidents and outcomes remains procedural."
+    csf_targets:
+      - id: "DE.AE-08"
+        relationship: "partial"
+        rationale: "Declaring incidents is the identify step."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.AE-08"
+      - id: "RS.MI-01"
+        relationship: "partial"
+        rationale: "Containment is the mitigate step."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, RS.MI-01"
+      - id: "RS.AN-06"
+        relationship: "partial"
+        rationale: "Recording actions preserves the documentation HIPAA requires."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, RS.AN-06"
+      - id: "RS.CO-02"
+        relationship: "related"
+        rationale: "Stakeholder notification; the breach notification clocks are in notification-clocks.md."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, RS.CO-02"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-XDR", "PIP-SIEM", "PEP-HOST", "PA-IDENTITY", "PE-NETWORK", "PEP-NET-ZONE"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "3"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "6"
+        - doc: "architecture"
+          file: "adr/ADR-008-clinical-continuity-failure-modes.md"
+          section: "Decision"
+        - doc: "grc"
+          file: "notification-clocks.md"
+          section: "2"
+    detections:
+      - doc: "detections"
+        file: "playbooks/ir-identity-compromise.md"
+        purpose: "Identify (D1, from this pack's rule results), contain and eradicate (section 6), notify (section 7), and record every action in an incident timeline"
+    notes: ""
+  - id: "XW-22"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(7)(i)"
+      kind: "standard"
+      title: "Contingency plan"
+      designation: "standard"
+      summary: "Establish, and implement as needed, policies and procedures for responding to an emergency or other occurrence that damages systems containing ePHI."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(i)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Failure behavior for each decision plane is designed (ADR-008). ADR-009 sets four requirements for the copies Contoso restores from: immutable and offline copies, isolation from Tier 0 administrative reach, tested restores with evidence, and monitoring as Tier 0. The recovery implementation (products, topology, recovery objectives, and restore order) is not designed, and recovery capability stays unverified until restores are tested against ADR-009 (A-19, RR-11). The contingency plan's policies and procedures are organizational."
+    csf_targets:
+      - id: "ID.IM-04"
+        relationship: "partial"
+        rationale: "Plans that affect operations, contingency plans included, are established and maintained."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.IM-04"
+      - id: "PR.IR-03"
+        relationship: "related"
+        rationale: "Resilience mechanisms carry out the plan."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.IR-03"
+      - id: "RC.RP-01"
+        relationship: "related"
+        rationale: "Executing the recovery portion of the plan."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, RC.RP-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["IDS-AD", "PE-NETWORK", "PEP-NET-ZONE", "PIP-PKI", "SVC-BACKUP"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-11", "RR-13"]
+      artifacts:
+        - doc: "architecture"
+          file: "adr/ADR-008-clinical-continuity-failure-modes.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-009-recovery-requirements.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "10"
+    detections: []
+    notes: ""
+  - id: "XW-23"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(7)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Data backup plan"
+      designation: "required"
+      summary: "Establish and implement procedures to create and maintain retrievable exact copies of ePHI."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(A)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "ADR-009 sets the requirements for every copy Contoso would restore ePHI from. Scope: the local-first clinical stores, RES-LEGACY, RES-FILES, and RES-AZ-WORKLOADS, plus the Tier 0 identity systems they cannot be restored without (IDS-AD, PIP-PKI) and the keys that encrypted data depends on; whether to keep copies of Microsoft 365 data is left to Contoso's criticality analysis. Properties: at least one immutable and one offline copy (one copy may be both), retention that reaches back past the likely start of an undetected intrusion, and encryption with keys recoverable without production Tier 0. The backup implementation (products, topology, where copies are kept, retention periods) is out of scope (01, Out of scope), so the procedures that create and maintain the copies are not designed, and RR-11 records recovery capability as unverified. The linked rules watch for deletion of recovery points where they exist; they are not a backup plan."
+    csf_targets:
+      - id: "PR.DS-11"
+        relationship: "partial"
+        rationale: "Backups created and maintained; CSF adds protected and tested, while HIPAA requires retrievable exact copies."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-11"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["SVC-BACKUP", "IDS-AD", "PIP-PKI", "RES-EHR", "RES-PACS", "RES-LIS", "RES-PHARM", "RES-INTEGRATION", "RES-LEGACY", "RES-FILES", "RES-AZ-WORKLOADS"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-11"]
+      artifacts:
+        - doc: "architecture"
+          file: "adr/ADR-009-recovery-requirements.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "13"
+    detections:
+      - doc: "detections"
+        file: "kql/defender-xdr/dx01-recovery-inhibition-shadow-copy-backup-deletion.kql"
+        purpose: "Detects deletion of shadow copies and Windows Backup catalogs on hosts where those recovery points exist"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_recovery_inhibition_utilities.yml"
+        purpose: "Portable Sigma form of DX-01 for shadow copy and backup deletion commands"
+      - doc: "detections"
+        file: "kql/sentinel/sn05-azure-backup-and-restore-point-deletion.kql"
+        purpose: "Detects deletion of Azure backup items, vaults, restore points, or snapshots and vault security changes; applies only where Azure-native backup protects RES-AZ-WORKLOADS"
+    notes: ""
+  - id: "XW-24"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(7)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Disaster recovery plan"
+      designation: "required"
+      summary: "Establish, and implement as needed, procedures to restore any loss of data."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(B)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "ADR-008 designs the administrative recovery paths (sealed AD recovery credentials, the dormant emergency path). ADR-009 sets the requirements data restoration depends on: copies that survive an attacker in production (decisions 1 and 2), restoration in an incident from a copy that predates the compromise and is verified before use (decision 3), and the Tier 0 identity systems in backup scope, because the clinical applications cannot be restored to working order without them. Restore procedures, recovery objectives, and restore order are not designed; Contoso sets them through its criticality analysis (A-19, RR-11)."
+    csf_targets:
+      - id: "RC.RP-01"
+        relationship: "partial"
+        rationale: "Executing recovery; HIPAA asks for procedures to restore any loss of data."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, RC.RP-01"
+      - id: "RC.RP-03"
+        relationship: "related"
+        rationale: "Verifying backup integrity before restoring from it."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, RC.RP-03"
+      - id: "RC.RP-05"
+        relationship: "related"
+        rationale: "Verifying restored assets and confirming normal operation."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, RC.RP-05"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["SVC-BACKUP", "IDS-AD", "PIP-PKI"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-10", "RR-11"]
+      artifacts:
+        - doc: "architecture"
+          file: "adr/ADR-008-clinical-continuity-failure-modes.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-009-recovery-requirements.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "5"
+    detections: []
+    notes: ""
+  - id: "XW-25"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(7)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Emergency mode operation plan"
+      designation: "required"
+      summary: "Establish, and implement as needed, procedures that keep critical business processes running while protecting ePHI during emergency mode operation."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(C)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "The local clinical plane keeps on-site care running without internet or Entra ID, while remote and administrative paths fail closed (ADR-001, ADR-008)."
+    csf_targets:
+      - id: "PR.IR-03"
+        relationship: "partial"
+        rationale: "Resilience mechanisms for adverse situations; HIPAA requires that ePHI stays protected while operating in emergency mode."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.IR-03"
+      - id: "GV.OC-04"
+        relationship: "related"
+        rationale: "Clinical care is the service patients depend on."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.OC-04"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["IDS-AD", "PE-NETWORK", "PEP-NET-ACCESS", "PEP-NET-ZONE", "PIP-PKI", "PEP-SSO-APP"]
+      zones: ["Z-CLIN-USER", "Z-CLIN-APP", "Z-T0"]
+      policies: []
+      flows: ["F-01"]
+      residual_risks: ["RR-02", "RR-13"]
+      artifacts:
+        - doc: "architecture"
+          file: "adr/ADR-001-decision-planes-and-zta-approach.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-008-clinical-continuity-failure-modes.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "10"
+    detections: []
+    notes: ""
+  - id: "XW-26"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(7)(ii)(D)"
+      kind: "implementation-specification"
+      title: "Testing and revision procedures"
+      designation: "addressable"
+      summary: "Periodically test contingency plans and revise them."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(D)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "ADR-008 sets failure-mode drills with clinical participation twice a year (example cadence), and WP-3.4 schedules them; those drills test continuity of access and restore nothing. ADR-009 decision 3 adds restore tests: from the immutable or offline copy into an isolated environment, passed only when the system owner confirms the application works, with evidence kept outside the recovery plane and measured restore times checked against Contoso's objectives. Test frequency and plan revision are Contoso's, and no restore has been tested (RR-11)."
+    csf_targets:
+      - id: "ID.IM-02"
+        relationship: "partial"
+        rationale: "Improvements identified from tests and exercises."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.IM-02"
+      - id: "ID.IM-04"
+        relationship: "partial"
+        rationale: "Plans that affect operations are maintained and improved."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.IM-04"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["SVC-BACKUP"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-11"]
+      artifacts:
+        - doc: "architecture"
+          file: "adr/ADR-008-clinical-continuity-failure-modes.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-009-recovery-requirements.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "4"
+    detections: []
+    notes: ""
+  - id: "XW-27"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(7)(ii)(E)"
+      kind: "implementation-specification"
+      title: "Applications and data criticality analysis"
+      designation: "addressable"
+      summary: "Assess how critical specific applications and data are, to support the other parts of the contingency plan."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(E)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "ADR-008 names the local-first set: on-site access from Z-CLIN-USER to the EHR, PACS, LIS, and pharmacy system, the integration flows that carry orders and results among them, and the device-to-server flows that feed them (F-08). The set records which paths stay local and does not rank them; relative criticality, recovery objectives, and restore order are organizational work. ADR-009 sets a floor for this analysis: it may add data sets to backup scope but may not drop the Tier 0 identity systems (IDS-AD, PIP-PKI), because the clinical applications cannot be restored to working order without them. ADR-009 also names the completed analysis as the trigger for a full recovery design (RR-11)."
+    csf_targets:
+      - id: "ID.AM-05"
+        relationship: "partial"
+        rationale: "Prioritizing assets by criticality and impact on the mission."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.AM-05"
+      - id: "GV.OC-04"
+        relationship: "related"
+        rationale: "The services patients depend on set the priorities."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.OC-04"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-ASSET-INV", "RES-EHR", "RES-PACS", "RES-LIS", "RES-PHARM", "RES-INTEGRATION", "IDS-AD", "PIP-PKI"]
+      zones: []
+      policies: []
+      flows: ["F-01", "F-08"]
+      residual_risks: ["RR-11"]
+      artifacts:
+        - doc: "architecture"
+          file: "adr/ADR-001-decision-planes-and-zta-approach.md"
+          section: "Context"
+        - doc: "architecture"
+          file: "adr/ADR-008-clinical-continuity-failure-modes.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-009-recovery-requirements.md"
+          section: "Decision"
+    detections: []
+    notes: ""
+  - id: "XW-28"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(a)(8)"
+      kind: "standard"
+      title: "Evaluation"
+      designation: "standard"
+      summary: "Periodically evaluate, technically and nontechnically, how well security policies and procedures meet the Security Rule, first against the standards and later after environmental or operational changes."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(8)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "This crosswalk is a reference mapping, not an evaluation under this standard. The design contributes measures (05 section 6) and the quarterly joint review of both decision planes (ADR-001)."
+    csf_targets:
+      - id: "GV.OV-03"
+        relationship: "partial"
+        rationale: "Cybersecurity risk management performance is evaluated; HIPAA requires periodic technical and nontechnical evaluation against the Security Rule."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.OV-03"
+      - id: "ID.IM-01"
+        relationship: "partial"
+        rationale: "Improvements identified from evaluations."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.IM-01"
+      - id: "GV.PO-02"
+        relationship: "related"
+        rationale: "Policy updated after environmental or operational change."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-02"
+    cde_scope: true
+    pci_targets:
+      - id: "11.4.5"
+        relationship: "related"
+        shared_csf: ["ID.IM-02"]
+        saq_path_status: "not-on-saq-p2pe"
+        full_assessment_status: "required-when-segmentation-reduces-scope"
+        rationale: "Penetration testing of the segmentation controls is one technical evaluation; it is not on SAQ P2PE."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 11.4.5"
+    architecture:
+      components: ["PEP-CDE-BOUNDARY"]
+      zones: ["Z-CDE"]
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "6"
+        - doc: "architecture"
+          file: "adr/ADR-001-decision-planes-and-zta-approach.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+    detections: []
+    notes: ""
+  - id: "XW-29"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(b)(1)"
+      kind: "standard"
+      title: "Business associate contracts and other arrangements"
+      designation: "standard"
+      summary: "Let a business associate create, receive, maintain, or transmit ePHI for the covered entity only after obtaining satisfactory assurances, under 164.314(a), that it will safeguard the information."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(b)(1)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Contracts are organizational. Biomedical vendors count as business associates when their service can reach ePHI on a device, which includes every vendor with broker access, and the sponsor approves the access package only when a signed agreement is on file (A-13). The design limits what each business associate can reach: broker-only vendor sessions (F-06, F-07), billing roles for the outsourcer, and file exchange through RES-RCM-EXCHANGE. The architecture maps the vendor model to this standard (03 section 9, 02 section 12), not to the workforce specifications, because vendor engineers are their employers' workforce under 45 CFR 160.103. 164.308(b)(2) applies the same rule between business associates and their subcontractors."
+    csf_targets:
+      - id: "GV.SC-05"
+        relationship: "partial"
+        rationale: "Security requirements in contracts; HIPAA requires satisfactory assurances under 164.314(a) before a business associate handles ePHI."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.SC-05"
+      - id: "GV.SC-06"
+        relationship: "related"
+        rationale: "Due diligence before the relationship starts."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.SC-06"
+      - id: "GV.SC-07"
+        relationship: "related"
+        rationale: "Monitoring over the relationship, including recorded broker sessions."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.SC-07"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["EXT-VENDOR-EHR", "EXT-VENDOR-BIOMED", "EXT-RCM-BA", "EXT-TELEHEALTH", "PEP-VENDOR-BROKER", "PEP-APP-PROXY", "RES-RCM-EXCHANGE"]
+      zones: []
+      policies: []
+      flows: ["F-06", "F-07", "F-09"]
+      residual_risks: ["RR-06", "RR-12"]
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "7"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "9"
+        - doc: "architecture"
+          file: "adr/ADR-002-ztna-and-app-proxy-replace-vpn.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Assumptions"
+    detections: []
+    notes: ""
+  - id: "XW-30"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.308(b)(3)"
+      kind: "implementation-specification"
+      title: "Written contract or other arrangement"
+      designation: "required"
+      summary: "Document the satisfactory assurances in a written contract or other arrangement that meets 164.314(a)."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(b)(3)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "The written business associate agreement is organizational work."
+    csf_targets:
+      - id: "GV.SC-05"
+        relationship: "partial"
+        rationale: "Written agreements carry the security requirements."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.SC-05"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "7"
+    detections: []
+    notes: ""
+# ---------------------------------------------------------------- 45 CFR 164.310 Physical safeguards
+  - id: "XW-31"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(a)(1)"
+      kind: "standard"
+      title: "Facility access controls"
+      designation: "standard"
+      summary: "Limit physical access to electronic information systems and the facilities that house them, while still allowing authorized access."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(1)"
+    applicability: "applicable"
+    coverage: "out-of-scope"
+    coverage_note: "Physical security is excluded from the design set except the payment terminal inspection that PCI DSS requires (01, Out of scope)."
+    csf_targets:
+      - id: "PR.AA-06"
+        relationship: "partial"
+        rationale: "Physical access managed and enforced; CSF also asks for monitoring."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-06"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+    detections: []
+    notes: ""
+  - id: "XW-32"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(a)(2)(i)"
+      kind: "implementation-specification"
+      title: "Contingency operations"
+      designation: "addressable"
+      summary: "Allow facility access in support of restoring lost data under the disaster recovery and emergency mode operation plans."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(2)(i)"
+    applicability: "applicable"
+    coverage: "out-of-scope"
+    coverage_note: "Out of scope with the rest of physical security (01, Out of scope)."
+    csf_targets:
+      - id: "PR.AA-06"
+        relationship: "related"
+        rationale: "Physical access management, here during an emergency."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-06"
+      - id: "PR.IR-03"
+        relationship: "related"
+        rationale: "Resilience in adverse situations."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.IR-03"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+    detections: []
+    notes: ""
+  - id: "XW-33"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(a)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Facility security plan"
+      designation: "addressable"
+      summary: "Safeguard the facility and the equipment in it from unauthorized physical access, tampering, and theft."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(2)(ii)"
+    applicability: "applicable"
+    coverage: "out-of-scope"
+    coverage_note: "Facility security for systems that hold ePHI is out of scope. The one physical control the design includes, terminal tamper inspection, protects payment terminals, which hold no ePHI."
+    csf_targets:
+      - id: "PR.AA-06"
+        relationship: "partial"
+        rationale: "Managing physical access to facilities and equipment."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-06"
+      - id: "DE.CM-02"
+        relationship: "related"
+        rationale: "Monitoring the physical environment for tampering."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.CM-02"
+    cde_scope: true
+    pci_targets:
+      - id: "9.5.1"
+        relationship: "related"
+        shared_csf: ["PR.AA-06", "DE.CM-02"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "Protecting card-reading terminals from tampering and substitution shares the anti-tampering objective; the protected data differs."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 9.5.1"
+      - id: "9.5.1.2"
+        relationship: "related"
+        shared_csf: ["DE.CM-02"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "Periodic surface inspection of the terminals."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 9.5.1.2"
+      - id: "9.5.1.2.1"
+        relationship: "related"
+        shared_csf: ["ID.RA-04"]
+        saq_path_status: "performed-anyway"
+        full_assessment_status: "required"
+        rationale: "The inspection frequency is set by a targeted risk analysis."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 9.5.1.2.1"
+    architecture:
+      components: ["RES-POI", "PIP-ASSET-INV"]
+      zones: ["Z-CDE"]
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+    detections: []
+    notes: ""
+  - id: "XW-34"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(a)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Access control and validation procedures"
+      designation: "addressable"
+      summary: "Control and validate each person's access to facilities by role or function, including visitor control and control of access to software programs for testing and revision."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(2)(iii)"
+    applicability: "applicable"
+    coverage: "out-of-scope"
+    coverage_note: "Out of scope with the rest of physical security (01, Out of scope)."
+    csf_targets:
+      - id: "PR.AA-06"
+        relationship: "partial"
+        rationale: "Physical access managed and enforced commensurate with risk."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-06"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+    detections: []
+    notes: ""
+  - id: "XW-35"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(a)(2)(iv)"
+      kind: "implementation-specification"
+      title: "Maintenance records"
+      designation: "addressable"
+      summary: "Document repairs and changes to the security-related physical parts of a facility, such as hardware, walls, doors, and locks."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(2)(iv)"
+    applicability: "applicable"
+    coverage: "out-of-scope"
+    coverage_note: "Out of scope with the rest of physical security (01, Out of scope)."
+    csf_targets:
+      - id: "PR.AA-06"
+        relationship: "related"
+        rationale: "Records support the management of physical access controls."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-06"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+    detections: []
+    notes: ""
+  - id: "XW-36"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(b)"
+      kind: "standard"
+      title: "Workstation use"
+      designation: "standard"
+      summary: "Specify the functions performed on each workstation or class of workstation that can access ePHI, how they are performed, and the physical surroundings."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(b)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Workstation classes have designed functions: PAWs with no email or general browsing, shared clinical workstations tagged SHARED-CLIN with badge sign-in, and corporate devices under compliance policy. Physical surroundings, such as screen placement in public areas, are outside the design."
+    csf_targets:
+      - id: "PR.PS-01"
+        relationship: "partial"
+        rationale: "Configuration baselines per device class; HIPAA also covers the physical surroundings."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.PS-01"
+      - id: "GV.PO-01"
+        relationship: "related"
+        rationale: "The workstation use policy."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PEP-PAW", "PIP-DEVICE-MGMT", "PEP-HOST"]
+      zones: ["Z-MGMT", "Z-CLIN-USER", "Z-CORP"]
+      policies: ["CA-04", "CA-05", "CA-12"]
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "3"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "4"
+    detections: []
+    notes: ""
+  - id: "XW-37"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(c)"
+      kind: "standard"
+      title: "Workstation security"
+      designation: "standard"
+      summary: "Put physical safeguards on every workstation that accesses ePHI so that only authorized users can use it."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(c)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Physical safeguards are out of scope. Locking the session when the badge is removed restricts each shared clinical workstation to the authenticated user and supports this standard."
+    csf_targets:
+      - id: "PR.AA-06"
+        relationship: "partial"
+        rationale: "Physical safeguards for workstations."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-06"
+      - id: "PR.AA-03"
+        relationship: "related"
+        rationale: "Badge authentication restricts use to the person present."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-03"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-PKI", "PEP-HOST"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "adr/ADR-003-phishing-resistant-mfa-and-clinical-badges.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+    detections: []
+    notes: ""
+  - id: "XW-38"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(d)(1)"
+      kind: "standard"
+      title: "Device and media controls"
+      designation: "standard"
+      summary: "Govern how hardware and electronic media containing ePHI come into and leave a facility, and how they move within it."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(1)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Covered for medical devices and managed endpoints through one inventory with location and lifecycle state. Medical devices that cannot encrypt the ePHI they store rely on physical safeguards and location records when they move (RR-15). Handling of removable media is not designed."
+    csf_targets:
+      - id: "ID.AM-08"
+        relationship: "partial"
+        rationale: "Hardware and data managed through their life cycles."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.AM-08"
+      - id: "ID.AM-01"
+        relationship: "related"
+        rationale: "The hardware inventory records what is present."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.AM-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-ASSET-INV", "PIP-DEVICE-MGMT"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-15"]
+      artifacts:
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "3"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "11"
+    detections: []
+    notes: ""
+  - id: "XW-39"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(d)(2)(i)"
+      kind: "implementation-specification"
+      title: "Disposal"
+      designation: "required"
+      summary: "Address the final disposition of ePHI and of the hardware or electronic media that stores it."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(2)(i)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Medical devices that stored ePHI are wiped or destroyed at decommissioning (04 section 3), and their media is sanitized before disposal (ADR-006). For devices that cannot encrypt the ePHI they store, sanitization is one of the controls that carry the loss case (RR-15). A general media disposal procedure is organizational."
+    csf_targets:
+      - id: "ID.AM-08"
+        relationship: "partial"
+        rationale: "Assets managed through the end of their life cycle."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.AM-08"
+      - id: "PR.PS-03"
+        relationship: "partial"
+        rationale: "Hardware removed commensurate with risk."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.PS-03"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-ASSET-INV", "RES-IOMT"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-15"]
+      artifacts:
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "3"
+        - doc: "architecture"
+          file: "adr/ADR-006-iomt-network-enforced-segmentation.md"
+          section: "Consequences"
+    detections: []
+    notes: ""
+  - id: "XW-40"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(d)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Media re-use"
+      designation: "required"
+      summary: "Remove ePHI from electronic media before the media is made available for re-use."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(2)(ii)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "The decommissioning step that covers disposal also covers medical devices returned to service elsewhere, and device media is sanitized before a device is re-used or returned to the manufacturer (ADR-006, RR-15); re-use of other media is procedural."
+    csf_targets:
+      - id: "ID.AM-08"
+        relationship: "partial"
+        rationale: "Data managed through the asset's life cycle, including before re-use."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.AM-08"
+      - id: "PR.DS-01"
+        relationship: "related"
+        rationale: "Protecting data at rest on media that changes hands."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PIP-ASSET-INV", "RES-IOMT"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-15"]
+      artifacts:
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "3"
+        - doc: "architecture"
+          file: "adr/ADR-006-iomt-network-enforced-segmentation.md"
+          section: "Consequences"
+    detections: []
+    notes: ""
+  - id: "XW-41"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(d)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Accountability"
+      designation: "addressable"
+      summary: "Keep a record of the movements of hardware and electronic media and of the person responsible."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(2)(iii)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "PIP-ASSET-INV records owner, location, and lifecycle state, payment terminals included. Movement history for media is procedural."
+    csf_targets:
+      - id: "ID.AM-01"
+        relationship: "partial"
+        rationale: "A hardware inventory; HIPAA asks for movement records and the person responsible."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.AM-01"
+      - id: "ID.AM-08"
+        relationship: "related"
+        rationale: "Lifecycle state changes record movement in and out of service."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.AM-08"
+    cde_scope: true
+    pci_targets:
+      - id: "9.5.1.1"
+        relationship: "related"
+        shared_csf: ["ID.AM-01"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "The terminal list (make, model, location, serial number) is a hardware record of the same kind."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 9.5.1.1"
+    architecture:
+      components: ["PIP-ASSET-INV", "RES-POI"]
+      zones: ["Z-CDE"]
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "11"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "3"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+    detections: []
+    notes: ""
+  - id: "XW-42"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.310(d)(2)(iv)"
+      kind: "implementation-specification"
+      title: "Data backup and storage"
+      designation: "addressable"
+      summary: "When needed, create a retrievable, exact copy of ePHI before moving equipment."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(2)(iv)"
+    applicability: "applicable"
+    coverage: "out-of-scope"
+    coverage_note: "Out of scope with the backup implementation (01, Out of scope; A-19). ADR-009 sets requirements for the copies Contoso restores from; it does not address a copy taken before equipment is moved, so the design set does not cover this specification. RR-11 records recovery capability as unverified."
+    csf_targets:
+      - id: "PR.DS-11"
+        relationship: "partial"
+        rationale: "Backups created and maintained; HIPAA ties this copy to equipment moves."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-11"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["SVC-BACKUP"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-11"]
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+    detections: []
+    notes: ""
+# ---------------------------------------------------------------- 45 CFR 164.312 Technical safeguards
+  - id: "XW-43"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(a)(1)"
+      kind: "standard"
+      title: "Access control"
+      designation: "standard"
+      summary: "Use technical policies and procedures so that systems holding ePHI allow access only to the persons or software programs granted access rights under 164.308(a)(4)."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(1)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Access is decided per request on the cloud plane and per device and zone on the local plane, with application roles as the last layer (02 sections 3 and 6, 04 section 1)."
+    csf_targets:
+      - id: "PR.AA-05"
+        relationship: "partial"
+        rationale: "Access permissions enforced; HIPAA requires technical policies and procedures in the systems that hold ePHI."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+      - id: "PR.IR-01"
+        relationship: "partial"
+        rationale: "Networks protected from unauthorized logical access: zones, the legacy enclave, and device-class segments."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.IR-01"
+      - id: "PR.AA-03"
+        relationship: "related"
+        rationale: "Authentication precedes every access decision."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-03"
+    cde_scope: true
+    pci_targets:
+      - id: "1.3.1"
+        relationship: "related"
+        shared_csf: ["PR.IR-01"]
+        saq_path_status: "defense-in-depth"
+        full_assessment_status: "required"
+        rationale: "Inbound restriction to Z-CDE through PEP-CDE-BOUNDARY, the same deny-by-default rule as the ePHI zones."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 1.3.1"
+      - id: "1.3.2"
+        relationship: "related"
+        shared_csf: ["PR.IR-01"]
+        saq_path_status: "defense-in-depth"
+        full_assessment_status: "required"
+        rationale: "Outbound traffic from Z-CDE goes only to the P2PE provider."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 1.3.2"
+      - id: "1.3.3"
+        relationship: "related"
+        shared_csf: ["PR.IR-01"]
+        saq_path_status: "defense-in-depth"
+        full_assessment_status: "required"
+        rationale: "Terminals are wired; any wireless terminal would need a control between wireless networks and Z-CDE."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 1.3.3"
+      - id: "1.4.1"
+        relationship: "related"
+        shared_csf: ["PR.IR-01"]
+        saq_path_status: "defense-in-depth"
+        full_assessment_status: "required"
+        rationale: "Controls between trusted and untrusted networks, as at every zone boundary in the design."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 1.4.1"
+      - id: "1.5.1"
+        relationship: "related"
+        shared_csf: ["PR.IR-01"]
+        saq_path_status: "defense-in-depth"
+        full_assessment_status: "required"
+        rationale: "No dual-homed device connects Z-CDE to an untrusted network."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 1.5.1"
+    architecture:
+      components: ["PE-IDENTITY", "PA-IDENTITY", "PEP-SSO-APP", "PEP-APP-PROXY", "PEP-SESSION-PROXY", "PEP-ZTNA-BROKER", "PEP-ZTNA-CONNECTOR", "PEP-VENDOR-BROKER", "PE-NETWORK", "PEP-NET-ACCESS", "PEP-NET-ZONE", "PEP-ENCLAVE-GW", "PEP-CLOUD-NET", "PEP-CDE-BOUNDARY"]
+      zones: ["Z-CLIN-APP", "Z-LEGACY", "Z-IOMT", "Z-T0", "Z-CDE"]
+      policies: []
+      flows: ["F-01", "F-03", "F-05", "F-06", "F-10"]
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "3"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "6"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "3"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "1"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+        - doc: "architecture"
+          file: "adr/ADR-001-decision-planes-and-zta-approach.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-002-ztna-and-app-proxy-replace-vpn.md"
+          section: "Decision"
+    detections:
+      - doc: "detections"
+        file: "kql/sentinel/sn02-entra-control-plane-and-vendor-activation-changes.kql"
+        purpose: "Flags changes to the technical access policies themselves: Conditional Access policies, named locations, authentication contexts, and cross-tenant access settings"
+    notes: ""
+  - id: "XW-44"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(a)(2)(i)"
+      kind: "implementation-specification"
+      title: "Unique user identification"
+      designation: "required"
+      summary: "Give each user a unique name or number for identifying and tracking user identity."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(2)(i)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Individual accounts for every population, and individual badges on shared clinical workstations; no shared clinical logins."
+    csf_targets:
+      - id: "PR.AA-01"
+        relationship: "partial"
+        rationale: "Identities managed; HIPAA requires a unique identifier per user for tracking."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["IDS-AD", "IDS-ENTRA", "IDS-SOR", "PIP-PKI"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "1"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "9"
+        - doc: "architecture"
+          file: "adr/ADR-003-phishing-resistant-mfa-and-clinical-badges.md"
+          section: "Decision"
+    detections: []
+    notes: ""
+  - id: "XW-45"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(a)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Emergency access procedure"
+      designation: "required"
+      summary: "Establish, and implement as needed, procedures for obtaining necessary ePHI during an emergency."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(2)(ii)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Three mechanisms support it: EHR clinical break-the-glass (its configuration is out of scope), the local clinical plane during cloud outages, and tenant emergency accounts plus sealed AD recovery credentials for administrative recovery (03 section 5, ADR-008). The tenant accounts stay usable through grp-ca-emergency-access, which exempts them from the Conditional Access policies that block or restrict sign-in. The group is a Tier 0 object (ADR-004 decision 9): an administrator can change it only through an approved Tier 0 activation, but the two emergency accounts and Tier 0 workload identities can change it, or an emergency account's credentials, with no approval, and on those paths the alerts (SN-07 for the change, SN-06 for any sign-in it enables) are the only control (RR-16). SN-06 alerts on every sign-in by the two accounts, so each use is confirmed as a scheduled test, a declared emergency, or misuse. SN-07 alerts on every change to the group and all audit activity by or on the accounts, so a change that would leave the procedure without a usable account, such as an account removed from the group or disabled, is reviewed when it happens. Both are untested templates."
+    csf_targets:
+      - id: "PR.IR-03"
+        relationship: "related"
+        rationale: "Resilience that keeps ePHI reachable when normal paths fail."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.IR-03"
+      - id: "PR.AA-05"
+        relationship: "related"
+        rationale: "Controlled exceptions to normal access rules."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PEP-SSO-APP", "RES-EHR", "IDS-ENTRA", "IDS-AD"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-10", "RR-16"]
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "5"
+        - doc: "architecture"
+          file: "adr/ADR-004-privileged-access-tiering-and-pim.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-008-clinical-continuity-failure-modes.md"
+          section: "Decision"
+    detections:
+      - doc: "detections"
+        file: "kql/sentinel/sn06-emergency-access-account-signin.kql"
+        purpose: "Carries out the monitoring step of the tenant emergency access procedure in 03 section 5: alerts on every sign-in by either emergency access account, so each use is reviewed as a scheduled test, a declared emergency, or misuse"
+      - doc: "detections"
+        file: "kql/sentinel/sn07-emergency-access-group-and-account-audit-activity.kql"
+        purpose: "Carries out the change-monitoring step of the same procedure (03 section 5): alerts on every change to grp-ca-emergency-access and all audit activity by or on the two accounts, so a change that would leave the procedure without a usable account, such as an account removed from the group, disabled, or reset away from its custodians, is reviewed when it happens"
+    notes: ""
+  - id: "XW-46"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(a)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Automatic logoff"
+      designation: "addressable"
+      summary: "Use electronic procedures that end a session after a set period of inactivity."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(2)(iii)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "The EHR's own inactivity timeout covers EHR sessions, and Microsoft 365 idle session timeout covers Microsoft 365 web apps on the unmanaged browsers that CA-10 serves, with the limits 02 section 9 states: where a browser blocks third-party cookies, only the CA-10 sign-in frequency bounds the session. Sign-in frequency caps session length and the badge-removal lock ends access when a clinician walks away, but neither is an inactivity timeout. On shared clinical workstations, a locked session, including one left behind by Switch User, is signed out after an idle period Contoso sets (ADR-003, Consequences). Inactivity controls for idle sessions that are not locked, for other clinical applications, and for desktop and mobile clients on other devices are not specified in the design set."
+    csf_targets:
+      - id: "PR.AA-05"
+        relationship: "related"
+        rationale: "Session limits are part of enforcing access."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+      - id: "PR.AA-03"
+        relationship: "related"
+        rationale: "Reauthentication after the session ends."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-03"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PEP-SSO-APP", "RES-EHR", "RES-M365", "PA-IDENTITY", "PEP-HOST", "PIP-PKI"]
+      zones: []
+      policies: ["CA-10", "CA-12", "CA-14"]
+      flows: []
+      residual_risks: ["RR-03"]
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "9"
+        - doc: "architecture"
+          file: "adr/ADR-003-phishing-resistant-mfa-and-clinical-badges.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-003-phishing-resistant-mfa-and-clinical-badges.md"
+          section: "Consequences"
+    detections: []
+    notes: ""
+  - id: "XW-47"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(a)(2)(iv)"
+      kind: "implementation-specification"
+      title: "Encryption and decryption"
+      designation: "addressable"
+      summary: "Put in place a mechanism to encrypt and decrypt ePHI."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(2)(iv)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Every class of store that holds ePHI has an at-rest requirement (02 section 7, Data at rest by data-store class): Microsoft 365 data (the provider's managed encryption, confirmed in Contoso's risk analysis, plus sensitivity labels with encryption for labeled ePHI), file services (volume encryption, plus labels), managed endpoints (full-disk or platform encryption checked by the compliance policy, with recovery keys escrowed), personal phones under app protection (organization data encrypted by the app protection policy), datacenter clinical stores (encryption at the guest volume or database layer, with the keys that unlock a copy held outside it), Azure workloads (platform encryption, verified continuously), managed file transfer (encrypted at rest and deleted after receipt), medical devices (where the device supports it), and backup copies (keys recoverable without production Tier 0). Coverage is partial for two reasons. Medical devices that cannot encrypt are owned, dated exceptions (RR-15): the design documents them as 45 CFR 164.306(d)(3) requires, and whether their compensating measures are adequate is Contoso's risk analysis decision. Backup copy encryption rests on SVC-BACKUP, whose implementation is not designed (ADR-009, RR-11). Storage-layer-only encryption and legacy platforms that cannot encrypt are further owned, dated exceptions. Meeting a requirement is not, on its own, a finding that ePHI is secured under the HHS guidance (notification-clocks.md section 2.2)."
+    csf_targets:
+      - id: "PR.DS-01"
+        relationship: "partial"
+        rationale: "Protecting data at rest; HIPAA asks for an encryption and decryption mechanism."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-01"
+      - id: "PR.DS-10"
+        relationship: "related"
+        rationale: "Labels with encryption also protect data in use in Microsoft 365 applications."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-10"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PEP-DATA", "PIP-DATA-CLASS", "PIP-DEVICE-MGMT", "RES-M365", "RES-FILES", "RES-EHR", "RES-PACS", "RES-LIS", "RES-PHARM", "RES-INTEGRATION", "RES-LEGACY", "RES-AZ-WORKLOADS", "RES-RCM-EXCHANGE", "RES-IOMT", "PIP-ASSET-INV", "SVC-BACKUP"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-11", "RR-15"]
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "Data at rest by data-store class"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "12"
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "4"
+        - doc: "architecture"
+          file: "adr/ADR-006-iomt-network-enforced-segmentation.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-009-recovery-requirements.md"
+          section: "Decision"
+    detections: []
+    notes: "Coverage label is this crosswalk's judgment. It is kept partial, as on the in-transit rows XW-53 and XW-54, which carry the same medical device exception."
+  - id: "XW-48"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(b)"
+      kind: "standard"
+      title: "Audit controls"
+      designation: "standard"
+      summary: "Use hardware, software, or procedural mechanisms that record and examine activity in systems that contain or use ePHI."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(b)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Identity, endpoint, firewall allow and deny, NAC, IoMT sensor, broker session, and EHR audit logs are collected in PIP-SIEM; IoMT sensor logs cover the three hospitals only (RR-14). Recorded vendor broker sessions are the audit record of business associate access (02 section 12). The emergency access path is examined at Tier 0 priority: every sign-in by the two tenant emergency access accounts, every change to grp-ca-emergency-access, and all audit activity by or on the accounts raise an alert (03 section 5, ADR-004 decision 9; SN-06 and SN-07). ADR-009 decision 4 adds recovery-plane events, handled at Tier 0 priority, plus an audit trail that production identities cannot change; rules for those logs depend on the product chosen and are not built. Per-record review of EHR access is a privacy monitoring function outside the design (RR-01). The detection pack's 22 rules examine identity, endpoint, mailbox, directory, and Azure activity; no rule examines firewall, NAC, IoMT sensor, broker session, or EHR audit logs yet (coverage-map.md sections 4 and 5)."
+    csf_targets:
+      - id: "PR.PS-04"
+        relationship: "partial"
+        rationale: "Log records generated and available; HIPAA also requires examining them."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.PS-04"
+      - id: "DE.CM-03"
+        relationship: "partial"
+        rationale: "Examining personnel activity and technology usage."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.CM-03"
+      - id: "DE.CM-09"
+        relationship: "related"
+        rationale: "Monitoring systems and their data."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.CM-09"
+    cde_scope: true
+    pci_targets:
+      - id: "10.2.1"
+        relationship: "related"
+        shared_csf: ["PR.PS-04"]
+        saq_path_status: "defense-in-depth"
+        full_assessment_status: "required"
+        rationale: "Audit logs enabled for system components; under the assumed path the boundary logs are defense in depth."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 10.2.1"
+    architecture:
+      components: ["PIP-SIEM", "PIP-XDR", "PEP-NET-ZONE", "PEP-VENDOR-BROKER", "PEP-SSO-APP", "PEP-CDE-BOUNDARY"]
+      zones: ["Z-CDE"]
+      policies: []
+      flows: []
+      residual_risks: ["RR-01", "RR-14"]
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "3"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "12"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "4"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "5"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "1"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "6"
+        - doc: "architecture"
+          file: "adr/ADR-004-privileged-access-tiering-and-pim.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-009-recovery-requirements.md"
+          section: "Decision"
+    detections:
+      - doc: "detections"
+        file: "kql/defender-xdr/dx01-recovery-inhibition-shadow-copy-backup-deletion.kql"
+        purpose: "Examines endpoint process events (DeviceProcessEvents) on workstations and servers for recovery-inhibition commands"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx02-mass-file-rename-encryption-burst.kql"
+        purpose: "Examines file events (DeviceFileEvents) on endpoints and file servers, with Defender alerts, for encryption-style rename bursts"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx03-entra-session-reuse-new-country-or-client.kql"
+        purpose: "Examines Entra sign-in events (EntraIdSignInEvents) for session reuse across countries, networks, and clients"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx04-exchange-inbox-rule-hide-or-forward.kql"
+        purpose: "Examines Exchange Online activity (CloudAppEvents) for rules that forward, delete, or hide mail"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx05-mdi-tier0-credential-access-alert-chain.kql"
+        purpose: "Examines Defender for Identity alerts from domain controllers, AD CS, and Entra Connect servers for staged credential access"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx06-dcsync-replication-from-non-dc.kql"
+        purpose: "Examines Defender for Identity directory events (IdentityDirectoryEvents) for replication from unexpected hosts or accounts"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx07-entra-connect-sync-server-anomalies.kql"
+        purpose: "Examines logon and process events on the Entra Connect servers (DeviceLogonEvents, DeviceProcessEvents), and Defender for Identity sync-identity alerts (AlertInfo). The logon and process events need Defender for Endpoint on the IDS-SYNC servers, which the design does not yet state (threat-model.md TM-A4)"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx08-workstation-peer-smb-and-tool-transfer.kql"
+        purpose: "Examines endpoint network and file events for SMB between workstations and tool transfer"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx09-endpoint-protection-tampering.kql"
+        purpose: "Examines tamper protection events, tamper alerts, and PowerShell command lines for attempts to weaken Defender Antivirus"
+      - doc: "detections"
+        file: "kql/sentinel/sn01-mfa-method-change-then-new-country-or-inbox-rule.kql"
+        purpose: "Examines Entra audit and sign-in logs and Exchange audit records (OfficeActivity) for the help-desk takeover chain"
+      - doc: "detections"
+        file: "kql/sentinel/sn02-entra-control-plane-and-vendor-activation-changes.kql"
+        purpose: "Examines Entra audit logs for Tier 0 role, Conditional Access, trust, and sync changes and vendor session group activations"
+      - doc: "detections"
+        file: "kql/sentinel/sn03-oauth-consent-and-service-principal-credential-add.kql"
+        purpose: "Examines Entra audit logs for consent grants and credentials added to applications and service principals"
+      - doc: "detections"
+        file: "kql/sentinel/sn04-device-code-and-authentication-transfer-signins.kql"
+        purpose: "Examines interactive and non-interactive sign-in logs for device code and authentication transfer sign-ins"
+      - doc: "detections"
+        file: "kql/sentinel/sn05-azure-backup-and-restore-point-deletion.kql"
+        purpose: "Examines Azure activity logs (AzureActivity) for deletion of recovery assets and vault security changes"
+      - doc: "detections"
+        file: "kql/sentinel/sn06-emergency-access-account-signin.kql"
+        purpose: "Examines interactive and non-interactive sign-in logs (SigninLogs, AADNonInteractiveUserSignInLogs) for every sign-in by the two tenant emergency access accounts"
+      - doc: "detections"
+        file: "kql/sentinel/sn07-emergency-access-group-and-account-audit-activity.kql"
+        purpose: "Examines Entra audit logs (AuditLogs) for every change to grp-ca-emergency-access, grp-admins-t0, and grp-admins-t1, and all audit activity by or on the two tenant emergency access accounts, matched by object ID, at the Tier 0 priority that ADR-004 decisions 6 and 9 set"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_recovery_inhibition_utilities.yml"
+        purpose: "Examines Windows process creation events for recovery-inhibition commands (portable form of DX-01)"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_defender_preference_tampering.yml"
+        purpose: "Examines Windows process creation events for Defender Antivirus preference tampering from PowerShell"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_office_spawns_script_interpreter.yml"
+        purpose: "Examines Windows process creation events for Office applications starting script interpreters"
+      - doc: "detections"
+        file: "sigma/proc_creation_win_domain_trust_and_group_discovery.yml"
+        purpose: "Examines Windows process creation events for domain trust, group, and user enumeration"
+      - doc: "detections"
+        file: "sigma/win_security_kerberos_rc4_service_ticket_user_spn.yml"
+        purpose: "Examines domain controller Security event 4769 for RC4 service tickets; needs that event collected"
+      - doc: "detections"
+        file: "sigma/win_security_replication_rights_non_computer_account.yml"
+        purpose: "Examines domain controller Security event 4662 for replication rights use; needs that event collected and a SACL on the domain object"
+      - doc: "detections"
+        file: "coverage-map.md"
+        purpose: "Section 5 states what each log source records and cannot see, such as agentless medical devices and activity inside the EHR"
+    notes: ""
+  - id: "XW-49"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(c)(1)"
+      kind: "standard"
+      title: "Integrity"
+      designation: "standard"
+      summary: "Have policies and procedures that protect ePHI from improper alteration or destruction."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(c)(1)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Access control, application control, and the web application firewall limit who and what can change ePHI. ADR-009 requires immutable copies, which no identity can alter or delete during their retention period, so ePHI destroyed or altered in production can be restored; the recovery implementation is not designed (RR-11). Integrity controls inside the EHR are out of scope (01)."
+    csf_targets:
+      - id: "PR.DS-01"
+        relationship: "partial"
+        rationale: "Integrity of data at rest."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-01"
+      - id: "PR.DS-02"
+        relationship: "related"
+        rationale: "Integrity of data in transit."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-02"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PEP-SSO-APP", "PEP-HOST", "PEP-WAF", "SVC-BACKUP"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: ["RR-11"]
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "11"
+        - doc: "architecture"
+          file: "adr/ADR-009-recovery-requirements.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+    detections:
+      - doc: "detections"
+        file: "kql/defender-xdr/dx02-mass-file-rename-encryption-burst.kql"
+        purpose: "Detects bulk encryption-style renames on endpoints and file servers, some of which hold ePHI, so containment can stop improper alteration in progress"
+    notes: ""
+  - id: "XW-50"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(c)(2)"
+      kind: "implementation-specification"
+      title: "Mechanism to authenticate electronic protected health information"
+      designation: "addressable"
+      summary: "Use electronic mechanisms that confirm ePHI has not been altered or destroyed without authorization."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(c)(2)"
+    applicability: "applicable"
+    coverage: "out-of-scope"
+    coverage_note: "Integrity verification inside clinical applications is part of EHR internals, which 01 excludes."
+    csf_targets:
+      - id: "PR.DS-01"
+        relationship: "partial"
+        rationale: "Integrity protection; HIPAA asks for a mechanism that corroborates ePHI was not altered or destroyed."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-01"
+      - id: "DE.CM-09"
+        relationship: "related"
+        rationale: "Monitoring data for unauthorized change."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, DE.CM-09"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+    detections: []
+    notes: ""
+  - id: "XW-51"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(d)"
+      kind: "standard"
+      title: "Person or entity authentication"
+      designation: "standard"
+      summary: "Have procedures to verify that a person or entity seeking access to ePHI is the one claimed."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(d)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Phishing-resistant MFA by persona, certificate badges on shared clinical workstations, home-tenant methods for partners under inbound trust, and device certificates for network admission. Legacy applications that need Kerberos or NTLM (RES-LEGACY) sit in the enclave, where NTLM is audited and then restricted (ADR-005). Patients and proxies sign in through IDS-CIAM, outside the workforce tenant; their sign-in methods and identity proofing are out of scope (01, Out of scope; 03 section 8)."
+    csf_targets:
+      - id: "PR.AA-03"
+        relationship: "equivalent"
+        rationale: "Both require authenticating the subject before access. CSF also names services and hardware, which the design covers with workload identities and 802.1X device certificates."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-03"
+      - id: "PR.AA-02"
+        relationship: "related"
+        rationale: "Proofing before a credential is issued."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-02"
+      - id: "PR.AA-04"
+        relationship: "related"
+        rationale: "Federated assertions from partner tenants accepted under inbound trust."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-04"
+    cde_scope: true
+    pci_targets:
+      - id: "8.2.7"
+        relationship: "related"
+        shared_csf: ["PR.AA-05", "DE.CM-06"]
+        saq_path_status: "not-applicable-by-design"
+        full_assessment_status: "required-where-access-exists"
+        rationale: "Third-party remote access enabled only when needed and monitored; no such account exists for Z-CDE, and vendor sessions elsewhere already follow this pattern."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 8.2.7"
+      - id: "8.4.1"
+        relationship: "related"
+        shared_csf: ["PR.AA-03"]
+        saq_path_status: "not-applicable-by-design"
+        full_assessment_status: "required-where-access-exists"
+        rationale: "No administrative access path into Z-CDE exists; any future path would use phishing-resistant MFA through PEP-VENDOR-BROKER."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 8.4.1"
+      - id: "8.4.2"
+        relationship: "related"
+        shared_csf: ["PR.AA-03"]
+        saq_path_status: "not-applicable-by-design"
+        full_assessment_status: "required-where-access-exists"
+        rationale: "No non-console access into Z-CDE exists by design. If access were ever created, v4.0.1's new Applicability Note becomes relevant: the requirement does not apply to user accounts authenticated only with phishing-resistant factors, and the design already uses such factors elsewhere (ADR-003)."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 8.4.2"
+      - id: "8.4.3"
+        relationship: "related"
+        shared_csf: ["PR.AA-03"]
+        saq_path_status: "not-applicable-by-design"
+        full_assessment_status: "required-where-access-exists"
+        rationale: "No remote access path can reach Z-CDE; the design retires user VPN and admits only outbound traffic to the P2PE provider."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 8.4.3"
+      - id: "8.5.1"
+        relationship: "related"
+        shared_csf: ["PR.AA-03"]
+        saq_path_status: "not-applicable-by-design"
+        full_assessment_status: "required-where-access-exists"
+        rationale: "The phishing-resistant methods used elsewhere would meet the MFA system properties if CDE access were ever created."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 8.5.1"
+    architecture:
+      components: ["PE-IDENTITY", "PA-IDENTITY", "IDS-AD", "IDS-ENTRA", "IDS-PARTNER", "IDS-CIAM", "PIP-PKI", "PE-NETWORK", "PEP-VENDOR-BROKER", "RES-LEGACY", "RES-PORTAL"]
+      zones: ["Z-CDE"]
+      policies: ["CA-02", "CA-03", "CA-07", "CA-11", "CA-14"]
+      flows: ["F-14"]
+      residual_risks: ["RR-02", "RR-06"]
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "2"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "8"
+        - doc: "architecture"
+          file: "adr/ADR-003-phishing-resistant-mfa-and-clinical-badges.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "adr/ADR-005-legacy-kerberos-ntlm-enclave.md"
+          section: "Decision"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+    detections:
+      - doc: "detections"
+        file: "kql/defender-xdr/dx03-entra-session-reuse-new-country-or-client.kql"
+        purpose: "Flags one session used from another country or client, a sign that someone other than the authenticated user holds it (RR-03)"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx05-mdi-tier0-credential-access-alert-chain.kql"
+        purpose: "Its certificate-abuse stage flags forged or misused authentication certificates; PIP-PKI issues the badge and device certificates this row relies on"
+      - doc: "detections"
+        file: "kql/defender-xdr/dx07-entra-connect-sync-server-anomalies.kql"
+        purpose: "Flags anomalies on the Entra Connect sync tier, where an attacker could modify hybrid authentication. Its sync-identity alert signal needs no Defender for Endpoint; its logon and process signals do, on the IDS-SYNC servers, which the design does not yet state (threat-model.md TM-A4)"
+      - doc: "detections"
+        file: "kql/sentinel/sn01-mfa-method-change-then-new-country-or-inbox-rule.kql"
+        purpose: "Flags an MFA method registration or change followed within 24 hours by a new-country sign-in or a mail rule, the help-desk enrollment fraud path"
+      - doc: "detections"
+        file: "kql/sentinel/sn02-entra-control-plane-and-vendor-activation-changes.kql"
+        purpose: "Flags federation, domain authentication, and cross-tenant access changes, which alter whose authentication Contoso accepts"
+      - doc: "detections"
+        file: "kql/sentinel/sn04-device-code-and-authentication-transfer-signins.kql"
+        purpose: "Flags device code and authentication transfer sign-ins outside the CA-20 exception, phishable flows in which a user can complete sign-in for a session someone else started"
+    notes: ""
+  - id: "XW-52"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(e)(1)"
+      kind: "standard"
+      title: "Transmission security"
+      designation: "standard"
+      summary: "Use technical measures that guard against unauthorized access to ePHI sent over an electronic communications network."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(e)(1)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Per-app tunnels, TLS through the application proxy, private endpoints in Azure, mutual TLS on integration interfaces where both ends support it, and managed file transfer for the outsourcer."
+    csf_targets:
+      - id: "PR.DS-02"
+        relationship: "partial"
+        rationale: "Confidentiality in transit; CSF also covers integrity and availability, which HIPAA treats in 164.312(e)(2)(i)."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-02"
+      - id: "PR.IR-01"
+        relationship: "related"
+        rationale: "Network protection around the transmission paths."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.IR-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PEP-ZTNA-CLIENT", "PEP-ZTNA-BROKER", "PEP-ZTNA-CONNECTOR", "PEP-APP-PROXY", "PEP-CLOUD-NET", "RES-AZ-WORKLOADS", "RES-INTEGRATION", "RES-RCM-EXCHANGE"]
+      zones: ["Z-CONNECTOR", "Z-AZURE", "Z-DMZ"]
+      policies: []
+      flows: ["F-03", "F-04", "F-13"]
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "5"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "6"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "8"
+    detections: []
+    notes: ""
+  - id: "XW-53"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(e)(2)(i)"
+      kind: "implementation-specification"
+      title: "Integrity controls"
+      designation: "addressable"
+      summary: "Make sure ePHI sent electronically is not improperly modified without detection until it is disposed of."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(e)(2)(i)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "TLS and per-app tunnels give in-transit integrity on the designed paths. Some medical device protocols lack it, so device-class segments compensate (05 section 3, Traffic Encryption)."
+    csf_targets:
+      - id: "PR.DS-02"
+        relationship: "partial"
+        rationale: "Integrity of data in transit."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-02"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PEP-ZTNA-BROKER", "PEP-APP-PROXY", "RES-INTEGRATION", "PEP-NET-ZONE"]
+      zones: ["Z-IOMT"]
+      policies: []
+      flows: []
+      residual_risks: ["RR-04"]
+      artifacts:
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "3"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "3"
+    detections: []
+    notes: ""
+  - id: "XW-54"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.312(e)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Encryption"
+      designation: "addressable"
+      summary: "Encrypt ePHI whenever this is judged appropriate."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(e)(2)(ii)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Encrypted on user, remote, cloud, and partner paths. Where medical device protocols cannot encrypt, segmentation compensates; for an addressable specification, 45 CFR 164.306(d)(3) requires documenting that decision and any equivalent alternative measure."
+    csf_targets:
+      - id: "PR.DS-02"
+        relationship: "partial"
+        rationale: "Encryption is one way to protect data in transit."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.DS-02"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PEP-ZTNA-CLIENT", "PEP-ZTNA-BROKER", "PEP-APP-PROXY", "PEP-CLOUD-NET", "RES-INTEGRATION"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "3"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "12"
+    detections: []
+    notes: ""
+# ---------------------------------------------------------------- 45 CFR 164.314 Organizational requirements
+  - id: "XW-55"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.314(a)(1)"
+      kind: "standard"
+      title: "Business associate contracts or other arrangements"
+      designation: "standard"
+      summary: "The contract or other arrangement that 164.308(b)(3) requires must meet the content rules in 164.314(a)(2)."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(a)(1)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "The agreements are organizational. The scenario's business associates are the EHR vendor, the revenue-cycle outsourcer, the telehealth service, and biomedical vendors whose service can reach ePHI on a device, which includes every vendor with broker access (A-13)."
+    csf_targets:
+      - id: "GV.SC-05"
+        relationship: "partial"
+        rationale: "Requirements in supplier agreements; HIPAA prescribes the contract content in 164.314(a)(2)."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.SC-05"
+    cde_scope: true
+    pci_targets:
+      - id: "12.8.1"
+        relationship: "related"
+        shared_csf: ["ID.AM-04"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "A provider list parallels the business associate inventory, for account data instead of ePHI."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 12.8.1"
+      - id: "12.8.2"
+        relationship: "related"
+        shared_csf: ["GV.SC-05"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "Written agreements in which providers acknowledge security responsibility, the PCI counterpart of a business associate agreement."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 12.8.2"
+      - id: "12.8.3"
+        relationship: "related"
+        shared_csf: ["GV.SC-06"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "Due diligence before engaging a provider."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 12.8.3"
+      - id: "12.8.4"
+        relationship: "related"
+        shared_csf: ["GV.SC-07"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "Annual monitoring of each provider's compliance status."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 12.8.4"
+      - id: "12.8.5"
+        relationship: "related"
+        shared_csf: ["GV.SC-02"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "A responsibility matrix for EXT-P2PE and EXT-PSP."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 12.8.5"
+    architecture:
+      components: ["EXT-VENDOR-EHR", "EXT-VENDOR-BIOMED", "EXT-RCM-BA", "EXT-TELEHEALTH", "EXT-P2PE", "EXT-PSP"]
+      zones: ["Z-CDE"]
+      policies: []
+      flows: ["F-10", "F-11"]
+      residual_risks: ["RR-12"]
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "7"
+        - doc: "architecture"
+          file: "04-segmentation.md"
+          section: "7"
+        - doc: "architecture"
+          file: "adr/ADR-007-cde-scope-reduction-p2pe-redirect.md"
+          section: "Consequences"
+    detections: []
+    notes: ""
+  - id: "XW-56"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.314(a)(2)(i)"
+      kind: "implementation-specification"
+      title: "Business associate contracts"
+      designation: "required"
+      summary: "The contract must require the business associate to comply with the Security Rule, to bind subcontractors that handle ePHI to the same terms, and to report any security incident it becomes aware of, including breaches of unsecured PHI under 164.410."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(a)(2)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Breach and incident notification timing between business associates and Contoso is in notification-clocks.md section 3."
+    csf_targets:
+      - id: "GV.SC-05"
+        relationship: "partial"
+        rationale: "Requirements in contracts; HIPAA names compliance, subcontractor flow-down, and incident reporting."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.SC-05"
+      - id: "GV.SC-08"
+        relationship: "related"
+        rationale: "Suppliers take part in incident planning and response."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.SC-08"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["EXT-VENDOR-EHR", "EXT-VENDOR-BIOMED", "EXT-RCM-BA", "EXT-TELEHEALTH"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "grc"
+          file: "notification-clocks.md"
+          section: "3"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "7"
+    detections: []
+    notes: ""
+  - id: "XW-57"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.314(a)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Other arrangements"
+      designation: "required"
+      summary: "A covered entity can instead rely on another arrangement that meets 164.504(e)(3)."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(a)(2)(ii)"
+    applicability: "not-applicable"
+    coverage: "not-applicable"
+    coverage_note: "45 CFR 164.504(e)(3) allows alternatives to a business associate contract in limited cases, such as a memorandum of understanding between governmental entities, a business associate required by law to act, or a limited data set under a data use agreement. The scenario's business associates work under business associate agreements (A-10, A-13, A-14), so the alternative is not used."
+    csf_targets: []
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Assumptions"
+    detections: []
+    notes: "Basis for the not-applicable call: SRC-ECFR-164-504."
+  - id: "XW-58"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.314(a)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Business associate contracts with subcontractors"
+      designation: "required"
+      summary: "The same contract requirements apply between a business associate and its subcontractor as between a covered entity and a business associate."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(a)(2)(iii)"
+    applicability: "indirect"
+    coverage: "procedural"
+    coverage_note: "Binds Contoso's business associates in their own subcontracts, for example the revenue-cycle outsourcer's providers. Contoso's part is the flow-down term that 164.314(a)(2)(i) requires."
+    csf_targets:
+      - id: "GV.SC-05"
+        relationship: "related"
+        rationale: "Requirements flow down through the supply chain."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.SC-05"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["EXT-RCM-BA"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "7"
+    detections: []
+    notes: ""
+  - id: "XW-59"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.314(b)(1)"
+      kind: "standard"
+      title: "Requirements for group health plans"
+      designation: "standard"
+      summary: "A group health plan must make its plan documents require the plan sponsor to safeguard the ePHI it handles for the plan, except in limited Privacy Rule cases."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(b)(1)"
+    applicability: "not-applicable"
+    coverage: "not-applicable"
+    coverage_note: "The scenario describes Contoso as a health care provider and defines no group health plan. An employee health plan, if added, would be a separate covered entity with its own obligations."
+    csf_targets: []
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Scenario (fixed)"
+    detections: []
+    notes: ""
+  - id: "XW-60"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.314(b)(2)"
+      kind: "implementation-specification"
+      title: "Implementation specifications"
+      designation: "required"
+      summary: "The plan documents must require the sponsor to apply safeguards, support the required separation with security measures, bind its agents to the same measures, and report security incidents to the plan."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(b)(2)"
+    applicability: "not-applicable"
+    coverage: "not-applicable"
+    coverage_note: "Applies only together with 164.314(b)(1), which does not apply here."
+    csf_targets: []
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Scenario (fixed)"
+    detections: []
+    notes: ""
+# ---------------------------------------------------------------- 45 CFR 164.316 Policies, procedures, and documentation
+  - id: "XW-61"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.316(a)"
+      kind: "standard"
+      title: "Policies and procedures"
+      designation: "standard"
+      summary: "Implement reasonable and appropriate policies and procedures to comply with the Security Rule, and document any changes to them."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(a)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "The ADRs record design decisions and the alternatives that lost; they are design records, not Contoso's policies."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Policy established, communicated, and enforced."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+      - id: "GV.PO-02"
+        relationship: "partial"
+        rationale: "Policy reviewed and updated; HIPAA also requires documenting the changes."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-02"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "14"
+    detections: []
+    notes: ""
+  - id: "XW-62"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.316(b)(1)"
+      kind: "standard"
+      title: "Documentation"
+      designation: "standard"
+      summary: "Keep the policies and procedures in written form (electronic is allowed), and keep a written record of every action, activity, or assessment the Security Rule requires to be documented."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(b)(1)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Design-level records exist: the ADRs, the exception rule (owner, expiry date, log entry) in principle P-5 and WP-0.1, and this crosswalk. Operational records such as risk analyses, incidents, and access reviews are produced in operation."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "related"
+        rationale: "Policies are kept in written form."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+      - id: "ID.RA-07"
+        relationship: "related"
+        rationale: "Exceptions are recorded and tracked."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.RA-07"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Design principles"
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "4"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "14"
+    detections:
+      - doc: "detections"
+        file: "playbooks/ir-identity-compromise.md"
+        purpose: "Specifies the incident records to keep: a timeline of every action with time, actor, and result (section 6) and an after-action report (section 9)"
+    notes: ""
+  - id: "XW-63"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.316(b)(2)(i)"
+      kind: "implementation-specification"
+      title: "Time limit"
+      designation: "required"
+      summary: "Keep required documentation for 6 years from its creation or from the date it was last in effect, whichever is later."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(b)(2)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "A records-management rule. Sentinel log retention is a separate decision and is out of scope (A-17)."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "related"
+        rationale: "Policy management implies retention; no CSF 2.0 subcategory addresses retention periods directly."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Assumptions"
+    detections: []
+    notes: ""
+  - id: "XW-64"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.316(b)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Availability"
+      designation: "required"
+      summary: "Make the documentation available to the people responsible for carrying out the procedures it covers."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(b)(2)(ii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "A document-management practice; not designed in this set."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Policy is communicated to the people who apply it."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-65"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C, as in force (eCFR text current through 2026-09-30)"
+      id: "164.316(b)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Updates"
+      designation: "required"
+      summary: "Review the documentation periodically and update it when environmental or operational changes affect the security of ePHI."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(b)(2)(iii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "The ADRs' Revisit when sections are design-level update triggers."
+    csf_targets:
+      - id: "GV.PO-02"
+        relationship: "partial"
+        rationale: "Policy reviewed and updated to reflect changes in requirements, threats, technology, or mission."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-02"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts:
+        - doc: "architecture"
+          file: "adr/ADR-001-decision-planes-and-zta-approach.md"
+          section: "Revisit when"
+    detections: []
+    notes: ""
+# End of crosswalk.

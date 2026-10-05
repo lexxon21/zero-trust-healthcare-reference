@@ -1,0 +1,2 @@
+# Test fixture: the document root is a one-item list, so it is an array, not an object.
+- schema_version: "1.0"

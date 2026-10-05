@@ -1,0 +1,57 @@
+# Reference rule. Not deployed in any employer environment.
+# Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+# Rule ID: SG-02 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Tag note: attack.defense-impairment is the ATT&CK v19 tactic Defense Impairment (TA0112), newer than the Sigma v2.1.0 tags appendix.
+# Answers: detection-priorities.md item 13 (Priority 2); attack-paths.md AP-4 step 9
+# Companion KQL: kql/defender-xdr/dx09-endpoint-protection-tampering.kql (adds tamper protection events and tamper alerts)
+# Conversion note: process_creation log source, targeted by the pySigma Kusto backend's microsoft_xdr pipeline.
+#   On 2026-10-04, "sigma convert -t kusto -p microsoft_xdr" (pySigma-backend-kusto 1.0.1) converted this rule
+#   to a DeviceProcessEvents query. The converted query has not been run against data.
+# Tuning: Intune and Defender security settings management change these settings without PowerShell command
+#   lines, so hits on managed Contoso devices should be rare. Exclude a sanctioned management tool by parent
+#   image only after review. PowerShell accepts shortened parameter names, which this rule does not cover.
+# Validation: not run. On a lab device with tamper protection on, attempt to turn off real-time protection
+#   from an elevated PowerShell session; expect a process creation event with Set-MpPreference and the
+#   parameter. Public library: Atomic Red Team tests mapped to T1685 (operator selects them;
+#   purple-team-plan.md exercise PX-18).
+title: Microsoft Defender Antivirus Protection Disabled or Exclusion Added From PowerShell
+id: c81d0f5e-2a47-4b96-9e3c-7f1a6b0d2e58
+status: experimental
+description: Reference rule. Detects PowerShell command lines that call Set-MpPreference or Add-MpPreference with parameters that turn off a Microsoft Defender Antivirus protection or add a scan exclusion, an attempt to impair endpoint protection before ransomware deployment. Written for the fictional Contoso Regional Health reference architecture and not deployed in any employer environment.
+references:
+    - https://attack.mitre.org/techniques/T1685/
+    - https://learn.microsoft.com/en-us/powershell/module/defender/set-mppreference?view=windowsserver2025-ps
+    - https://learn.microsoft.com/en-us/defender-endpoint/tamper-protection-overview
+author: Jacob Welch
+date: 2026-10-04
+tags:
+    - attack.defense-impairment
+    - attack.t1685
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_image:
+        Image|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+    selection_cmdlet:
+        CommandLine|contains:
+            - 'Set-MpPreference'
+            - 'Add-MpPreference'
+    selection_parameter:
+        CommandLine|contains:
+            - 'DisableRealtimeMonitoring'
+            - 'DisableBehaviorMonitoring'
+            - 'DisableIOAVProtection'
+            - 'DisableScriptScanning'
+            - 'DisableBlockAtFirstSeen'
+            - 'DisableArchiveScanning'
+            - 'ExclusionPath'
+            - 'ExclusionProcess'
+            - 'ExclusionExtension'
+    condition: all of selection_*
+falsepositives:
+    - Endpoint team troubleshooting sessions recorded in the change system
+    - Third-party installers that add Defender exclusions during setup
+level: high

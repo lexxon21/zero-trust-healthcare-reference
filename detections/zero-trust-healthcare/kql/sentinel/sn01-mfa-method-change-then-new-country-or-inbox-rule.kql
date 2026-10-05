@@ -1,0 +1,185 @@
+// Reference query. Not deployed in any employer environment.
+// Title: MFA method registered or changed, then within 24 hours a sign-in from a country new for the user or a mail-hiding or forwarding rule (help-desk takeover chain)
+// Status: untested template
+// ATT&CK: T1098.005 (Account Manipulation: Device Registration), T1556.006 (Modify Authentication Process: Multi-Factor Authentication), T1564.008 (Hide Artifacts: Email Hiding Rules), T1114.003 (Email Collection: Email Forwarding Rule); ATT&CK v19.2
+// Data sources: Microsoft Sentinel, AuditLogs and SigninLogs (Microsoft Entra ID data connector), OfficeActivity (Microsoft 365 data connector, Exchange operations)
+// Licensing assumptions: Microsoft Sentinel workspace with the Entra ID and Microsoft 365 connectors (scenario A-17); Entra ID P1 or P2 for sign-in log access (scenario holds P2)
+// Rule ID: SN-01 | Platform: Microsoft Sentinel scheduled analytics rule, run every hour, query period 14 days (see Tuning knobs) | Suggested severity: High for the full chain, Medium for two links
+// Tactics: Persistence (TA0003), Credential Access (TA0006), Stealth (TA0005), Collection (TA0009)
+// Answers: detection-priorities.md items 3 and 4 (Priority 1), the correlation the item 4 rationale asks for; attack-paths.md AP-2 steps 3 to 6
+// Architecture context: CA-19 (security info registration control), IGA-ENTRA, RES-M365, PIP-SIEM correlation; risk register R-02
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   AP-2 needs no malware: a help desk is talked into enrolling an attacker-controlled MFA method, then
+//   the mailbox is used to divert payer or payroll payments. Any single link is noisy (people change
+//   phones, travel, and file mail into folders). The chain inside 24 hours is specific, and payment
+//   recovery depends on speed, so this rule runs often.
+//
+// Logic
+//   1. AuditLogs security-info activities that Microsoft's audit activity reference lists under the
+//      UserManagement category: registrations, updates to existing security info, default method changes,
+//      and deletions, by the user or by an administrator. Category itself is not filtered, as in SN-02
+//      and SN-07. Microsoft's token theft playbook query does filter on Category UserManagement, but the
+//      Azure Monitor AuditLogs reference says Audit is the only supported value, and the activity names
+//      identify the rows on their own.
+//   2. SigninLogs: successful sign-ins from a country the user has not signed in from during
+//      BaselineWindow (12 days), which ends where the 2-day search window (LookbackWindow) begins.
+//   3. OfficeActivity: New-InboxRule, Set-InboxRule, Set-Mailbox, or UpdateInboxRules whose parameters
+//      mention forwarding, redirect, delete, move, or mark-as-read settings.
+//   4. Joined on the user principal name, one method change at a time: a new-country sign-in or a rule
+//      counts when it falls within ChainWindow after any method change in the search window, so an
+//      earlier, unrelated sign-in or rule cannot hide a later chain.
+//   5. A chain is returned only in a run where one of its linked rows (the method change with its sign-in
+//      or its rule) was ingested since the previous run, so a chain is reported when it completes and
+//      again only when a further link arrives, such as the one that raises it to High (Tuning knobs).
+//   The third AP-2 link, a banking-detail change in payer, payroll, or ERP systems, is not in Sentinel
+//   under assumption A-17. Add it as a third join when those audit logs are onboarded.
+//
+// Known false positives
+//   - New staff enrolling methods on day one, then travelling (onboarding cohorts during orientation).
+//   - Affiliated physicians on travel who replace a phone and sign in abroad the same day.
+//   - Users who reset methods and then create ordinary filing rules.
+//
+// Tuning knobs (let statements below)
+//   ChainWindow, BaselineWindow   link window and the history that defines a new country.
+//   MethodChangeActivities        security-info activities in scope.
+//   PaymentKeywords               terms that raise severity when a rule filters on them.
+//   RunInterval                   the rule's "Run query every" setting (1 hour, example value).
+//   Query period: set "Lookup data from the last" to 14 days, the maximum Microsoft allows, and keep
+//   BaselineWindow plus LookbackWindow within it (12 plus 2 days by default). Microsoft documents that
+//   this setting is the time period the query covers, so it also bounds the baseline subquery. At a
+//   shorter period the baseline is empty, the anti-join removes nothing, and every sign-in country after
+//   a method change counts as new. Run the rule every RunInterval: each run reads 14 days of SigninLogs
+//   for the baseline, and the 2-day LookbackWindow still completes a chain that starts near the end of
+//   one run. At larger scale, a per-user country baseline maintained by a separate job (for example a
+//   watchlist) can replace the baseline subquery.
+//   Repeat suppression (Logic 5): an hourly run over a 2-day window would otherwise return the same chain
+//   in every run until its method change ages out, and Microsoft documents that overlapping query periods
+//   can cause some duplication of results. Each link keeps its ingestion_time(), and the query keeps a
+//   chain only when its latest linked row was ingested within RunInterval, the ingestion_time() filter
+//   that Microsoft's ingestion delay guidance uses to tie an event to one run, as SN-06 and SN-07 do.
+//   Alert settings: "Trigger an alert for each event" (one alert per user chain). Map the Account entity
+//   with Name and UPNSuffix from TargetAccountName and TargetUpnSuffix, a strong identifier pair in
+//   Microsoft's entity reference, which notes that from July 1, 2026 the Name field holds only the UPN
+//   prefix. Group alerts into one incident when all entities match, with a time frame of at least
+//   LookbackWindow (2 days; Microsoft allows 5 minutes to 7 days), so a chain's first report and a later
+//   upgrade share an incident. With Sentinel onboarded to the Defender portal, Microsoft documents that
+//   these grouping settings take effect only when the incident is created and that the Defender
+//   correlation engine may group alerts differently.
+//
+// Response notes
+//   Disable the rule and the attacker method, revoke sessions, and require in-person or sponsor-verified
+//   proofing before any new method is registered (threat-model.md section 9 item 3). Call finance and the
+//   bank relationship owner at once if payment terms appear. Follow the identity compromise playbook.
+//   When the account belongs to clinical staff, the clinical notification step comes before sessions are
+//   revoked (clinical safety gate, ADR-008; playbook decision point D5).
+//
+// Validation notes
+//   Not run against any workspace. Validate with a lab user in a lab tenant connected to a lab workspace:
+//   register a new authenticator method, sign in from a second country through a lab egress, and create
+//   a rule that moves "invoice" messages to an RSS folder. Expected telemetry: an AuditLogs row "User
+//   registered security info", a SigninLogs row with the new country, and an OfficeActivity New-InboxRule
+//   row. purple-team-plan.md exercise PX-09 covers the method or device registration and the method change
+//   (T1098.005, T1556.006), and records a device registration that does not alert against coverage-map.md
+//   section 3, item 3; PX-10 covers the hide-or-forward rule after a method change (T1564.008, T1114.003).
+//   Before PX-09 and PX-10 run, record the rule's "Lookup data from the last" setting (14 days) in the
+//   findings entry, and confirm that the lab user's usual country is not reported as new. Repeat
+//   suppression: confirm that the chain is returned in the run after its follow-on link is ingested, not
+//   again in the next hourly run, and again when a further link arrives (for example the payment rule
+//   after the sign-in), with both alerts grouped into one incident.
+//   Help-desk proofing itself is confirmed by tabletop.
+//
+// References
+//   https://learn.microsoft.com/en-us/entra/identity/monitoring-health/reference-audit-activities
+//   https://learn.microsoft.com/en-us/security/operations/token-theft-playbook
+//   https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/auditlogs
+//   https://learn.microsoft.com/en-us/azure/sentinel/scheduled-rules-overview
+//   https://learn.microsoft.com/en-us/azure/sentinel/create-analytics-rules
+//   https://learn.microsoft.com/en-us/azure/sentinel/ingestion-delay
+//   https://learn.microsoft.com/en-us/azure/sentinel/entities-reference
+//   https://learn.microsoft.com/en-us/purview/audit-log-activities
+//   https://attack.mitre.org/techniques/T1098/005/
+//   https://attack.mitre.org/techniques/T1556/006/
+//
+let LookbackWindow = 2d;
+let ChainWindow = 24h;
+// The rule's "Run query every" setting; a chain returns only when a link was ingested within it (Logic 5)
+let RunInterval = 1h;
+// BaselineWindow plus LookbackWindow must fit the rule's query period, at most 14 days (Tuning knobs)
+let BaselineWindow = 12d;
+let MethodChangeActivities = dynamic(["User registered security info", "User updated security info", "User changed default security info",
+    "User deleted security info", "User registered all required security info", "Admin registered security info", "Admin updated security info",
+    "Admin deleted security info"]);
+let PaymentKeywords = dynamic(["invoice", "payment", "remittance", "ACH", "wire", "bank", "deposit", "payroll", "EFT"]);
+// One row per security-info change; no Category filter (Logic 1)
+let MethodChangeEvents =
+    AuditLogs
+    | where TimeGenerated > ago(LookbackWindow)
+    | where ActivityDisplayName in~ (MethodChangeActivities)
+    | extend TargetUpn = tolower(tostring(TargetResources[0].userPrincipalName)),
+             Initiator = coalesce(tostring(InitiatedBy.user.userPrincipalName), tostring(InitiatedBy.app.displayName)),
+             InitiatorIP = tostring(InitiatedBy.user.ipAddress),
+             ChangeIngested = ingestion_time()
+    | where isnotempty(TargetUpn)
+    | project TargetUpn, ChangeTime = TimeGenerated, ChangeIngested, ActivityDisplayName, Initiator, InitiatorIP;
+// Successful sign-ins from a country absent from the user's baseline (Logic 2)
+let NewCountrySignins =
+    SigninLogs
+    | where TimeGenerated > ago(LookbackWindow)
+    | where ResultType == "0"
+    | extend SigninUpn = tolower(UserPrincipalName), Country = tostring(LocationDetails.countryOrRegion), SigninIngested = ingestion_time()
+    | where isnotempty(Country)
+    | join kind=leftanti (
+        SigninLogs
+        | where TimeGenerated between (ago(BaselineWindow + LookbackWindow) .. ago(LookbackWindow))
+        | where ResultType == "0"
+        | extend SigninUpn = tolower(UserPrincipalName), Country = tostring(LocationDetails.countryOrRegion)
+        | distinct SigninUpn, Country
+      ) on SigninUpn, Country
+    | project SigninUpn, SigninTime = TimeGenerated, SigninIngested, Country, IPAddress;
+// Rules and mailbox settings that forward, redirect, delete, move, or mark mail as read (Logic 3)
+let MailRules =
+    OfficeActivity
+    | where TimeGenerated > ago(LookbackWindow)
+    | where Operation in~ ("New-InboxRule", "Set-InboxRule", "Set-Mailbox", "UpdateInboxRules")
+    | extend RuleUpn = tolower(UserId), RuleText = strcat(Parameters, " ", tostring(OperationProperties)), RuleIngested = ingestion_time()
+    | where RuleText has_any ("ForwardTo", "ForwardAsAttachmentTo", "RedirectTo", "ForwardingSmtpAddress", "ForwardingAddress",
+                              "DeleteMessage", "SoftDeleteMessage", "MoveToFolder", "MarkAsRead")
+    | project RuleUpn, RuleTime = TimeGenerated, RuleIngested, RuleRecordId = OfficeId, Operation, ClientIP, PaymentRule = RuleText has_any (PaymentKeywords);
+// Each follow-on signal is tested against every method change in the search window (Logic 4)
+let ChainSignins =
+    MethodChangeEvents
+    | join kind=inner NewCountrySignins on $left.TargetUpn == $right.SigninUpn
+    | where SigninTime between (ChangeTime .. (ChangeTime + ChainWindow))
+    | summarize FirstNewCountrySignin = min(SigninTime), NewCountries = make_set(Country, 5), NewCountryIPs = make_set(IPAddress, 5),
+        SigninLinkIngested = max(max_of(ChangeIngested, SigninIngested))
+        by TargetUpn;
+let ChainRules =
+    MethodChangeEvents
+    | join kind=inner MailRules on $left.TargetUpn == $right.RuleUpn
+    | where RuleTime between (ChangeTime .. (ChangeTime + ChainWindow))
+    | summarize FirstRuleTime = min(RuleTime), RuleOperations = make_set(Operation, 5), RuleClientIPs = make_set(ClientIP, 5),
+        PaymentRuleCount = dcountif(RuleRecordId, PaymentRule), RuleLinkIngested = max(max_of(ChangeIngested, RuleIngested))
+        by TargetUpn;
+MethodChangeEvents
+| summarize MethodChangeTime = min(ChangeTime), MethodChanges = make_set(ActivityDisplayName, 5),
+    Initiators = make_set(Initiator, 5), InitiatorIPs = make_set(InitiatorIP, 5)
+    by TargetUpn
+| join kind=leftouter ChainSignins on TargetUpn
+| join kind=leftouter ChainRules on TargetUpn
+| extend SigninAfterChange = isnotnull(FirstNewCountrySignin),
+         RuleAfterChange = isnotnull(FirstRuleTime)
+| where SigninAfterChange or RuleAfterChange
+// Return the chain only in a run where one of its linked rows was newly ingested (Logic 5)
+| extend LatestLinkIngested = max_of(coalesce(SigninLinkIngested, RuleLinkIngested), coalesce(RuleLinkIngested, SigninLinkIngested))
+| where LatestLinkIngested > ago(RunInterval)
+| extend SuggestedSeverity = case(
+    SigninAfterChange and RuleAfterChange, "High: method change, new-country sign-in, and a mail-hiding or forwarding rule",
+    RuleAfterChange and coalesce(PaymentRuleCount, 0) > 0, "High: method change, then a rule touching payment-related mail",
+    "Medium: method change followed by one follow-on signal")
+| extend TimeGenerated = max_of(MethodChangeTime, coalesce(FirstNewCountrySignin, MethodChangeTime), coalesce(FirstRuleTime, MethodChangeTime)),
+         TargetAccountName = tostring(split(TargetUpn, "@")[0]),
+         TargetUpnSuffix = tostring(split(TargetUpn, "@")[1])
+| project TimeGenerated, TargetUpn, TargetAccountName, TargetUpnSuffix, SuggestedSeverity, MethodChangeTime, MethodChanges, Initiators, InitiatorIPs,
+    FirstNewCountrySignin, NewCountries, NewCountryIPs, FirstRuleTime, RuleOperations, RuleClientIPs, PaymentRuleCount, LatestLinkIngested

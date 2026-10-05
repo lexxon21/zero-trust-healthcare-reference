@@ -1,0 +1,289 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contoso Regional Health (fictional) HIPAA Security Rule crosswalk",
+  "description": "Reference work. Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice. Describes the structure of crosswalk.yaml. Cross-field and cross-file rules (identifier catalogs, the complete list of HIPAA standards and implementation specifications, architecture references, coverage and applicability consistency, CDE-only PCI DSS mapping, and agreement with crosswalk.md) are enforced by validate-crosswalk.ps1.",
+  "$comment": "Keywords used here are limited to the subset validate-crosswalk.ps1 implements: $schema, $id, $comment, title, description, default, examples, definitions, $ref, type, properties, required, additionalProperties, items, minItems, maxItems, uniqueItems, enum, const, pattern, minLength, maxLength. The validator stops with exit code 2 if it meets any other keyword. The csfId enum lists all 106 NIST CSF 2.0 subcategory identifiers from NIST CSWP 29 Appendix A, checked 2026-10-04.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "metadata", "mappings"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "metadata": { "$ref": "#/definitions/metadata" },
+    "mappings": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/mapping" }
+    }
+  },
+  "definitions": {
+    "text": { "type": "string", "minLength": 1 },
+    "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "httpsUrl": { "type": "string", "pattern": "^https://[^\\s\"]+$" },
+    "sourceKey": { "type": "string", "pattern": "^SRC-[A-Z0-9]+(-[A-Z0-9]+)*$" },
+    "mappingId": { "type": "string", "pattern": "^XW-[0-9]{2}$" },
+    "hipaaId": { "type": "string", "pattern": "^164\\.3(08|10|12|14|16)(\\([0-9A-Za-z]+\\))+$" },
+    "pciId": { "type": "string", "pattern": "^(1[0-2]|[1-9])(\\.[0-9]{1,2}){1,4}$" },
+    "componentId": { "type": "string", "pattern": "^(PE|PA|IGA|PEP|IDS|PIP|SVC|RES|EXT)-[A-Z0-9]+(-[A-Z0-9]+)*$" },
+    "zoneId": { "type": "string", "pattern": "^Z-[A-Z0-9]+(-[A-Z0-9]+)*$" },
+    "policyId": { "type": "string", "pattern": "^CA-[0-9]{2}$" },
+    "flowId": { "type": "string", "pattern": "^F-[0-9]{2}$" },
+    "residualRiskId": { "type": "string", "pattern": "^RR-[0-9]{2}$" },
+    "relativeFile": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*(/[A-Za-z0-9][A-Za-z0-9_.-]*)*\\.(md|yaml|yml|csv|kql|json)$"
+    },
+    "csfId": {
+      "type": "string",
+      "enum": [
+        "GV.OC-01", "GV.OC-02", "GV.OC-03", "GV.OC-04", "GV.OC-05",
+        "GV.RM-01", "GV.RM-02", "GV.RM-03", "GV.RM-04", "GV.RM-05", "GV.RM-06", "GV.RM-07",
+        "GV.RR-01", "GV.RR-02", "GV.RR-03", "GV.RR-04",
+        "GV.PO-01", "GV.PO-02",
+        "GV.OV-01", "GV.OV-02", "GV.OV-03",
+        "GV.SC-01", "GV.SC-02", "GV.SC-03", "GV.SC-04", "GV.SC-05", "GV.SC-06", "GV.SC-07", "GV.SC-08", "GV.SC-09", "GV.SC-10",
+        "ID.AM-01", "ID.AM-02", "ID.AM-03", "ID.AM-04", "ID.AM-05", "ID.AM-07", "ID.AM-08",
+        "ID.RA-01", "ID.RA-02", "ID.RA-03", "ID.RA-04", "ID.RA-05", "ID.RA-06", "ID.RA-07", "ID.RA-08", "ID.RA-09", "ID.RA-10",
+        "ID.IM-01", "ID.IM-02", "ID.IM-03", "ID.IM-04",
+        "PR.AA-01", "PR.AA-02", "PR.AA-03", "PR.AA-04", "PR.AA-05", "PR.AA-06",
+        "PR.AT-01", "PR.AT-02",
+        "PR.DS-01", "PR.DS-02", "PR.DS-10", "PR.DS-11",
+        "PR.PS-01", "PR.PS-02", "PR.PS-03", "PR.PS-04", "PR.PS-05", "PR.PS-06",
+        "PR.IR-01", "PR.IR-02", "PR.IR-03", "PR.IR-04",
+        "DE.CM-01", "DE.CM-02", "DE.CM-03", "DE.CM-06", "DE.CM-09",
+        "DE.AE-02", "DE.AE-03", "DE.AE-04", "DE.AE-06", "DE.AE-07", "DE.AE-08",
+        "RS.MA-01", "RS.MA-02", "RS.MA-03", "RS.MA-04", "RS.MA-05",
+        "RS.AN-03", "RS.AN-06", "RS.AN-07", "RS.AN-08",
+        "RS.CO-02", "RS.CO-03",
+        "RS.MI-01", "RS.MI-02",
+        "RC.RP-01", "RC.RP-02", "RC.RP-03", "RC.RP-04", "RC.RP-05", "RC.RP-06",
+        "RC.CO-03", "RC.CO-04"
+      ]
+    },
+    "relationship": { "type": "string", "enum": ["equivalent", "partial", "related"] },
+    "coverage": { "type": "string", "enum": ["designed", "partial", "procedural", "out-of-scope", "not-applicable"] },
+    "applicability": { "type": "string", "enum": ["applicable", "indirect", "not-applicable"] },
+    "kind": { "type": "string", "enum": ["standard", "implementation-specification"] },
+    "designation": { "type": "string", "enum": ["standard", "required", "addressable"] },
+    "saqPathStatus": {
+      "type": "string",
+      "enum": ["required", "performed-anyway", "defense-in-depth", "not-applicable-by-design", "not-on-saq-p2pe"]
+    },
+    "fullAssessmentStatus": {
+      "type": "string",
+      "enum": ["required", "required-where-access-exists", "required-when-segmentation-reduces-scope"]
+    },
+    "docKey": { "type": "string", "enum": ["architecture", "grc", "threat_models", "detections", "research"] },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "locator"],
+      "properties": {
+        "source": { "$ref": "#/definitions/sourceKey" },
+        "locator": { "$ref": "#/definitions/text" }
+      }
+    },
+    "csfTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "relationship", "rationale", "citation"],
+      "properties": {
+        "id": { "$ref": "#/definitions/csfId" },
+        "relationship": { "$ref": "#/definitions/relationship" },
+        "rationale": { "$ref": "#/definitions/text" },
+        "citation": { "$ref": "#/definitions/citation" }
+      }
+    },
+    "pciTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "relationship", "shared_csf", "saq_path_status", "full_assessment_status", "rationale", "citation"],
+      "properties": {
+        "id": { "$ref": "#/definitions/pciId" },
+        "relationship": { "$ref": "#/definitions/relationship" },
+        "shared_csf": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/csfId" }
+        },
+        "saq_path_status": { "$ref": "#/definitions/saqPathStatus" },
+        "full_assessment_status": { "$ref": "#/definitions/fullAssessmentStatus" },
+        "rationale": { "$ref": "#/definitions/text" },
+        "citation": { "$ref": "#/definitions/citation" }
+      }
+    },
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["doc", "file", "section"],
+      "properties": {
+        "doc": { "$ref": "#/definitions/docKey" },
+        "file": { "$ref": "#/definitions/relativeFile" },
+        "section": { "$ref": "#/definitions/text" }
+      }
+    },
+    "detectionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["doc", "file", "purpose"],
+      "properties": {
+        "doc": { "type": "string", "const": "detections" },
+        "file": { "$ref": "#/definitions/relativeFile" },
+        "purpose": { "$ref": "#/definitions/text" }
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["components", "zones", "policies", "flows", "residual_risks", "artifacts"],
+      "properties": {
+        "components": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/componentId" } },
+        "zones": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/zoneId" } },
+        "policies": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/policyId" } },
+        "flows": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/flowId" } },
+        "residual_risks": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/residualRiskId" } },
+        "artifacts": { "type": "array", "items": { "$ref": "#/definitions/artifactRef" } }
+      }
+    },
+    "hipaaSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["framework", "framework_version", "id", "kind", "title", "designation", "summary", "citation"],
+      "properties": {
+        "framework": { "type": "string", "const": "hipaa-security-rule" },
+        "framework_version": { "$ref": "#/definitions/text" },
+        "id": { "$ref": "#/definitions/hipaaId" },
+        "kind": { "$ref": "#/definitions/kind" },
+        "title": { "$ref": "#/definitions/text" },
+        "designation": { "$ref": "#/definitions/designation" },
+        "summary": { "$ref": "#/definitions/text" },
+        "citation": { "$ref": "#/definitions/citation" }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "applicability", "coverage", "coverage_note", "csf_targets", "cde_scope", "pci_targets", "architecture", "detections", "notes"],
+      "properties": {
+        "id": { "$ref": "#/definitions/mappingId" },
+        "source": { "$ref": "#/definitions/hipaaSource" },
+        "applicability": { "$ref": "#/definitions/applicability" },
+        "coverage": { "$ref": "#/definitions/coverage" },
+        "coverage_note": { "$ref": "#/definitions/Text" },
+        "csf_targets": { "type": "array", "items": { "$ref": "#/definitions/csfTarget" } },
+        "cde_scope": { "type": "boolean" },
+        "pci_targets": { "type": "array", "items": { "$ref": "#/definitions/pciTarget" } },
+        "architecture": { "$ref": "#/definitions/architecture" },
+        "detections": { "type": "array", "items": { "$ref": "#/definitions/detectionRef" } },
+        "notes": { "type": "string" }
+      }
+    },
+    "keyedDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "definition"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "definition": { "$ref": "#/definitions/text" }
+      }
+    },
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "name", "version", "role"],
+      "properties": {
+        "key": { "type": "string", "enum": ["hipaa-security-rule", "nist-csf", "pci-dss"] },
+        "name": { "$ref": "#/definitions/text" },
+        "version": { "$ref": "#/definitions/text" },
+        "role": { "$ref": "#/definitions/text" }
+      }
+    },
+    "hitrust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identifiers_included", "decision", "sources"],
+      "properties": {
+        "identifiers_included": { "type": "boolean", "const": false },
+        "decision": { "$ref": "#/definitions/text" },
+        "sources": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/sourceKey" } }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["architecture", "grc"],
+      "properties": {
+        "architecture": { "$ref": "#/definitions/text" },
+        "grc": { "$ref": "#/definitions/text" },
+        "threat_models": { "$ref": "#/definitions/text" },
+        "detections": { "$ref": "#/definitions/text" },
+        "research": { "$ref": "#/definitions/text" }
+      }
+    },
+    "pciRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "summary", "verified_against", "checked"],
+      "properties": {
+        "id": { "$ref": "#/definitions/pciId" },
+        "summary": { "$ref": "#/definitions/text" },
+        "verified_against": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/sourceKey" } },
+        "checked": { "$ref": "#/definitions/date" }
+      }
+    },
+    "csfSubcategory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "outcome"],
+      "properties": {
+        "id": { "$ref": "#/definitions/csfId" },
+        "outcome": { "$ref": "#/definitions/text" }
+      }
+    },
+    "sourceEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "title", "publisher", "url", "checked", "quality"],
+      "properties": {
+        "key": { "$ref": "#/definitions/sourceKey" },
+        "title": { "$ref": "#/definitions/text" },
+        "publisher": { "$ref": "#/definitions/text" },
+        "url": { "$ref": "#/definitions/httpsUrl" },
+        "checked": { "$ref": "#/definitions/date" },
+        "quality": { "type": "string", "enum": ["primary", "secondary", "unverified"] }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title", "reference_label", "scenario", "project", "status", "prepared", "statement", "frameworks",
+        "pci_numbering_basis", "hitrust", "paths", "relationship_types", "coverage_types", "applicability_types",
+        "pci_path_statuses", "pci_requirements", "csf_subcategories", "sources"
+      ],
+      "properties": {
+        "title": { "$ref": "#/definitions/text" },
+        "reference_label": {
+          "type": "string",
+          "const": "Reference work. Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice."
+        },
+        "scenario": { "type": "string", "const": "Contoso Regional Health (fictional)" },
+        "project": { "type": "string", "const": "zero-trust-healthcare" },
+        "status": { "$ref": "#/definitions/text" },
+        "prepared": { "$ref": "#/definitions/date" },
+        "statement": { "$ref": "#/definitions/text" },
+        "frameworks": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/definitions/framework" } },
+        "pci_numbering_basis": { "$ref": "#/definitions/text" },
+        "hitrust": { "$ref": "#/definitions/hitrust" },
+        "paths": { "$ref": "#/definitions/paths" },
+        "relationship_types": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/definitions/keyedDefinition" } },
+        "coverage_types": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/definitions/keyedDefinition" } },
+        "applicability_types": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/definitions/keyedDefinition" } },
+        "pci_path_statuses": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/definitions/keyedDefinition" } },
+        "pci_requirements": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/pciRequirement" } },
+        "csf_subcategories": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/csfSubcategory" } },
+        "sources": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/sourceEntry" } }
+      }
+    }
+  }
+}

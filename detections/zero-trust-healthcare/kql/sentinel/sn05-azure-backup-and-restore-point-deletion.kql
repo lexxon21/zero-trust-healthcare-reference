@@ -1,0 +1,99 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Deletion of Azure backup items, backup vaults, restore points, or snapshots, and changes to Recovery Services vault security settings
+// Status: untested template
+// ATT&CK: T1490 (Inhibit System Recovery); ATT&CK v19.2
+// Data sources: Microsoft Sentinel, AzureActivity (Azure Activity data connector)
+// Licensing assumptions: Microsoft Sentinel with the Azure Activity connector for the subscriptions that hold Z-AZURE workloads; applies only where Azure Backup, Azure Backup vaults, snapshots, or restore points protect RES-AZ-WORKLOADS (SVC-BACKUP: requirements set in ADR-009, implementation not designed, A-19)
+// Rule ID: SN-05 | Platform: Microsoft Sentinel scheduled analytics rule | Suggested severity: High
+// Tactic: Impact (TA0040)
+// Answers: detection-priorities.md item 1 (Priority 1, cloud half); attack-paths.md AP-5 step 9 and AP-4 step 10 where Azure-hosted data is in scope
+// Architecture context: Z-AZURE, RES-AZ-WORKLOADS, PEP-CLOUD-NET, SVC-BACKUP; residual risk RR-11; risk register R-03 and R-05
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   The documented hybrid cloud-ransomware case in threat-model.md section 7 deleted cloud backups after
+//   reaching cloud administration. Recovery is the decisive control for AP-4 and AP-5 and is unverified
+//   (RR-11), so deletion of recovery assets in Azure is alert-worthy on its own.
+//
+// Logic
+//   1. Administrative AzureActivity records whose OperationNameValue falls under the resource types
+//      Microsoft.RecoveryServices/vaults, Microsoft.DataProtection/backupVaults, Microsoft.Compute/snapshots,
+//      or Microsoft.Compute/restorePointCollections (resource types from the Azure Resource Manager reference)
+//      and ends in /delete, the Azure RBAC operation naming form.
+//   2. Writes to Microsoft.RecoveryServices/vaults/backupconfig, the vault configuration resource that holds
+//      softDeleteFeatureState and enhancedSecurityState. Activity records do not always carry the new values,
+//      so these rows are a review signal.
+//   3. Grouped per caller and subscription. Deletions are counted as distinct resources and configuration
+//      writes as distinct operations (CorrelationId), because one operation writes several activity
+//      records (status values such as Started, then Succeeded or Failed) that share a CorrelationId. Many
+//      deletions, or any vault-level deletion, raise severity.
+//   4. No filter on ActivityStatusValue: failed attempts return with successful ones (Statuses shows which).
+//   Not covered: retention changes, which ADR-009 decision 4 also lists; this rule sees deletions and
+//   backupconfig writes only.
+//
+// Known false positives
+//   - Azure Backup and snapshot lifecycle automation that prunes expired recovery points (add the caller's
+//     object ID to ApprovedCallers once the automation identity is confirmed).
+//   - Decommissioning of a workload with a change record.
+//
+// Tuning knobs (let statements below)
+//   ApprovedCallers        object IDs or names of sanctioned backup lifecycle automation (Caller column).
+//   BulkDeletionThreshold  distinct recovery assets deleted per caller per run that count as bulk.
+//
+// Response notes
+//   Stop further deletion first: remove the caller's role assignments through PIM and revoke its sessions,
+//   then check soft-deleted items and immutability settings before anything else changes. Treat as a
+//   Tier 0 compromise indicator when the caller is a privileged identity (AP-5), and start recovery
+//   planning with the integrity checks that CSF 2.0 RC.RP-03 describes. A failed deletion gets the same
+//   response: ADR-009 decision 4 treats a refused attempt to delete a copy as preparation for the
+//   recovery-inhibition step of AP-4 or AP-5. These steps touch no clinical device; if the caller is a
+//   service identity that a clinical system depends on, the clinical safety gate (ADR-008; playbook
+//   decision point D5) applies before its access is removed.
+//
+// Validation notes
+//   Not run against any workspace. Validate in a lab subscription: create a VM restore point collection
+//   and a disk snapshot, then delete them, and change a test vault's soft delete setting. Expected
+//   telemetry: AzureActivity Administrative records with OperationNameValue ending in /delete and a
+//   backupconfig write (purple-team-plan.md exercise PX-01, cloud half).
+//
+// References
+//   https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/azureactivity
+//   https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/activity-log-schema
+//   https://learn.microsoft.com/en-us/azure/templates/microsoft.recoveryservices/vaults/backupconfig
+//   https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/restorepointcollections
+//   https://learn.microsoft.com/en-us/azure/templates/microsoft.dataprotection/backupvaults/backupinstances
+//   https://attack.mitre.org/techniques/T1490/
+//
+let LookbackWindow = 1h;
+// Object IDs or names of sanctioned backup lifecycle automation (placeholder)
+let ApprovedCallers = dynamic(["00000000-0000-0000-0000-000000000000"]);
+let BulkDeletionThreshold = 5;
+AzureActivity
+| where TimeGenerated > ago(LookbackWindow)
+| where CategoryValue =~ "Administrative"
+| extend Op = tolower(OperationNameValue)
+| where Op startswith "microsoft.recoveryservices/vaults"
+    or Op startswith "microsoft.dataprotection/backupvaults"
+    or Op startswith "microsoft.compute/snapshots"
+    or Op startswith "microsoft.compute/restorepointcollections"
+| where Op endswith "/delete" or Op == "microsoft.recoveryservices/vaults/backupconfig/write"
+| where Caller !in~ (ApprovedCallers)
+| extend ChangeType = iff(Op endswith "/delete", "Deletion", "Vault security configuration write"),
+         VaultLevelDeletion = Op in ("microsoft.recoveryservices/vaults/delete", "microsoft.dataprotection/backupvaults/delete")
+// Count distinct resources and operations, not activity records (one operation writes several records)
+| summarize arg_max(TimeGenerated, CallerIpAddress, ActivityStatusValue, _ResourceId, CorrelationId),
+    FirstSeen = min(TimeGenerated),
+    Deletions = dcountif(tolower(_ResourceId), ChangeType == "Deletion"),
+    VaultDeletions = dcountif(tolower(_ResourceId), VaultLevelDeletion),
+    ConfigWrites = dcountif(CorrelationId, ChangeType == "Vault security configuration write"),
+    Operations = make_set(OperationNameValue, 20),
+    Resources = make_set(_ResourceId, 20),
+    Statuses = make_set(ActivityStatusValue, 5)
+    by Caller, SubscriptionId
+| extend SuggestedSeverity = case(
+    VaultDeletions > 0, "High: backup vault deletion",
+    Deletions >= BulkDeletionThreshold, "High: bulk deletion of recovery assets",
+    ConfigWrites > 0, "Medium: vault security settings changed, confirm soft delete and immutability state",
+    "Medium: recovery asset deleted, confirm the change record")
+| project TimeGenerated, Caller, CallerIpAddress, SubscriptionId, SuggestedSeverity, Deletions, VaultDeletions, ConfigWrites,
+    Operations, Resources, Statuses, FirstSeen, CorrelationId

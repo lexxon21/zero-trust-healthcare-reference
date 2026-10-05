@@ -1,0 +1,92 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Workstation-to-workstation SMB traffic and executables written over SMB between workstations (lateral movement past host east-west blocking)
+// Status: untested template
+// ATT&CK: T1021.002 (Remote Services: SMB/Windows Admin Shares), T1570 (Lateral Tool Transfer); ATT&CK v19.2
+// Data sources: Microsoft Defender XDR advanced hunting, DeviceNetworkEvents and DeviceFileEvents (Microsoft Defender for Endpoint)
+// Licensing assumptions: Defender for Endpoint on Windows workstations in Z-CORP and Z-CLIN-USER (scenario A-05, Microsoft 365 E5)
+// Rule ID: DX-08 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High
+// Tactic: Lateral Movement (TA0008)
+// Answers: detection-priorities.md item 12 (Priority 2); attack-paths.md AP-4 steps 7 and 8
+// Architecture context: PEP-HOST (host firewall blocks inbound SMB, RDP, WinRM, and RPC between peer workstations, 04-segmentation.md section 6), Z-CORP, Z-CLIN-USER, Z-MGMT; risk register R-03
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   Host east-west blocking is the cheapest control against ransomware spreading between workstations. If
+//   it holds, this query is quiet; any result is either a policy gap on a host or an intrusion. Detection
+//   here is assurance for a preventive control, as detection-priorities.md notes for item 12.
+//
+// Logic
+//   1. Workstation devices are identified by their local address falling in the workstation ranges.
+//   2. Signal A: network events on ports 445 or 139 where both ends are workstation addresses. All
+//      ActionType values are kept (Microsoft defers the list to the in-portal schema reference), so
+//      blocked attempts and completed connections both surface; Outcomes shows which.
+//   3. Signal B: executables or scripts written to a workstation over SMB (RequestProtocol "SMB", a
+//      documented value) from another workstation address.
+//   Administrative traffic from Z-MGMT is outside the workstation ranges, so it never matches.
+//
+// Known false positives
+//   - Peer-to-peer content delivery features or legacy software distribution between workstations.
+//   - A workstation re-addressed into a server range, or a management host placed in a workstation range.
+//   - Shared clinical printers or scanners attached to a workstation and shared over SMB (a design gap
+//     worth recording rather than allow-listing).
+//
+// Tuning knobs (let statements below)
+//   WorkstationRanges      Z-CORP and Z-CLIN-USER address ranges (example private ranges shown; addressing is
+//                          out of scope in 01-scenario-and-assumptions.md).
+//   ExecutableExtensions   file types treated as tooling.
+//
+// Response notes
+//   A connected result means PEP-HOST policy did not apply on that host: record a host policy gap (add
+//   it to the architectural observations in threat-model.md section 9, as purple-team-plan.md section 8
+//   does for architectural control gaps) and investigate the source workstation.
+//   Shared clinical workstations need the clinical notification step before isolation (ADR-008).
+//
+// Validation notes
+//   Not run against any tenant. Validate between two lab workstations: attempt an SMB connection from one
+//   to the other with the host firewall policy applied, then with it disabled, and copy a benign test
+//   executable to an administrative share. Expected telemetry: DeviceNetworkEvents rows on port 445 with
+//   both workstation addresses, and a DeviceFileEvents row with RequestProtocol SMB and RequestSourceIP set.
+//   Public library: Atomic Red Team tests mapped to T1021.002 and T1570, selected by the operator
+//   (purple-team-plan.md exercise PX-03).
+//
+// References
+//   https://attack.mitre.org/techniques/T1021/002/
+//   https://attack.mitre.org/techniques/T1570/
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicenetworkevents-table
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicefileevents-table
+//
+let LookbackWindow = 1h;
+// Example private ranges for Z-CORP and Z-CLIN-USER; replace with the real allocations
+let WorkstationRanges = dynamic(["10.10.0.0/16", "10.20.0.0/16"]);
+let ExecutableExtensions = dynamic(["exe", "dll", "ps1", "bat", "cmd", "vbs", "js", "hta", "scr", "msi", "sys"]);
+let WorkstationDevices =
+    DeviceNetworkEvents
+    | where Timestamp > ago(1d)
+    | where ipv4_is_in_any_range(LocalIP, WorkstationRanges)
+    | distinct DeviceId;
+let PeerSmb =
+    DeviceNetworkEvents
+    | where Timestamp > ago(LookbackWindow)
+    | where RemotePort in (445, 139)
+    | where ipv4_is_in_any_range(LocalIP, WorkstationRanges) and ipv4_is_in_any_range(RemoteIP, WorkstationRanges)
+    | where LocalIP != RemoteIP
+    | summarize arg_max(Timestamp, ReportId, InitiatingProcessFileName, InitiatingProcessAccountName),
+        Events = count(), Outcomes = make_set(ActionType, 10), PeerCount = dcount(RemoteIP), Peers = make_set(RemoteIP, 20)
+        by DeviceId, DeviceName
+    | extend Signal = "Workstation-to-workstation SMB (PEP-HOST should block this)", Detail = strcat(Events, " events to ", PeerCount, " peer(s)");
+let ToolDrops =
+    DeviceFileEvents
+    | where Timestamp > ago(LookbackWindow)
+    | where DeviceId in (WorkstationDevices)
+    | where RequestProtocol == "SMB"
+    | where ipv4_is_in_any_range(RequestSourceIP, WorkstationRanges)
+    | extend Extension = tolower(extract(@"\.([A-Za-z0-9]{1,8})$", 1, FileName))
+    | where Extension in (ExecutableExtensions)
+    | summarize arg_max(Timestamp, ReportId, FileName, FolderPath, SHA1, RequestAccountDomain, RequestAccountName, RequestSourceIP),
+        FilesWritten = count()
+        by DeviceId, DeviceName
+    | extend Signal = "Executable or script written over SMB from another workstation", Detail = strcat(FilesWritten, " file(s), latest ", FileName, " from ", RequestSourceIP);
+union PeerSmb, ToolDrops
+| extend SuggestedSeverity = iff(Signal startswith "Executable", "High: tooling copied between workstations", "High: peer SMB between workstations")
+| project Timestamp, ReportId, DeviceId, DeviceName, SuggestedSeverity, Signal, Detail, Outcomes, Peers,
+    InitiatingProcessFileName, InitiatingProcessAccountName, FileName, FolderPath, SHA1, RequestAccountDomain, RequestAccountName, RequestSourceIP

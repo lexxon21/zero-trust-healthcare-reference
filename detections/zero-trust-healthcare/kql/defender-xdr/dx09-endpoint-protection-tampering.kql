@@ -1,0 +1,93 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Endpoint protection tampering: tamper protection events, tamper alerts, and command-line attempts to disable Defender Antivirus or add exclusions
+// Status: untested template
+// ATT&CK: T1685 (Disable or Modify Tools); ATT&CK v19.2
+// Data sources: Microsoft Defender XDR advanced hunting, DeviceEvents and DeviceProcessEvents (Defender for Endpoint), AlertInfo and AlertEvidence (Defender XDR alerts)
+// Licensing assumptions: Defender for Endpoint with tamper protection on workstations (scenario A-05, Microsoft 365 E5) and server licensing for the servers in PEP-HOST's zones, as in DX-01
+// Rule ID: DX-09 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High
+// Tactic: Defense Impairment (TA0112)
+// Answers: detection-priorities.md item 13 (Priority 2); attack-paths.md AP-4 step 9
+// Architecture context: PIP-EDR, PEP-HOST, PIP-DEVICE-MGMT (Intune is the sanctioned way to change Defender settings); risk register R-03
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   Tampering with endpoint protection usually precedes encryption. With tamper protection on, most
+//   changes are blocked, so the value here is the early warning that someone with local administrator
+//   rights is trying. ATT&CK v19 moved this behavior to the Defense Impairment tactic (TA0112), technique
+//   T1685, which this rule uses.
+//
+// Logic (three signals, unioned)
+//   1. DeviceEvents with ActionType "TamperingAttempt", the value Microsoft's tamper protection
+//      documentation uses for advanced hunting.
+//   2. AlertInfo with DetectionSource "EDR" and the two tamper protection alert titles Microsoft lists in
+//      the same documentation, joined to AlertEvidence for the device.
+//   3. PowerShell command lines calling Set-MpPreference or Add-MpPreference with parameters that turn off
+//      a protection or add an exclusion (parameter names from the Set-MpPreference reference). Intune and
+//      Defender security settings management do not use these command lines, so a hit is unusual on a
+//      managed Contoso device.
+//
+// Known false positives
+//   - Troubleshooting mode sessions run by the endpoint team (record them in the change system).
+//   - Third-party software installers that add Defender exclusions during setup.
+//   - PowerShell partial parameter names (for example a shortened parameter) evade signal 3; signal 1
+//     still records the attempt when tamper protection blocks it.
+//
+// Tuning knobs (let statements below)
+//   ApprovedInitiators    initiating processes of sanctioned management tooling, after review.
+//   ProtectionParameters  Set-MpPreference and Add-MpPreference parameters treated as tampering.
+//
+// Response notes
+//   A tampering attempt on a host that also shows DX-01 or DX-02 activity is an active ransomware
+//   precursor: escalate at once. Isolation follows the clinical safety gate (non-medical devices may be
+//   isolated automatically; clinical workstations need the clinical notification step).
+//
+// Validation notes
+//   Not run against any tenant. Validate on a lab device onboarded to Defender for Endpoint with tamper
+//   protection on: attempt to turn off real-time protection from an elevated PowerShell session. Expected
+//   telemetry: a DeviceProcessEvents row for the Set-MpPreference command and a DeviceEvents row with
+//   ActionType TamperingAttempt. Public library: Atomic Red Team tests mapped to T1685, selected by the
+//   operator (purple-team-plan.md exercise PX-18).
+//
+// References
+//   https://attack.mitre.org/techniques/T1685/
+//   https://learn.microsoft.com/en-us/defender-endpoint/tamper-protection-overview
+//   https://learn.microsoft.com/en-us/powershell/module/defender/set-mppreference?view=windowsserver2025-ps
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceevents-table
+//
+let LookbackWindow = 1h;
+let TamperAlertTitles = dynamic(["Tamper Protection bypass", "Tampering with the Microsoft Defender for Endpoint sensor"]);
+let ProtectionParameters = dynamic(["DisableRealtimeMonitoring", "DisableBehaviorMonitoring", "DisableIOAVProtection",
+    "DisableScriptScanning", "DisableBlockAtFirstSeen", "DisableArchiveScanning", "MAPSReporting", "SubmitSamplesConsent",
+    "ExclusionPath", "ExclusionProcess", "ExclusionExtension"]);
+// Sanctioned management tooling that legitimately runs these cmdlets (empty by default)
+let ApprovedInitiators = dynamic([]);
+let TamperEvents =
+    DeviceEvents
+    | where Timestamp > ago(LookbackWindow)
+    | where ActionType == "TamperingAttempt"
+    | project Timestamp, ReportId, DeviceId, DeviceName, Signal = "Tampering attempt recorded by tamper protection",
+        AccountName = InitiatingProcessAccountName, Detail = AdditionalFields, InitiatingProcessFileName, InitiatingProcessCommandLine;
+let TamperAlerts =
+    AlertInfo
+    | where Timestamp > ago(LookbackWindow)
+    | where DetectionSource == "EDR" and Title in (TamperAlertTitles)
+    | join kind=inner (
+        AlertEvidence
+        | where Timestamp > ago(LookbackWindow)
+        | where isnotempty(DeviceId)
+        | distinct AlertId, DeviceId, DeviceName
+      ) on AlertId
+    | project Timestamp, ReportId = long(null), DeviceId, DeviceName, Signal = strcat("Defender alert: ", Title),
+        AccountName = "", Detail = AlertId, InitiatingProcessFileName = "", InitiatingProcessCommandLine = "";
+let PreferenceCommands =
+    DeviceProcessEvents
+    | where Timestamp > ago(LookbackWindow)
+    | where FileName in~ ("powershell.exe", "pwsh.exe", "powershell_ise.exe")
+    | where ProcessCommandLine contains "Set-MpPreference" or ProcessCommandLine contains "Add-MpPreference"
+    | where ProcessCommandLine has_any (ProtectionParameters)
+    | where InitiatingProcessFileName !in~ (ApprovedInitiators)
+    | project Timestamp, ReportId, DeviceId, DeviceName, Signal = "Defender Antivirus preference change from a command line",
+        AccountName, Detail = ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine;
+union TamperEvents, TamperAlerts, PreferenceCommands
+| extend SuggestedSeverity = iff(Signal startswith "Defender alert" or Signal startswith "Tampering attempt", "High: tamper protection recorded or alerted", "Medium-high: attempted protection change, check change records")
+| project Timestamp, ReportId, DeviceId, DeviceName, SuggestedSeverity, Signal, AccountName, Detail, InitiatingProcessFileName, InitiatingProcessCommandLine

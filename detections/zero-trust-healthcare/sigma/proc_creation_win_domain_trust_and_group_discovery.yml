@@ -1,0 +1,59 @@
+# Reference rule. Not deployed in any employer environment.
+# Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+# Rule ID: SG-04 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Answers: detection-priorities.md item 18 (Priority 3, the endpoint half); attack-paths.md AP-5 steps 1 and 2, and the AP-4 enumeration that item 18 also serves
+# Companion KQL: kql/defender-xdr/dx05-mdi-tier0-credential-access-alert-chain.kql uses Defender for Identity
+#   reconnaissance alerts for the directory-side half of item 18.
+# Conversion note: process_creation log source, targeted by the pySigma Kusto backend's microsoft_xdr pipeline.
+#   On 2026-10-04, "sigma convert -t kusto -p microsoft_xdr" (pySigma-backend-kusto 1.0.1) converted this rule
+#   to a DeviceProcessEvents query. The converted query has not been run against data.
+# Tuning: these built-in commands are routine on administrator PAWs and IT support hosts in Z-MGMT and rare on
+#   clinical workstations. Scope out PAW and support host names, and treat a hit from Z-CLIN-USER as higher
+#   priority than one from Z-CORP.
+# Validation: not run. On a lab workstation joined to a lab domain, run the domain trust and domain group
+#   queries with the built-in tools; expect process creation events for nltest.exe and net.exe. Public
+#   library: Atomic Red Team tests mapped to T1482, T1069.002, and T1087.002 (operator selects them).
+title: Domain Trust, Domain Group, or Domain User Enumeration With Built-in Windows Tools
+id: 4d7e2b9f-1c06-4a3e-b85d-9f2a0c6e1d43
+status: experimental
+description: Reference rule. Detects built-in Windows tools listing domain trusts and domain controllers, domain groups, or domain users, early enumeration that precedes lateral movement and Tier 0 objectives. Written for the fictional Contoso Regional Health reference architecture and not deployed in any employer environment.
+references:
+    - https://attack.mitre.org/techniques/T1482/
+    - https://attack.mitre.org/techniques/T1069/002/
+    - https://attack.mitre.org/techniques/T1087/002/
+author: Jacob Welch
+date: 2026-10-04
+tags:
+    - attack.discovery
+    - attack.t1482
+    - attack.t1069.002
+    - attack.t1087.002
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_nltest:
+        Image|endswith: '\nltest.exe'
+        CommandLine|contains|windash:
+            - '/domain_trusts'
+            - '/all_trusts'
+            - '/dclist'
+    selection_net_group:
+        Image|endswith:
+            - '\net.exe'
+            - '\net1.exe'
+        CommandLine|contains|all:
+            - ' group'
+            - '/domain'
+    selection_net_user:
+        Image|endswith:
+            - '\net.exe'
+            - '\net1.exe'
+        CommandLine|contains|all:
+            - ' user'
+            - '/domain'
+    condition: 1 of selection_*
+falsepositives:
+    - Administrators and IT support staff working from PAWs or support hosts in Z-MGMT
+    - Logon scripts or inventory tools that query domain group membership
+level: medium

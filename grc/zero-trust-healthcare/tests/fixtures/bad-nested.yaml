@@ -1,0 +1,2302 @@
+# Test fixture for tests\run-tests.ps1: the minimal known-good crosswalk.
+# Every bad-*.yaml in this folder is this file with exactly one change; run-tests.ps1 checks that.
+# Rebuild the variants with: powershell -NoProfile -ExecutionPolicy Bypass -File ..\run-tests.ps1 -Rebuild
+schema_version: "1.0"
+metadata:
+  title: "Validator fixture: minimal known-good crosswalk"
+  reference_label: "Reference work. Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice."
+  scenario: "Contoso Regional Health (fictional)"
+  project: "zero-trust-healthcare"
+  status: "Test fixture"
+  prepared: "2026-10-04"
+  statement: "A test fixture for validate-crosswalk.ps1. The rows are placeholders, not analysis."
+  frameworks:
+    - key: "hipaa-security-rule"
+      name: "HIPAA Security Rule"
+      version: "45 CFR Part 164 Subpart C (fixture)"
+      role: "Source"
+    - key: "nist-csf"
+      name: "NIST Cybersecurity Framework"
+      version: "2.0"
+      role: "Hub"
+    - key: "pci-dss"
+      name: "PCI DSS"
+      version: "v4.0.1"
+      role: "Target for the Z-CDE segment only"
+  pci_numbering_basis: "Fixture."
+  hitrust:
+    identifiers_included: false
+    decision: "No HITRUST CSF identifiers appear in this fixture."
+    sources: ["SRC-HITRUST-LICENSE"]
+  paths:
+    architecture: "architecture"
+    grc: "grc"
+    detections: "detections"
+  relationship_types:
+    - key: "equivalent"
+      definition: "Fixture."
+    - key: "partial"
+      definition: "Fixture."
+    - key: "related"
+      definition: "Fixture."
+  coverage_types:
+    - key: "designed"
+      definition: "Fixture."
+    - key: "partial"
+      definition: "Fixture."
+    - key: "procedural"
+      definition: "Fixture."
+    - key: "out-of-scope"
+      definition: "Fixture."
+    - key: "not-applicable"
+      definition: "Fixture."
+  applicability_types:
+    - key: "applicable"
+      definition: "Fixture."
+    - key: "indirect"
+      definition: "Fixture."
+    - key: "not-applicable"
+      definition: "Fixture."
+  pci_path_statuses:
+    - key: "required"
+      definition: "Fixture."
+    - key: "performed-anyway"
+      definition: "Fixture."
+    - key: "defense-in-depth"
+      definition: "Fixture."
+    - key: "not-applicable-by-design"
+      definition: "Fixture."
+    - key: "not-on-saq-p2pe"
+      definition: "Fixture."
+  pci_requirements:
+    - id: "1.2.3"
+      summary: "Fixture paraphrase."
+      verified_against: ["SRC-PCI-DSS-401"]
+      checked: "2026-10-04"
+    - id: "12.10.1"
+      summary: "Fixture paraphrase."
+      verified_against: ["SRC-PCI-DSS-401"]
+      checked: "2026-10-04"
+  csf_subcategories:
+    - id: "GV.PO-01"
+      outcome: "Fixture."
+    - id: "GV.SC-05"
+      outcome: "Fixture."
+    - id: "ID.AM-03"
+      outcome: "Fixture."
+    - id: "ID.IM-04"
+      outcome: "Fixture."
+    - id: "ID.RA-05"
+      outcome: "Fixture."
+    - id: "PR.AA-05"
+      outcome: "Fixture."
+  sources:
+    - key: "SRC-ECFR-164-308"
+      title: "45 CFR 164.308"
+      publisher: "Fixture"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.308"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-310"
+      title: "45 CFR 164.310"
+      publisher: "Fixture"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.310"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-312"
+      title: "45 CFR 164.312"
+      publisher: "Fixture"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.312"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-314"
+      title: "45 CFR 164.314"
+      publisher: "Fixture"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.314"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-ECFR-164-316"
+      title: "45 CFR 164.316"
+      publisher: "Fixture"
+      url: "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.316"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-NIST-CSWP29"
+      title: "NIST CSWP 29"
+      publisher: "Fixture"
+      url: "https://doi.org/10.6028/NIST.CSWP.29"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-PCI-DSS-401"
+      title: "PCI DSS v4.0.1"
+      publisher: "Fixture"
+      url: "https://www.pcisecuritystandards.org/document_library/"
+      checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-HITRUST-LICENSE"
+      title: "HITRUST CSF License Agreement"
+      publisher: "Fixture"
+      url: "https://hitrustalliance.net/"
+      checked: "2026-10-04"
+      quality: "primary"
+mappings:
+  - id: "XW-01"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(1)(i)"
+      kind: "standard"
+      title: "Security management process"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(i)"
+    applicability: "applicable"
+    coverage: "designed"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+      - id: "PR.AA-05"
+        relationship: "related"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, PR.AA-05"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: ["PE-FIXTURE", "PEP-FIXTURE"]
+      zones: ["Z-FIXTURE", "Z-IOMT-FIXTURE"]
+      policies: ["CA-01"]
+      flows: ["F-01"]
+      residual_risks: ["RR-01"]
+      artifacts:
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "1"
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Design principles"
+        - doc: "architecture"
+          file: "adr/ADR-001-fixture.md"
+          section: "Decision"
+        - doc: "grc"
+          file: "register.md"
+          section: "2"
+    detections:
+      - doc: "detections"
+        file: "fixture-rule.kql"
+        purpose: "Fixture detection link."
+    notes: ""
+  - id: "XW-02"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(1)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Risk analysis"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(ii)(A)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "ID.RA-05"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.RA-05"
+    cde_scope: true
+    pci_targets:
+      - id: "1.2.3"
+        relationship: "related"
+        shared_csf: ["ID.AM-03"]
+        saq_path_status: "performed-anyway"
+        full_assessment_status: "required"
+        rationale: "Fixture."
+        citation:
+          source: "src-pci-dss-401"
+          locator: "Requirement 1.2.3"
+    architecture:
+      components: []
+      zones: ["Z-CDE"]
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-03"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(1)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Risk management"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(ii)(B)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-04"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(1)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Sanction policy"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(ii)(C)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-05"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(1)(ii)(D)"
+      kind: "implementation-specification"
+      title: "Information system activity review"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(1)(ii)(D)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-06"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(2)"
+      kind: "standard"
+      title: "Assigned security responsibility"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(2)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-07"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(3)(i)"
+      kind: "standard"
+      title: "Workforce security"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(3)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-08"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(3)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Authorization and/or supervision"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(3)(ii)(A)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-09"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(3)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Workforce clearance procedure"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(3)(ii)(B)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-10"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(3)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Termination procedures"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(3)(ii)(C)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-11"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(4)(i)"
+      kind: "standard"
+      title: "Information access management"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(4)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-12"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(4)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Isolating health care clearinghouse functions"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(4)(ii)(A)"
+    applicability: "not-applicable"
+    coverage: "not-applicable"
+    coverage_note: "Fixture."
+    csf_targets: []
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-13"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(4)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Access authorization"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(4)(ii)(B)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-14"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(4)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Access establishment and modification"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(4)(ii)(C)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-15"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(5)(i)"
+      kind: "standard"
+      title: "Security awareness and training"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "equivalent"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-16"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(5)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Security reminders"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(ii)(A)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-17"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(5)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Protection from malicious software"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(ii)(B)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-18"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(5)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Log-in monitoring"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(ii)(C)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-19"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(5)(ii)(D)"
+      kind: "implementation-specification"
+      title: "Password management"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(5)(ii)(D)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-20"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(6)(i)"
+      kind: "standard"
+      title: "Security incident procedures"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(6)(i)"
+    applicability: "applicable"
+    coverage: "partial"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "ID.IM-04"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, ID.IM-04"
+    cde_scope: true
+    pci_targets:
+      - id: "12.10.1"
+        relationship: "partial"
+        shared_csf: ["ID.IM-04"]
+        saq_path_status: "required"
+        full_assessment_status: "required"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-PCI-DSS-401"
+          locator: "Requirement 12.10.1"
+    architecture:
+      components: ["RES-POI"]
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-21"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(6)(ii)"
+      kind: "implementation-specification"
+      title: "Response and reporting"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(6)(ii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-22"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(7)(i)"
+      kind: "standard"
+      title: "Contingency plan"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-23"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(7)(ii)(A)"
+      kind: "implementation-specification"
+      title: "Data backup plan"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(A)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-24"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(7)(ii)(B)"
+      kind: "implementation-specification"
+      title: "Disaster recovery plan"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(B)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-25"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(7)(ii)(C)"
+      kind: "implementation-specification"
+      title: "Emergency mode operation plan"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(C)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-26"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(7)(ii)(D)"
+      kind: "implementation-specification"
+      title: "Testing and revision procedures"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(D)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-27"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(7)(ii)(E)"
+      kind: "implementation-specification"
+      title: "Applications and data criticality analysis"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(7)(ii)(E)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-28"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(a)(8)"
+      kind: "standard"
+      title: "Evaluation"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(a)(8)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-29"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(b)(1)"
+      kind: "standard"
+      title: "Business associate contracts and other arrangements"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(b)(1)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-30"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.308(b)(3)"
+      kind: "implementation-specification"
+      title: "Written contract or other arrangement"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-308"
+        locator: "45 CFR 164.308(b)(3)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-31"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(a)(1)"
+      kind: "standard"
+      title: "Facility access controls"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(1)"
+    applicability: "applicable"
+    coverage: "out-of-scope"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "related"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-32"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(a)(2)(i)"
+      kind: "implementation-specification"
+      title: "Contingency operations"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(2)(i)"
+    applicability: "applicable"
+    coverage: "out-of-scope"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "related"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-33"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(a)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Facility security plan"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(2)(ii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-34"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(a)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Access control and validation procedures"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(2)(iii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-35"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(a)(2)(iv)"
+      kind: "implementation-specification"
+      title: "Maintenance records"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(a)(2)(iv)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-36"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(b)"
+      kind: "standard"
+      title: "Workstation use"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(b)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-37"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(c)"
+      kind: "standard"
+      title: "Workstation security"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(c)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-38"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(d)(1)"
+      kind: "standard"
+      title: "Device and media controls"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(1)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-39"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(d)(2)(i)"
+      kind: "implementation-specification"
+      title: "Disposal"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(2)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-40"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(d)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Media re-use"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(2)(ii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-41"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(d)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Accountability"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(2)(iii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-42"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.310(d)(2)(iv)"
+      kind: "implementation-specification"
+      title: "Data backup and storage"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-310"
+        locator: "45 CFR 164.310(d)(2)(iv)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-43"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(a)(1)"
+      kind: "standard"
+      title: "Access control"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(1)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-44"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(a)(2)(i)"
+      kind: "implementation-specification"
+      title: "Unique user identification"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(2)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-45"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(a)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Emergency access procedure"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(2)(ii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-46"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(a)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Automatic logoff"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(2)(iii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-47"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(a)(2)(iv)"
+      kind: "implementation-specification"
+      title: "Encryption and decryption"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(a)(2)(iv)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-48"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(b)"
+      kind: "standard"
+      title: "Audit controls"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(b)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-49"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(c)(1)"
+      kind: "standard"
+      title: "Integrity"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(c)(1)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-50"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(c)(2)"
+      kind: "implementation-specification"
+      title: "Mechanism to authenticate electronic protected health information"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(c)(2)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-51"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(d)"
+      kind: "standard"
+      title: "Person or entity authentication"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(d)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-52"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(e)(1)"
+      kind: "standard"
+      title: "Transmission security"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(e)(1)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-53"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(e)(2)(i)"
+      kind: "implementation-specification"
+      title: "Integrity controls"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(e)(2)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-54"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.312(e)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Encryption"
+      designation: "addressable"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-312"
+        locator: "45 CFR 164.312(e)(2)(ii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-55"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.314(a)(1)"
+      kind: "standard"
+      title: "Business associate contracts or other arrangements"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(a)(1)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-56"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.314(a)(2)(i)"
+      kind: "implementation-specification"
+      title: "Business associate contracts"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(a)(2)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-57"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.314(a)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Other arrangements"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(a)(2)(ii)"
+    applicability: "not-applicable"
+    coverage: "not-applicable"
+    coverage_note: "Fixture."
+    csf_targets: []
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-58"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.314(a)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Business associate contracts with subcontractors"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(a)(2)(iii)"
+    applicability: "indirect"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.SC-05"
+        relationship: "related"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.SC-05"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-59"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.314(b)(1)"
+      kind: "standard"
+      title: "Requirements for group health plans"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(b)(1)"
+    applicability: "not-applicable"
+    coverage: "not-applicable"
+    coverage_note: "Fixture."
+    csf_targets: []
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-60"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.314(b)(2)"
+      kind: "implementation-specification"
+      title: "Implementation specifications"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-314"
+        locator: "45 CFR 164.314(b)(2)"
+    applicability: "not-applicable"
+    coverage: "not-applicable"
+    coverage_note: "Fixture."
+    csf_targets: []
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-61"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.316(a)"
+      kind: "standard"
+      title: "Policies and procedures"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(a)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-62"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.316(b)(1)"
+      kind: "standard"
+      title: "Documentation"
+      designation: "standard"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(b)(1)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-63"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.316(b)(2)(i)"
+      kind: "implementation-specification"
+      title: "Time limit"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(b)(2)(i)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-64"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.316(b)(2)(ii)"
+      kind: "implementation-specification"
+      title: "Availability"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(b)(2)(ii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""
+  - id: "XW-65"
+    source:
+      framework: "hipaa-security-rule"
+      framework_version: "45 CFR Part 164 Subpart C (fixture)"
+      id: "164.316(b)(2)(iii)"
+      kind: "implementation-specification"
+      title: "Updates"
+      designation: "required"
+      summary: "Fixture."
+      citation:
+        source: "SRC-ECFR-164-316"
+        locator: "45 CFR 164.316(b)(2)(iii)"
+    applicability: "applicable"
+    coverage: "procedural"
+    coverage_note: "Fixture."
+    csf_targets:
+      - id: "GV.PO-01"
+        relationship: "partial"
+        rationale: "Fixture."
+        citation:
+          source: "SRC-NIST-CSWP29"
+          locator: "Appendix A, GV.PO-01"
+    cde_scope: false
+    pci_targets: []
+    architecture:
+      components: []
+      zones: []
+      policies: []
+      flows: []
+      residual_risks: []
+      artifacts: []
+    detections: []
+    notes: ""

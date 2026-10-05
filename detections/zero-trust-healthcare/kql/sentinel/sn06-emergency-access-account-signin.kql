@@ -1,0 +1,151 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Sign-in by either tenant emergency access (break-glass) account, interactive or non-interactive, successful or failed
+// Status: untested template
+// ATT&CK: T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v19.2
+// Data sources: Microsoft Sentinel, SigninLogs and AADNonInteractiveUserSignInLogs (Microsoft Entra ID data connector)
+// Licensing assumptions: Microsoft Sentinel with the Entra ID connector streaming interactive and non-interactive user sign-in logs (scenario A-17); Microsoft requires Entra ID P1 or P2 to ingest sign-in logs into Sentinel (scenario holds P2)
+// Rule ID: SN-06 | Platform: Microsoft Sentinel near-real-time (NRT) analytics rule, or a scheduled rule with the time settings below | Suggested severity: High for every result
+// Tactics: Initial Access (TA0001), Persistence (TA0003), Privilege Escalation (TA0004), Stealth (TA0005)
+// Answers: detection-priorities.md item 19 (Priority 2), with SN-07 for changes to grp-ca-emergency-access and audit activity by or on the accounts. It implements the 03-identity-and-access.md section 5 requirement that every sign-in by the two tenant emergency access accounts raises a Sentinel alert (also listed under Monitoring in 03 section 4), which is the emergency-account alerting control named at attack-paths.md AP-5 step 8, the sign-in that a reset at AP-5 step 8b enables, and threat-model.md TB-7
+// Architecture context: IDS-ENTRA, the emergency access accounts and grp-ca-emergency-access (03 section 5), PEP-PAW, PIP-SIEM; residual risk RR-07; risk register R-05
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   The two emergency access accounts are the only permanent active Global Administrators in the design
+//   (03 section 4). As Microsoft's guidance directs, they are excluded from every Conditional Access
+//   policy that blocks or restricts sign-in, so policy cannot limit their use. Their passkeys, the split
+//   custody of the safes, and this alert are the controls. Microsoft's emergency access guidance says to
+//   alert whenever an emergency access account signs in and to review every use. Each result is a
+//   scheduled test, a declared emergency, or misuse. The rule does not try to tell them apart; the
+//   responder does.
+//
+// Logic
+//   1. Both user sign-in tables, matched on the accounts' object IDs (the UserId column, as in Microsoft's
+//      alert steps), with the user principal name as a second key. SigninLogs holds interactive sign-ins.
+//      AADNonInteractiveUserSignInLogs holds sign-ins that a client performs for the user without user
+//      interaction, such as token refreshes, so continued use of an emergency session also alerts.
+//      Microsoft's sample queries use SigninLogs only; the second table is this pack's addition.
+//   2. No filter on the result: successful and failed sign-ins both return.
+//   3. No exclusion for scheduled tests. Microsoft's validation guidance says drills should confirm that
+//      monitoring and alerting rules trigger, so a test is expected to alert.
+//   4. One row per account, with counts, outcomes, addresses, apps, and devices. OffPawInteractiveSignIns
+//      counts interactive sign-ins whose Entra device ID is not on the designated PAW list (03 section 5:
+//      use only from a designated PAW). Microsoft populates the device ID only for devices registered in
+//      Entra ID, so a sign-in from an unregistered device counts as off-PAW.
+//   5. Time handling follows Microsoft's ingestion delay pattern: a row is returned once, in the first run
+//      after it is ingested, provided it was generated within RuleLookBack plus IngestionDelay.
+//   Mapping note: T1078.004, because what the rule sees is the use of a cloud account. AP-5 step 8 is a
+//   role assignment (T1098.003), which SN-02 detects; this rule is the alerting control that step names.
+//
+// Known false positives
+//   Every sign-in is meant to alert, so there are expected benign results rather than false positives:
+//   - The quarterly sign-in test and the 90-day validation (03 section 5), announced to the SOC first,
+//     as Microsoft's validation guidance says.
+//   - Use during a declared emergency under incident command.
+//   Close these against the test record or the incident timeline, never with a query exclusion.
+//
+// Tuning knobs (let statements below)
+//   EmergencyAccountObjectIds  object IDs of the two accounts, copied from the Entra admin center.
+//   EmergencyAccountUpns       their user principal names on the onmicrosoft.com domain.
+//   DesignatedPawDeviceIds     Entra device IDs of the designated PAWs.
+//   RuleLookBack               as a scheduled rule, set "Run query every" to this value (Microsoft allows
+//                              5 minutes to 14 days) and "Lookup data from the last" to RuleLookBack plus
+//                              IngestionDelay (65 minutes with the defaults).
+//   IngestionDelay             allowance for sign-in rows that arrive late. Microsoft notes that Entra log
+//                              events are batched into about 5-minute intervals before they are sent, and
+//                              the Workspace Usage Report in Sentinel shows the measured latency per data
+//                              type.
+//   As an NRT rule, the query runs every minute on newly ingested rows, which Microsoft offers as the
+//   alternative to the lookback pattern (Microsoft limits NRT rules to 50 per customer). Leave the time
+//   settings as they are. Alert settings for either form: "Trigger an alert for each event" (one alert per
+//   account), map UserPrincipalName and UserId to the Account entity and IPAddress to the IP entity, and
+//   group alerts into one incident when all entities match, so one emergency session becomes one incident.
+//
+// Response notes
+//   Run Microsoft's post-use review for every result. Confirm through incident command and the safe
+//   custodians whether the use was a scheduled test, a declared emergency, or neither, and preserve the
+//   Entra sign-in and audit logs. Review what the account did in the window: SN-07 alerts on AuditLogs
+//   rows by or on the account, and SN-02 on Tier 0 changes. Close a drill
+//   only when every address and device in the result matches the drill record: OffPawInteractiveSignIns
+//   counts interactive sign-ins only, so a token used from elsewhere during a drill shows only in the
+//   IPAddresses, Countries, Apps, and Devices sets. A sign-in that no test or declared emergency explains
+//   is a Tier 0 compromise: SEV-1, playbook decision point D4, and Branch D. Revoke the account's sessions, re-issue its passkey under split custody, and keep the other
+//   account sealed. The incident commander decides whether to disable the account, because that removes
+//   one of the two lockout backstops. These steps touch no clinical account or device; the clinical
+//   safety gate (ADR-008) applies if the response widens to Active Directory or certificates.
+//
+// Validation notes
+//   Not run against any workspace. The lab test is the drill that Microsoft describes and 03 section 5
+//   schedules (purple-team-plan.md exercise PX-19). Before it, set the tuning knobs to the lab accounts'
+//   object IDs and user principal names and the lab PAW's Entra device ID, or a correct drill reads as
+//   off-PAW. In a lab tenant, tell the monitoring staff first, then sign in with a lab emergency access
+//   account from the designated PAW. Expected telemetry: a SigninLogs row whose UserId is the account's
+//   object ID, possibly AADNonInteractiveUserSignInLogs rows as the session obtains further tokens, and an
+//   alert for the account within the agreed time. Rows ingested in a later run can raise further alerts
+//   for the same account, which the incident grouping above joins to the same incident when the entities
+//   match. OffPawInteractiveSignIns is 0 on the alert that carries the interactive sign-in. A second
+//   announced sign-in from a lab device that is not a designated PAW, also part of PX-19, should return
+//   OffPawInteractiveSignIns of 1 or more and the off-PAW severity text. Any administrative change the
+//   account makes during the drill is SN-07's to alert on (PX-20). Record the result before the status
+//   changes to lab-tested.
+//
+// References
+//   https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/security-emergency-access
+//   https://learn.microsoft.com/en-us/azure/sentinel/connect-azure-active-directory
+//   https://learn.microsoft.com/en-us/azure/sentinel/near-real-time-rules
+//   https://learn.microsoft.com/en-us/azure/sentinel/ingestion-delay
+//   https://learn.microsoft.com/en-us/azure/sentinel/create-analytics-rules
+//   https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-log-monitoring-integration-options-considerations
+//   https://learn.microsoft.com/en-us/graph/api/resources/devicedetail?view=graph-rest-1.0
+//   https://learn.microsoft.com/en-us/graph/api/resources/useridentity?view=graph-rest-1.0
+//   https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/signinlogs
+//   https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/aadnoninteractiveusersigninlogs
+//   https://attack.mitre.org/techniques/T1078/004/
+//
+// Object IDs of the two emergency access accounts (placeholders; copy them from the Entra admin center)
+let EmergencyAccountObjectIds = dynamic(["emergency-account-1-object-id-placeholder", "emergency-account-2-object-id-placeholder"]);
+// User principal names of the same accounts (placeholders on the onmicrosoft.com domain, 03 section 5)
+let EmergencyAccountUpns = dynamic(["emergency-account-1-placeholder@contoso.onmicrosoft.com", "emergency-account-2-placeholder@contoso.onmicrosoft.com"]);
+// Entra device IDs of the designated PAWs (placeholder)
+let DesignatedPawDeviceIds = dynamic(["designated-paw-device-id-placeholder"]);
+let RuleLookBack = 5m;
+let IngestionDelay = 1h;
+let InteractiveSignins =
+    SigninLogs
+    | where TimeGenerated >= ago(IngestionDelay + RuleLookBack)
+    | where ingestion_time() > ago(RuleLookBack)
+    | where UserId in~ (EmergencyAccountObjectIds) or UserPrincipalName in~ (EmergencyAccountUpns)
+    | extend Country = tostring(LocationDetails.countryOrRegion), DeviceId = tostring(DeviceDetail.deviceId),
+        DeviceName = tostring(DeviceDetail.displayName), SignInKind = "Interactive"
+    | project TimeGenerated, UserId, UserPrincipalName, IPAddress, Country, DeviceId, DeviceName, AppDisplayName,
+        ResourceDisplayName, ResultType, ResultDescription, ConditionalAccessStatus, SignInKind, CorrelationId;
+let NonInteractiveSignins =
+    AADNonInteractiveUserSignInLogs
+    | where TimeGenerated >= ago(IngestionDelay + RuleLookBack)
+    | where ingestion_time() > ago(RuleLookBack)
+    | where UserId in~ (EmergencyAccountObjectIds) or UserPrincipalName in~ (EmergencyAccountUpns)
+    // LocationDetails and DeviceDetail are stored as text in this table
+    | extend Location = todynamic(LocationDetails), Device = todynamic(DeviceDetail)
+    | extend Country = tostring(Location.countryOrRegion), DeviceId = tostring(Device.deviceId),
+        DeviceName = tostring(Device.displayName), SignInKind = "Non-interactive"
+    | project TimeGenerated, UserId, UserPrincipalName, IPAddress, Country, DeviceId, DeviceName, AppDisplayName,
+        ResourceDisplayName, ResultType, ResultDescription, ConditionalAccessStatus, SignInKind, CorrelationId;
+union InteractiveSignins, NonInteractiveSignins
+| extend Outcome = iff(ResultType == "0", "Success", strcat("Failure ", ResultType)),
+    OnDesignatedPaw = isnotempty(DeviceId) and DeviceId in~ (DesignatedPawDeviceIds),
+    AccountKey = iff(isnotempty(UserId), UserId, tolower(UserPrincipalName))
+| summarize arg_max(TimeGenerated, UserId, UserPrincipalName, IPAddress, ResourceDisplayName, ResultDescription, CorrelationId),
+    FirstSeen = min(TimeGenerated), SignIns = count(),
+    InteractiveSignIns = countif(SignInKind == "Interactive"), NonInteractiveSignIns = countif(SignInKind == "Non-interactive"),
+    Successes = countif(Outcome == "Success"), Outcomes = make_set(Outcome, 10),
+    OffPawInteractiveSignIns = countif(SignInKind == "Interactive" and not(OnDesignatedPaw)),
+    IPAddresses = make_set(IPAddress, 20), Countries = make_set(Country, 10), Apps = make_set(AppDisplayName, 20),
+    Devices = make_set(DeviceName, 10), ConditionalAccessResults = make_set(ConditionalAccessStatus, 5)
+    by AccountKey
+| extend SuggestedSeverity = case(
+    Successes > 0 and OffPawInteractiveSignIns > 0, "High: emergency access account in use, with an interactive sign-in attempt from a device that is not a designated PAW",
+    Successes > 0, "High: emergency access account in use; confirm a scheduled test or a declared emergency",
+    "High: failed sign-in only; confirm a scheduled test, otherwise treat it as targeting of a Tier 0 account")
+| project TimeGenerated, UserPrincipalName, UserId, SuggestedSeverity, SignIns, InteractiveSignIns, NonInteractiveSignIns,
+    Successes, Outcomes, OffPawInteractiveSignIns, IPAddress, IPAddresses, Countries, Apps, Devices, ConditionalAccessResults,
+    ResourceDisplayName, ResultDescription, FirstSeen, CorrelationId

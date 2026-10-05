@@ -1,0 +1,109 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Burst of extension-changing file renames by one process across many folders (data encryption for impact pattern)
+// Status: untested template
+// ATT&CK: T1486 (Data Encrypted for Impact); ATT&CK v19.2
+// Data sources: Microsoft Defender XDR advanced hunting, DeviceFileEvents (Defender for Endpoint), AlertInfo and AlertEvidence (Defender XDR alerts)
+// Licensing assumptions: Defender for Endpoint on workstations (scenario A-05, Microsoft 365 E5) and separate server licensing for file and application servers (for example Microsoft Defender for Servers), as in DX-01
+// Rule ID: DX-02 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High
+// Tactic: Impact (TA0040)
+// Answers: detection-priorities.md item 2 (Priority 1); attack-paths.md AP-4 step 11
+// Architecture context: PEP-HOST, PIP-EDR, PIP-XDR (automatic attack disruption), RES-FILES, Z-CLIN-APP; residual risk RR-11; risk register R-03
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   Catch the encryption stage of a ransomware intrusion from file telemetry alone, independent of any
+//   malware signature, and attach any Defender alert already mapped to T1486 on the same device so the
+//   analyst sees behavior and product verdict together.
+//
+// Logic
+//   1. DeviceFileEvents rows where the file was renamed (PreviousFileName set and different) and the
+//      extension changed. No ActionType string is hard-coded: Microsoft defers ActionType values to the
+//      in-portal schema reference, so the query relies on documented columns instead.
+//   2. Grouped per device, per initiating process instance (process ID plus creation time), per 10-minute bin.
+//   3. Fires when one process renames many files across many folders to a small set of new extensions,
+//      the typical "append one extension to everything" pattern.
+//   4. SMB-delivered encryption on a file server runs on the remote workstation, so the initiating process
+//      recorded on the server is not the encrypting program. RequestProtocol, RequestSourceIP, and
+//      RequestAccountDomain plus RequestAccountName (documented columns) identify the remote workstation
+//      and the account doing it.
+//   5. Left join to Defender alerts whose AttackTechniques mention T1486 on the same device.
+//
+// Known false positives
+//   - Backup, archive, and file-sync clients renaming large trees (for example a sync client migrating folders).
+//   - Software installers and OS servicing (msiexec, Windows servicing) during patch windows.
+//   - Imaging and PACS migrations that rename DICOM files in bulk (RES-PACS), and EHR client updates.
+//   - Developer build systems and document conversion jobs.
+//
+// Tuning knobs (let statements below)
+//   MinRenamedFiles, MinDistinctFolders   volume thresholds per process per bin; start high, lower with data.
+//   MaxNewExtensions                       encryption tends to use one appended extension; raise only if needed.
+//   ExcludedInitiators                     process names to exclude after review (keep the list short).
+//   BinSize                                aggregation bin; 10 minutes balances speed and noise.
+//
+// Response notes (clinical safety gate)
+//   Defender automatic attack disruption may already have contained the device. Because it can also
+//   contain the IP addresses of devices that are not onboarded, such as medical devices, the identity
+//   compromise playbook (section 3.1) recommends attack disruption exclusions for medical device segments.
+//   Automated isolation is allowed for non-medical devices. A device recorded as a medical device in
+//   PIP-ASSET-INV is never disconnected automatically: narrow containment to the anomalous flow and a
+//   clinical lead decides. Isolating a file or application server in Z-CLIN-APP is a clinical-impact
+//   decision for the incident commander. Start the identity compromise playbook for the account behind
+//   the activity: InitiatingProcessAccountName for local encryption, or RemoteAccounts for renames over SMB.
+//
+// Validation notes
+//   Not run against any tenant. Validate on an isolated lab host with disposable test files: the
+//   behavior is many files renamed to one new extension by one process in minutes. Expected telemetry:
+//   DeviceFileEvents rows with PreviousFileName set, and one output row per process instance. Microsoft's
+//   Defender for Endpoint evaluation lab simulations and Atomic Red Team tests mapped to T1486 are public
+//   options; the operator selects and runs them (purple-team-plan.md exercise PX-02).
+//
+// References
+//   https://attack.mitre.org/techniques/T1486/
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicefileevents-table
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-alertinfo-table
+//   https://learn.microsoft.com/en-us/defender-xdr/automatic-attack-disruption
+//
+let LookbackWindow = 1h;
+let BinSize = 10m;
+let MinRenamedFiles = 100;
+let MinDistinctFolders = 10;
+let MaxNewExtensions = 3;
+// Review before adding names here: an attacker can reuse a trusted process name
+let ExcludedInitiators = dynamic(["msiexec.exe", "TiWorker.exe"]);
+let RenameBursts =
+    DeviceFileEvents
+    | where Timestamp > ago(LookbackWindow)
+    | where isnotempty(PreviousFileName) and PreviousFileName != FileName
+    | where InitiatingProcessFileName !in~ (ExcludedInitiators)
+    | extend NewExtension = tolower(extract(@"\.([A-Za-z0-9_]{1,32})$", 1, FileName)),
+             OldExtension = tolower(extract(@"\.([A-Za-z0-9_]{1,32})$", 1, PreviousFileName)),
+             Directory = tostring(parse_path(FolderPath).DirectoryPath)
+    | where isnotempty(NewExtension) and NewExtension != OldExtension
+    | summarize arg_max(Timestamp, ReportId, InitiatingProcessAccountDomain, InitiatingProcessAccountName, InitiatingProcessFolderPath, InitiatingProcessCommandLine),
+        RenamedFiles = count(),
+        DistinctFolders = dcount(Directory),
+        DistinctNewExtensions = dcount(NewExtension),
+        NewExtensions = make_set(NewExtension, 10),
+        SmbRenames = countif(RequestProtocol == "SMB"),
+        RemoteSourceIPs = make_set_if(RequestSourceIP, isnotempty(RequestSourceIP), 10),
+        RemoteAccounts = make_set_if(strcat(RequestAccountDomain, "\\", RequestAccountName), isnotempty(RequestAccountName), 10)
+        by DeviceId, DeviceName, InitiatingProcessFileName, InitiatingProcessId, InitiatingProcessCreationTime, TimeBin = bin(Timestamp, BinSize)
+    | where RenamedFiles >= MinRenamedFiles and DistinctFolders >= MinDistinctFolders and DistinctNewExtensions <= MaxNewExtensions;
+let EncryptionAlerts =
+    AlertInfo
+    | where Timestamp > ago(LookbackWindow)
+    | where AttackTechniques has "T1486"
+    | join kind=inner (
+        AlertEvidence
+        | where Timestamp > ago(LookbackWindow)
+        | where isnotempty(DeviceId)
+        | distinct AlertId, DeviceId
+      ) on AlertId
+    | summarize RelatedAlertTitles = make_set(Title, 10) by DeviceId;
+RenameBursts
+| join kind=leftouter EncryptionAlerts on DeviceId
+| extend HasDefenderAlert = coalesce(array_length(RelatedAlertTitles), 0) > 0
+| extend SuggestedSeverity = iff(HasDefenderAlert, "High: rename burst plus a Defender alert mapped to T1486", "High: rename burst, confirm with the device timeline before containment")
+| project Timestamp, ReportId, DeviceId, DeviceName, SuggestedSeverity, InitiatingProcessFileName, InitiatingProcessId, InitiatingProcessCreationTime,
+    InitiatingProcessFolderPath, InitiatingProcessCommandLine, InitiatingProcessAccountDomain, InitiatingProcessAccountName,
+    RenamedFiles, DistinctFolders, NewExtensions, SmbRenames, RemoteSourceIPs, RemoteAccounts, HasDefenderAlert, RelatedAlertTitles, TimeBin

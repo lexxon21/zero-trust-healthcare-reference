@@ -1,0 +1,129 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Anomalous activity on Entra Connect sync servers (unexpected interactive logons, never-before-seen processes, ADSync module scripting) plus sync-identity alerts
+// Status: untested template
+// ATT&CK: T1556.007 (Modify Authentication Process: Hybrid Identity); ATT&CK v19.2
+// Data sources: Microsoft Defender XDR advanced hunting, DeviceLogonEvents and DeviceProcessEvents (Defender for Endpoint on the sync servers), AlertInfo (Defender for Identity and Defender XDR alerts)
+// Licensing assumptions: Signals 1 to 3 assume Defender for Endpoint with server licensing on the IDS-SYNC servers (for example Microsoft Defender for Servers), which the design does not yet state (threat-model.md TM-A4); signal 4 assumes Defender for Identity within the scenario's Defender XDR stack, whose sensors 03-identity-and-access.md section 4 places on those servers
+// Rule ID: DX-07 | Platform: Defender XDR advanced hunting, daily hunting query only, not a custom detection (see Tuning knobs) | Suggested severity: High
+// Tactics: Persistence (TA0003), Credential Access (TA0006), Defense Impairment (TA0112)
+// Answers: detection-priorities.md item 9 (Priority 2, on-premises half; the cloud half is SN-02); attack-paths.md AP-5 step 6
+// Architecture context: IDS-SYNC, Z-T0, PEP-PAW, PIP-ID-RISK; residual risks RR-07 and RR-09; risk register R-05
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   In the documented hybrid cloud-ransomware case in threat-model.md section 7, the actor already held
+//   domain administrator access on-premises and pivoted from on-premises to the cloud through an Entra
+//   Connect Sync server that was not onboarded to Defender for Endpoint (Microsoft, 2025-08-27). The
+//   architecture places Defender for Identity sensors on IDS-SYNC (03-identity-and-access.md section 4),
+//   which is not the control Microsoft names as missing. Signals 1 to 3 read DeviceLogonEvents and
+//   DeviceProcessEvents, which come from Defender for Endpoint, so they need Defender for Endpoint with
+//   server licensing on the sync servers, which the design does not yet state (threat-model.md section 9
+//   item 8, assumption TM-A4). Until the architecture decides, those signals have no data and this query
+//   rests on signal 4, the Defender for Identity alerts, which need no Defender for Endpoint. A sync
+//   server should be quiet: a service, scheduled synchronization, patching, and rare Tier 0
+//   administration from a Tier 0 PAW.
+//
+// Logic (four signals, unioned)
+//   1. Interactive or remote interactive logons (LogonType containing "Interactive") by accounts outside
+//      the Tier 0 administrator list.
+//   2. Processes never seen on the sync servers during the 14-day baseline (file name plus signer company).
+//   3. PowerShell command lines that reference the ADSync module or cmdlets. Administrators use these
+//      legitimately, so this is a review signal that gains weight next to signals 1 and 2.
+//   4. Sync-identity alert titles that Microsoft documents for Defender for Identity in the Defender alert
+//      format. These are cloud-side detections that may not name the sync server as a device, so they are
+//      grouped under a fixed label rather than joined to the server.
+//
+// Known false positives
+//   - Entra Connect upgrades and patching introduce new binaries (signal 2): correlate with change records.
+//   - Tier 0 administrators missing from Tier0AdminAccounts (signal 1).
+//   - Scheduled administrative scripts that query ADSync configuration (signal 3).
+//
+// Tuning knobs (let statements below)
+//   SyncServers           lower-case names of the active and staging IDS-SYNC servers.
+//   Tier0AdminAccounts    lower-case Tier 0 administrator account names allowed to log on interactively.
+//   BaselineWindow        history used to define "seen before".
+//   Run frequency: run this daily as an advanced hunting query, not as a custom detection. Signal 4 rows
+//   carry no ReportId, an empty DeviceId, and a placeholder DeviceName. Microsoft's custom detection
+//   reference recommends returning Timestamp and ReportId from the triggering event and a strong
+//   identifier for the impacted asset, and selects entities automatically for Defender XDR data, so a
+//   saved rule could tie those rows to no source event and map the placeholder as a device. Under TM-A4,
+//   signal 4 is the only signal with data.
+//
+// Response notes
+//   A sync server is Tier 0 (RR-07). Contain from a Tier 0 PAW, preserve the server for forensics, and
+//   plan for the synchronization pause containment causes (new joiners and leavers stop flowing to
+//   Entra ID). Check SN-02 output for hybrid authentication or federation changes in the same window.
+//   Containing a sync server touches no clinical device; if the response widens to clinical accounts or
+//   devices, the clinical safety gate applies (ADR-008; playbook decision point D5).
+//
+// Validation notes
+//   Not run against any tenant. Validate in a lab with a test Entra Connect server onboarded to Defender
+//   for Endpoint: log on interactively with a non-Tier 0 test account and run an unfamiliar signed binary.
+//   Expected telemetry: DeviceLogonEvents and DeviceProcessEvents rows for the sync server and one output
+//   row for the sync server with SignalCount 2 (High) (purple-team-plan.md exercise PX-06). PX-06 records
+//   the two products separately, and counts the documented gap as closed only if the lab host's Defender
+//   for Endpoint coverage reflects a design decision for IDS-SYNC; otherwise the run shows what signals 1
+//   to 3 would see, not designed coverage.
+//
+// References
+//   https://attack.mitre.org/techniques/T1556/007/
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicelogonevents-table
+//   https://learn.microsoft.com/en-us/defender-for-identity/alerts-xdr
+//   https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-accounts-permissions
+//   https://learn.microsoft.com/en-us/defender-xdr/custom-detection-rules
+//   https://www.microsoft.com/en-us/security/blog/2025/08/27/storm-0501s-evolving-techniques-lead-to-cloud-based-ransomware/
+//
+let LookbackWindow = 1d;
+let BaselineWindow = 14d;
+// Lower-case device names of the active and staging sync servers (placeholders on a reserved TLD)
+let SyncServers = dynamic(["sync01.corp.contoso.example", "sync02.corp.contoso.example"]);
+// Lower-case Tier 0 administrator account names (placeholders)
+let Tier0AdminAccounts = dynamic(["t0-admin-placeholder"]);
+let SyncAlertTitles = dynamic([
+    "Suspicious Entra Connect account authentication", "Suspicious sign-in observed from Entra ID sync application",
+    "Suspicious sign-in observed from Entra ID sync application to an uncommon resource app",
+    "Suspicious sign-in observed to Entra ID sync application using an uncommon user agent",
+    "Suspicious Graph API request made from Entra ID sync application", "Suspicious tool used by a Microsoft Entra Sync account",
+    "Suspicious user configuration change activity from Entra ID sync application", "Sync account risky sign-in to an uncommon app",
+    "Suspicious activity after password sync", "AADInternals private key extraction attempt"]);
+let UnexpectedLogons =
+    DeviceLogonEvents
+    | where Timestamp > ago(LookbackWindow)
+    | where tolower(DeviceName) in (SyncServers)
+    | where LogonType contains "Interactive"
+    | where tolower(AccountName) !in (Tier0AdminAccounts)
+    | project Timestamp, ReportId, DeviceId, DeviceName, Signal = "Interactive logon by an account outside the Tier 0 admin list",
+        AccountName, Detail = strcat(ActionType, " ", LogonType, " from ", RemoteIP);
+let BaselineProcesses =
+    DeviceProcessEvents
+    | where Timestamp between (ago(BaselineWindow) .. ago(LookbackWindow))
+    | where tolower(DeviceName) in (SyncServers)
+    | distinct ProcessKey = tolower(strcat(FileName, "|", ProcessVersionInfoCompanyName));
+let NewProcesses =
+    DeviceProcessEvents
+    | where Timestamp > ago(LookbackWindow)
+    | where tolower(DeviceName) in (SyncServers)
+    | extend ProcessKey = tolower(strcat(FileName, "|", ProcessVersionInfoCompanyName))
+    | where ProcessKey !in (BaselineProcesses)
+    | project Timestamp, ReportId, DeviceId, DeviceName, Signal = "Process not seen on this sync server during the baseline",
+        AccountName, Detail = ProcessCommandLine;
+let ADSyncScripting =
+    DeviceProcessEvents
+    | where Timestamp > ago(LookbackWindow)
+    | where tolower(DeviceName) in (SyncServers)
+    | where FileName in~ ("powershell.exe", "pwsh.exe", "powershell_ise.exe")
+    | where ProcessCommandLine contains "ADSync"
+    | project Timestamp, ReportId, DeviceId, DeviceName, Signal = "PowerShell referencing the ADSync module (review signal)",
+        AccountName, Detail = ProcessCommandLine;
+let SyncIdentityAlerts =
+    AlertInfo
+    | where Timestamp > ago(LookbackWindow)
+    | where Title in~ (SyncAlertTitles)
+    | project Timestamp, ReportId = long(null), DeviceId = "", DeviceName = "(cloud-side sync identity alert)",
+        Signal = strcat("Alert: ", Title), AccountName = "", Detail = AlertId;
+union UnexpectedLogons, NewProcesses, ADSyncScripting, SyncIdentityAlerts
+| summarize arg_max(Timestamp, ReportId, DeviceId), FirstSeen = min(Timestamp), SignalCount = dcount(Signal), Signals = make_set(Signal, 10),
+    Accounts = make_set_if(AccountName, isnotempty(AccountName), 10), Details = make_set(Detail, 20)
+    by DeviceName
+| extend SuggestedSeverity = iff(SignalCount >= 2, "High: more than one anomaly signal on the sync tier", "Medium: one anomaly signal, review with change records")
+| project Timestamp, ReportId, DeviceId, DeviceName, SuggestedSeverity, SignalCount, Signals, Accounts, Details, FirstSeen

@@ -1,7 +1,15 @@
-# OS and editor files
-Thumbs.db
-Desktop.ini
+# Operating system and editor files
 .DS_Store
-*.tmp
-*.bak
+Thumbs.db
+desktop.ini
+*.swp
+*~
+~$*
 .vscode/
+.idea/
+
+# Logs and local output
+*.log
+
+# Temporary fixtures the crosswalk test suite writes and deletes during a run
+grc/zero-trust-healthcare/tests/fixtures/tmp-*

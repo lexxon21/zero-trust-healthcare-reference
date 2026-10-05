@@ -1,0 +1,9 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Validator fixture for validate-crosswalk.ps1 (not a detection)
+// Status: reference
+// ATT&CK: none
+// Data sources: none
+// Licensing assumptions: none
+// validate-crosswalk.ps1 checks only that this file exists. The print statement below is a
+// placeholder that reads no table, so the file still holds a query for the KQL checker.
+print Fixture = "validate-crosswalk.ps1 test fixture, not a detection"

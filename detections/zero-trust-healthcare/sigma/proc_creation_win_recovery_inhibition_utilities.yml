@@ -1,0 +1,96 @@
+# Reference rule. Not deployed in any employer environment.
+# Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+# Rule ID: SG-01 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Answers: detection-priorities.md item 1 (Priority 1); attack-paths.md AP-4 step 10
+# Companion KQL: kql/defender-xdr/dx01-recovery-inhibition-shadow-copy-backup-deletion.kql (adds per-device roll-up and severity)
+# Conversion note: written for the process_creation log source, which the pySigma Kusto backend's
+#   microsoft_xdr pipeline targets for Defender XDR advanced hunting. On 2026-10-04,
+#   "sigma convert -t kusto -p microsoft_xdr" (pySigma-backend-kusto 1.0.1) converted this rule to a
+#   DeviceProcessEvents query. The converted query has not been run against data.
+# Coverage: the utilities listed on the T1490 technique page (ATT&CK v19.2) except diskshadow.
+# Credit: the reagentc selection follows SigmaHQ rule "Windows Recovery Environment Disabled Via Reagentc"
+#   (id db1c21e4-cd66-4b4e-85ca-590f0780529c) by Daniel Koifman (KoifSec), Michael Vilshin, licensed under the
+#   Detection Rule License (DRL) 1.1 (https://github.com/SigmaHQ/Detection-Rule-License); link in references.
+#   Differs: matches the image name only, where the SigmaHQ rule also accepts OriginalFileName, as one
+#   selection in a wider recovery-inhibition rule.
+# Tuning: exclude sanctioned backup or imaging tools by parent image after confirming their path and signer;
+#   diskshadow script mode hides its commands from the command line and is not covered here. Microsoft's
+#   KB5028997 recovery partition procedure runs reagentc /disable and then reagentc /enable; close a disable
+#   followed by an enable on the same host against its change record.
+# Validation: not run. Execute recovery-inhibition behaviors only on an isolated lab VM with a restorable
+#   snapshot; expect process creation events for vssadmin.exe, wbadmin.exe, bcdedit.exe, or reagentc.exe with
+#   these command lines. Public library: Atomic Red Team tests mapped to T1490 (operator selects them).
+title: Windows Recovery Inhibition With Built-in Utilities
+id: 6b2f4e1a-9c3d-4f7b-8a21-5d0e9c7b3a14
+status: experimental
+description: Reference rule. Detects built-in Windows utilities used to delete volume shadow copies, delete the Windows Backup catalog or system state backups, turn off automatic boot recovery, or disable the Windows Recovery Environment, a common step before or during ransomware encryption. Written for the fictional Contoso Regional Health reference architecture and not deployed in any employer environment. The reagentc selection follows SigmaHQ rule "Windows Recovery Environment Disabled Via Reagentc" by Daniel Koifman (KoifSec), Michael Vilshin, licensed under DRL 1.1.
+references:
+    - https://attack.mitre.org/techniques/T1490/
+    - https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table
+    - https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/reagentc-command-line-options
+    - https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_reagentc_disable_windows_recovery_environment.yml
+author: Jacob Welch; reagentc selection by Daniel Koifman (KoifSec), Michael Vilshin
+date: 2026-10-04
+tags:
+    - attack.impact
+    - attack.t1490
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_vssadmin_delete:
+        Image|endswith: '\vssadmin.exe'
+        CommandLine|contains|all:
+            - 'delete'
+            - 'shadows'
+    selection_vssadmin_resize:
+        Image|endswith: '\vssadmin.exe'
+        CommandLine|contains|all:
+            - 'resize'
+            - 'shadowstorage'
+    selection_wmic:
+        Image|endswith: '\wmic.exe'
+        CommandLine|contains|all:
+            - 'shadowcopy'
+            - 'delete'
+    selection_wbadmin_catalog:
+        Image|endswith: '\wbadmin.exe'
+        CommandLine|contains|all:
+            - 'delete'
+            - 'catalog'
+    selection_wbadmin_systemstate:
+        Image|endswith: '\wbadmin.exe'
+        CommandLine|contains|all:
+            - 'delete'
+            - 'systemstatebackup'
+    selection_bcdedit_recovery:
+        Image|endswith: '\bcdedit.exe'
+        CommandLine|contains|all:
+            - 'recoveryenabled'
+            - 'no'
+    selection_bcdedit_bootstatus:
+        Image|endswith: '\bcdedit.exe'
+        CommandLine|contains|all:
+            - 'bootstatuspolicy'
+            - 'ignoreallfailures'
+    selection_reagentc:
+        Image|endswith: '\reagentc.exe'
+        CommandLine|contains|windash: '/disable'
+    selection_powershell_image:
+        Image|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+    selection_powershell_class:
+        CommandLine|contains: 'Win32_ShadowCopy'
+    selection_powershell_action:
+        CommandLine|contains:
+            - '.Delete('
+            - 'Remove-CimInstance'
+            - 'Remove-WmiObject'
+    condition: 1 of selection_vssadmin_* or selection_wmic or 1 of selection_wbadmin_* or 1 of selection_bcdedit_* or selection_reagentc or all of selection_powershell_*
+falsepositives:
+    - Backup and imaging products that manage shadow copies on servers
+    - Administrators resizing shadow storage on file servers during approved change windows
+    - Reimaging or kiosk build workflows that change boot recovery settings
+    - Windows Recovery Environment maintenance that disables and re-enables it, such as the recovery partition resize in Microsoft KB5028997
+level: high

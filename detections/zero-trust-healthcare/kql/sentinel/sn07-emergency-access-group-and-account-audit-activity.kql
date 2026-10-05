@@ -1,0 +1,330 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Change to a Tier 0 group (the emergency access exclusion group grp-ca-emergency-access, or the admin targeting groups grp-admins-t0 and grp-admins-t1), or audit activity by or on either tenant emergency access account
+// Status: untested template
+// ATT&CK: T1556.006 (Modify Authentication Process: Multi-Factor Authentication), T1098.003 (Account Manipulation: Additional Cloud Roles), T1098 (Account Manipulation), T1531 (Account Access Removal), T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v19.2
+// Data sources: Microsoft Sentinel, AuditLogs (Microsoft Entra ID data connector)
+// Licensing assumptions: Microsoft Sentinel with the Entra ID connector streaming audit logs (scenario A-17; Microsoft states that any Entra ID license is sufficient for log types other than sign-in logs); role-assignable groups need Entra ID P1, and the PIM activation rows read for enrichment need Entra ID P2 (scenario holds P2)
+// Rule ID: SN-07 | Platform: Microsoft Sentinel scheduled analytics rule, run every 5 minutes (not offered as NRT, see Logic 6) | Suggested severity: High for every result
+// Tactics: Initial Access (TA0001), Persistence (TA0003), Privilege Escalation (TA0004), Stealth (TA0005), Credential Access (TA0006), Impact (TA0040), Defense Impairment (TA0112)
+// Answers: detection-priorities.md items 19 and 20 (Priority 2), with SN-06 for item 19's sign-ins. It implements two requirements. 03-identity-and-access.md section 5: every change to grp-ca-emergency-access, and all audit activity by or on the two tenant emergency access accounts, raise a Sentinel alert at the same priority as an emergency account sign-in (ADR-004 decision 9; also listed under Monitoring in 03 section 4). 03 sections 3 and 4: every change to grp-admins-t0 and grp-admins-t1 alerts in the same way, matched by object ID, at Tier 0 priority, with no exclusion for planned work (ADR-004 decision 6). Those are the alerts that attack-paths.md AP-5 steps 8a and 8b and threat-model.md TB-7 name
+// Architecture context: IDS-ENTRA, grp-ca-emergency-access and the emergency access accounts (03 section 5), grp-admins-t0 and grp-admins-t1 (03 section 3; CA-03, CA-04, CA-05), IGA-ENTRA (PIM), PEP-PAW, PIP-SIEM; companion rule SN-06 (sign-ins); residual risks RR-16 (standing Tier 0 access that no approval gates, where this rule's alert is the only control) and RR-07; risk register R-05
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   Alerts on every change to three Tier 0 groups and on all audit activity by or on the two tenant
+//   emergency access accounts. Every enforced Conditional Access policy that blocks or restricts sign-in
+//   excludes grp-ca-emergency-access, so the accounts stay usable when normal administration fails, and
+//   grp-admins-t0 and grp-admins-t1 decide which accounts the phishing-resistant and PAW-only policies
+//   cover (CA-03, CA-04, CA-05). Why each of these is a Tier 0 object, and what a change to it enables:
+//   03 sections 3 and 5, attack-paths.md AP-5 steps 8a and 8b, and threat-model.md TB-7.
+//   Microsoft's emergency access guidance says to monitor all sign-in and audit log activity for these
+//   accounts with alerts, and its security operations guide for privileged accounts says to send a
+//   high-priority alert every time an emergency access account is used or changed. SN-06 covers the
+//   sign-ins. Every result alerts; the responder, not the query, separates a test or an approved change
+//   from misuse.
+//
+// Logic
+//   1. Matching is by object ID, never by display name and never by a fixed activity list. Microsoft's
+//      audit activity reference says that activities and categories change periodically and might not be
+//      in sync with the service, and "Update group" can rename a group.
+//   2. Groups: any AuditLogs row whose TargetResources text contains the object ID of grp-ca-emergency-access,
+//      grp-admins-t0, or grp-admins-t1. That covers the changes 03 sections 3 and 5 name, which the audit
+//      activity reference lists under Core Directory as "Add member to group", "Remove member from group",
+//      "Add owner to group", "Remove owner from group", "Update group", "Delete group", "Hard Delete group",
+//      and "Restore group". For a membership change the group's ID sits in the member's modifiedProperties
+//      as Group.ObjectID, which is where Microsoft's Azure-Sentinel repository reads it, so the rule matches
+//      the serialized TargetResources rather than a target's id field. The match also covers activity the
+//      design expects never to see, such as a role or app role assigned to a group, a PIM for Groups
+//      change, or a group placed in an administrative unit. One exception: Conditional Access policy
+//      changes. Every policy that excludes grp-ca-emergency-access, and every policy that targets the admin
+//      groups (CA-03, CA-04, CA-05, CA-21), names the group's ID, and SN-02 alerts on those changes (03
+//      sections 3 and 5).
+//   3. Accounts: any row whose InitiatedBy.user.id is either account's object ID (activity by an
+//      account), and any row whose TargetResources text contains either ID (activity on an account). That
+//      covers the method, password, state, and role changes that 03 section 5 lists, under whatever
+//      activity name they log. It includes an administrator-issued Temporary Access Pass, which Microsoft's
+//      security operations guide for privileged accounts identifies as "Admin registered security info"
+//      with the status reason "Admin registered temporary access pass method for user". The rule counts
+//      those rows (TapIssued) but does not depend on the wording.
+//   4. Category is not used. Microsoft's Graph directoryAudit reference documents category values such as
+//      GroupManagement and RoleManagement, while its Azure Monitor AuditLogs table reference says Audit is
+//      the only supported value, so a filter on Category could fail silently.
+//   5. Enrichment, not filtering: which of Global Administrator, Privileged Role Administrator, and
+//      Privileged Authentication Administrator the actor activated through PIM within ActivationLookback.
+//      A change to a group's membership needs Global Administrator or Privileged Role Administrator
+//      (03 sections 3 and 5). Microsoft documents that changing the credentials of a member of a
+//      role-assignable group needs at least Privileged Authentication Administrator, and both accounts are
+//      members of grp-ca-emergency-access. The lookup reads "Add member to role completed (PIM activation)",
+//      the elevation activity in Microsoft's security operations guide, and takes the activating user both
+//      from InitiatedBy and from User-type targets, so either layout matches. The emergency accounts are
+//      permanent Global Administrators and never activate, and an application actor cannot activate.
+//   6. One row per watched object per run: one of the three groups, or one account. A row that touches a
+//      group is reported under that group even when an emergency account made the change
+//      (RowsByEmergencyAccount shows that), and a row that names more than one group is filed under the
+//      first of grp-ca-emergency-access, grp-admins-t0, and grp-admins-t1. Time handling follows
+//      Microsoft's ingestion delay pattern, as in SN-06. The rule is not offered as NRT: Microsoft documents
+//      that NRT rules capture events ingested in the preceding minute, so the activation lookup would find
+//      nothing.
+//   Mapping note: T1556.006 for a member added to the exclusion group (AP-5 step 8a; ATT&CK's description
+//   names excluding users from Conditional Access policies), and for an admin account removed from
+//   grp-admins-t0 or grp-admins-t1, or either group deleted (ATT&CK's description covers MFA disabled for
+//   all accounts tied to a larger group). T1098.003 for an owner added to any of the three groups, or a
+//   role assigned to one: owners of a role-assignable group can manage its membership, so an owner can
+//   change it later with no Tier 0 activation (step 8a, owner variant), and a role assigned to a group
+//   reaches every member (step 8). T1098 for a password or method change on an account (step 8b); T1531
+//   for an account disabled, deleted, stripped of its role, or reset so that its custodians cannot use it
+//   (TB-7, denial of service); T1078.004 for activity by an account, as in SN-06. A member removed from
+//   the exclusion group, or the group deleted, renamed, or restored, carries no technique; removal and
+//   deletion are TB-7's denial-of-service case. On the admin groups, an added member, a removed owner, a
+//   rename, or a restoration carries none (the groups hold no role, so an added member gains no access
+//   and only falls under stricter policies), and each alerts because 03 section 3 requires an alert on
+//   every change. Technique choices: attack-paths.md AP-5; threat-model.md TB-7 (tampering and denial of
+//   service rows); detection-priorities.md items 19 and 20.
+//
+// Known false positives
+//   Every change and every use is meant to alert, so these are expected benign results, not false positives:
+//   - The 90-day validation and the quarterly sign-in test (03 section 5), announced to the SOC first.
+//     Microsoft's validation guidance includes performing administrative tasks with the accounts, and
+//     those log activity by them.
+//   - Recovery after a use (SN-06 response notes): revoking the account's sessions and re-issuing its
+//     passkey under split custody log activity on the account.
+//   - An approved Tier 0 change to one of the groups under a change record, such as replacing an
+//     emergency account.
+//   - Administrator joiners and leavers: an admin account added to or removed from grp-admins-t0 or
+//     grp-admins-t1 by a Tier 0 administrator against a change record (03 section 3). These set the admin
+//     groups' benign volume (detection-priorities.md item 20).
+//   - Any other directory object that names a watched group's or an account's object ID, such as a policy
+//     or setting that lists them, raises the rule when it changes. That is the cost of matching by ID.
+//   Close these against the test record, the incident timeline, or the change record, never with a query
+//   exclusion.
+//
+// Tuning knobs (let statements below)
+//   EmergencyAccountObjectIds          object IDs of the two accounts; keep them identical to SN-06's.
+//   EmergencyAccessGroupObjectId       object ID of grp-ca-emergency-access, copied from the Entra admin
+//                                      center. Never leave a knob empty: an empty value matches every row.
+//   AdminGroupT0ObjectId,              object IDs of grp-admins-t0 and grp-admins-t1, copied from the Entra
+//   AdminGroupT1ObjectId               admin center, under the same rule.
+//   ConditionalAccessPolicyActivities  the three Conditional Access policy activities left to SN-02.
+//   Tier0ActivationRolePattern         the roles whose activation can make the changes this rule watches.
+//   ActivationLookback                 how far back the enrichment looks; longer than the 2-hour Tier 0
+//                                      maximum activation in 03 section 4 (example value).
+//   RuleLookBack, IngestionDelay       as in SN-06. Set "Run query every" to RuleLookBack (5 minutes) and
+//                                      "Lookup data from the last" to ActivationLookback plus
+//                                      IngestionDelay plus RuleLookBack (4 hours 5 minutes with the
+//                                      defaults), so the lookup can see activations made before a change.
+//   Alert settings: "Trigger an alert for each event" (one alert per watched object per run). Map Actor,
+//   and WatchedObjectId for the two account classes, to Account entities and ActorIP to the IP entity, and
+//   group alerts into one incident when all entities match.
+//
+// Response notes
+//   Treat every result as Tier 0 until a test record, a change record, or a declared emergency explains
+//   it, and act from a Tier 0 PAW. Compare ActorActivationNotes and the PIM approval with the change
+//   record: a membership change should follow a Global Administrator or Privileged Role Administrator
+//   activation, and a change to an account's credentials needed at least Privileged Authentication
+//   Administrator (Logic 5), so its actor held a Tier 0 role or was the other emergency account.
+//   The first action per watch class:
+//   - Member or owner added to grp-ca-emergency-access: unless a change record explains it, remove the
+//     member or owner at once, and treat that account and the actor as compromised. An application
+//     actor that can change the group holds RoleManagement.ReadWrite.Directory, which makes it a Tier 0
+//     workload identity (03 section 5).
+//   - Member removed from grp-ca-emergency-access, or the group deleted: the lockout backstop is reduced
+//     or gone. Microsoft documents that a deleted role-assignable group is soft-deleted and can be restored
+//     within 30 days. Restore it, or after a hard delete recreate it as a role-assignable group, then
+//     confirm that it holds exactly the two accounts, has no owners, and is excluded from every enforced
+//     policy that blocks or restricts sign-in (the check each 90-day validation makes, 03 section 5).
+//   - Any other change to grp-ca-emergency-access: confirm the change record; 03 section 5 expects no
+//     owners and no role.
+//   - Change to grp-admins-t0 or grp-admins-t1: an admin account removed from a group, or the group
+//     deleted, leaves the account outside the phishing-resistant and PAW-only policies (CA-03, and CA-04 or
+//     CA-05), although activation still needs CA-06, which targets all users (03 section 4). Unless a
+//     change record explains it, put the account back (restore a deleted group, as above). An added
+//     owner is removed at once (03 section 3 expects no owners), and an added member with no change
+//     record is removed.
+//   - Change made to an account: unless a test or incident record explains the change, treat the account
+//     as compromised (SEV-1) and revoke its sessions.
+//   - Activity by an account: SN-06 should already have alerted on the sign-in. Review each activity
+//     against the drill record or the declared emergency. Activity with no matching SN-06 alert means the
+//     sign-in alert or its data path failed, which is a monitoring gap to escalate as well.
+//   These steps touch no clinical account or device; the clinical safety gate (ADR-008) applies if the
+//   response widens to Active Directory or certificates.
+//   Full steps: playbook decision point D4 and Branch D step 1.
+//
+// Validation notes
+//   Not run against any workspace. The lab test is purple-team-plan.md exercise PX-20, which shares runs
+//   with PX-17 (its exclusion-group step) and PX-19 (the drill); PX-17 also carries the admin-group run.
+//   Use a lab group set up like grp-ca-emergency-access (role-assignable, no owners, no role), a lab
+//   grp-admins-t0 set up the same way, and a lab emergency access account, set the knobs to the lab object
+//   IDs first, tell the monitoring staff before each step, and have an authorized administrator make each
+//   change.
+//   - Group, after an approved Privileged Role Administrator activation: a lab test account added as a
+//     member and removed, then added as an owner and removed, and the group renamed. Expected telemetry:
+//     AuditLogs rows whose TargetResources name the group's object ID, under the group's alert, with
+//     ActorActivationNotes naming Privileged Role Administrator. Record the activity names the lab shows:
+//     the audit activity reference does not say whether a role-assignable group's member and owner
+//     changes log under the four member and owner names in Logic 2, and the rule does not depend on them.
+//   - Admin group (PX-17's admin-group run), after an approved Privileged Role Administrator activation: a
+//     lab admin account removed from the lab grp-admins-t0 and re-added. Expected telemetry: AuditLogs rows
+//     whose TargetResources name that group's object ID, under a "Change to grp-admins-t0" alert with the
+//     removal severity text and ActorActivationNotes naming Privileged Role Administrator. A change that
+//     does not alert is recorded against detection-priorities.md item 20.
+//   - Account, after an approved Privileged Authentication Administrator activation: a Temporary Access
+//     Pass issued and deleted unused, and the account disabled and re-enabled. Expected telemetry: "Admin
+//     registered security info" with "Admin registered temporary access pass method for user" in
+//     ResultReason (TapIssued 1), then rows for the pass's deletion, the disable, and the re-enable, under
+//     the account's alert, with ActorActivationNotes naming Privileged Authentication Administrator. Record
+//     the activity name the pass's deletion logs. Confirm that every account row carries the account's
+//     object ID; if one does not, add the user principal name as a second key, as SN-06 does.
+//   - Activity by an account: inside the PX-19 drill, the lab emergency account changes a lab object other
+//     than the groups and the two accounts (a read-only task may log nothing, and a change to a group or
+//     an account is filed under that object). Expected: an "Activity by an emergency access account" alert
+//     beside SN-06's alert, with the account's object ID in InitiatedBy.user.id.
+//   - Negative checks: an administrator who holds Authentication Administrator and no Tier 0 role tries
+//     the same pass issuance and is refused; if the refusal logs a failure row, this rule alerts on it, and
+//     the findings entry records which. A lab Conditional Access policy that excludes the exclusion group,
+//     or one that targets the lab grp-admins-t0, is updated: confirm that its audit row names the group's
+//     object ID (if it does not, the check shows nothing), that this rule returns no group row, and that
+//     SN-02 alerts.
+//   A change ingested in a later run can raise a further alert for the same object; incident grouping
+//   joins them when the entities match. Record the result before the status changes to lab-tested.
+//
+// References
+//   https://learn.microsoft.com/en-us/entra/identity/monitoring-health/reference-audit-activities
+//   https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/security-emergency-access
+//   https://learn.microsoft.com/en-us/entra/architecture/security-operations-privileged-accounts
+//   https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/groups-concept
+//   https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass
+//   https://learn.microsoft.com/en-us/graph/api/resources/directoryaudit?view=graph-rest-1.0
+//   https://learn.microsoft.com/en-us/graph/api/resources/targetresource?view=graph-rest-1.0
+//   https://learn.microsoft.com/en-us/graph/api/resources/useridentity?view=graph-rest-1.0
+//   https://learn.microsoft.com/en-us/graph/api/resources/appidentity?view=graph-rest-1.0
+//   https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/auditlogs
+//   https://learn.microsoft.com/en-us/azure/sentinel/connect-azure-active-directory
+//   https://learn.microsoft.com/en-us/azure/sentinel/near-real-time-rules
+//   https://learn.microsoft.com/en-us/azure/sentinel/ingestion-delay
+//   https://learn.microsoft.com/en-us/kusto/query/mv-expand-operator
+//   https://github.com/Azure/Azure-Sentinel/blob/master/Solutions/Microsoft%20Entra%20ID/Analytic%20Rules/GuestAccountsAddedinAADGroupsOtherThanTheOnesSpecified.yaml
+//   https://attack.mitre.org/techniques/T1556/006/
+//   https://attack.mitre.org/techniques/T1098/003/
+//   https://attack.mitre.org/techniques/T1098/
+//   https://attack.mitre.org/techniques/T1531/
+//   https://attack.mitre.org/techniques/T1078/004/
+//
+// Object IDs of the two emergency access accounts (placeholders; keep them identical to SN-06's)
+let EmergencyAccountObjectIds = dynamic(["emergency-account-1-object-id-placeholder", "emergency-account-2-object-id-placeholder"]);
+// Object ID of grp-ca-emergency-access (placeholder; copy it from the Entra admin center)
+let EmergencyAccessGroupObjectId = "grp-ca-emergency-access-object-id-placeholder";
+// Object IDs of the admin targeting groups (placeholders; copy them from the Entra admin center)
+let AdminGroupT0ObjectId = "grp-admins-t0-object-id-placeholder";
+let AdminGroupT1ObjectId = "grp-admins-t1-object-id-placeholder";
+// Policies that exclude or target these groups name their IDs; SN-02 alerts on these changes
+let ConditionalAccessPolicyActivities = dynamic(["Add Conditional Access policy", "Update Conditional Access policy", "Delete Conditional Access policy"]);
+// Global Administrator or Privileged Role Administrator for a group's membership (03 sections 3 and 5);
+// at least Privileged Authentication Administrator for an account's credentials (Logic 5)
+let Tier0ActivationRolePattern = @"(?i)(Global Administrator|Privileged Role Administrator|Privileged Authentication Administrator)";
+let ActivationLookback = 3h;
+let RuleLookBack = 5m;
+let IngestionDelay = 1h;
+// Enrichment input: completed PIM activations of those roles, keyed by every user ID on the row
+let ActivationRows =
+    AuditLogs
+    | where TimeGenerated >= ago(ActivationLookback + IngestionDelay + RuleLookBack)
+    | where OperationName =~ "Add member to role completed (PIM activation)"
+    | extend ActivatedRole = extract(Tier0ActivationRolePattern, 1, tostring(TargetResources))
+    | where isnotempty(ActivatedRole);
+let RecentTier0Activations =
+    union
+        (ActivationRows
+        | project ActivationTime = TimeGenerated, ActivatedRole, ActivatedUserId = tolower(tostring(InitiatedBy.user.id))),
+        (ActivationRows
+        | mv-expand Target = TargetResources
+        | where tostring(Target.type) =~ "User"
+        | project ActivationTime = TimeGenerated, ActivatedRole, ActivatedUserId = tolower(tostring(Target.id)))
+    | where isnotempty(ActivatedUserId)
+    | summarize LastTier0Activation = max(ActivationTime), ActivatedRoles = make_set(ActivatedRole, 3) by ActivatedUserId;
+// Audit rows ingested since the last run (ingestion delay pattern, as in SN-06)
+let WindowRows =
+    AuditLogs
+    | where TimeGenerated >= ago(IngestionDelay + RuleLookBack)
+    | where ingestion_time() > ago(RuleLookBack)
+    | extend TargetText = tostring(TargetResources), ActorUserId = tostring(InitiatedBy.user.id);
+// Emergency account IDs named anywhere in TargetResources, modifiedProperties included
+let AccountTargets =
+    WindowRows
+    | extend AccountId = EmergencyAccountObjectIds
+    | mv-expand AccountId to typeof(string)
+    | where TargetText contains AccountId
+    | summarize TargetAccountIds = make_set(AccountId) by Id;
+WindowRows
+| join kind=leftouter AccountTargets on Id
+| extend IsPolicyChange = OperationName in~ (ConditionalAccessPolicyActivities)
+| extend OnEmergencyGroup = TargetText contains EmergencyAccessGroupObjectId and not(IsPolicyChange),
+    AdminGroupName = case(
+        IsPolicyChange, "",
+        TargetText contains AdminGroupT0ObjectId, "grp-admins-t0",
+        TargetText contains AdminGroupT1ObjectId, "grp-admins-t1",
+        ""),
+    OnEmergencyAccount = coalesce(array_length(TargetAccountIds), 0) > 0,
+    ByEmergencyAccount = ActorUserId in~ (EmergencyAccountObjectIds)
+| extend OnAdminGroup = isnotempty(AdminGroupName)
+| where OnEmergencyGroup or OnAdminGroup or OnEmergencyAccount or ByEmergencyAccount
+| extend ActorKey = tolower(ActorUserId)
+| join kind=leftouter RecentTier0Activations on $left.ActorKey == $right.ActivatedUserId
+| extend Actor = coalesce(tostring(InitiatedBy.user.userPrincipalName), tostring(InitiatedBy.app.displayName), "unidentified actor"),
+    ActorIP = tostring(InitiatedBy.user.ipAddress),
+    ActorIsApp = isempty(ActorUserId) and isnotempty(tostring(InitiatedBy.app.displayName)),
+    TapIssued = OperationName =~ "Admin registered security info" and ResultReason contains "temporary access pass",
+    TargetAccountText = strcat_array(TargetAccountIds, ", ")
+| extend ActorActivationNote = case(
+        ByEmergencyAccount, strcat(Actor, ": emergency access account, a permanent Global Administrator, so no activation"),
+        ActorIsApp, strcat(Actor, ": application actor, so no PIM activation"),
+        isnotnull(LastTier0Activation), strcat(Actor, ": activated ", strcat_array(ActivatedRoles, ", "), " through PIM within ActivationLookback, latest completed ", tostring(LastTier0Activation)),
+        strcat(Actor, ": no Global Administrator, Privileged Role Administrator, or Privileged Authentication Administrator activation found within ActivationLookback")),
+    GroupChangeKind = case(
+        not(OnEmergencyGroup or OnAdminGroup), "",
+        OperationName in~ ("Add member to group", "Add owner to group"), "Member or owner added",
+        OperationName in~ ("Remove member from group", "Delete group", "Hard Delete group"), "Member removed or group deleted",
+        OperationName =~ "Restore group", "Group restored",
+        OperationName in~ ("Update group", "Remove owner from group"), "Group updated or owner removed",
+        "Other activity naming the group"),
+    WatchClass = case(
+        OnEmergencyGroup, "Change to grp-ca-emergency-access",
+        OnAdminGroup, strcat("Change to ", AdminGroupName),
+        OnEmergencyAccount, "Change made to an emergency access account",
+        "Activity by an emergency access account"),
+    WatchedObjectId = case(
+        OnEmergencyGroup, EmergencyAccessGroupObjectId,
+        AdminGroupName == "grp-admins-t0", AdminGroupT0ObjectId,
+        AdminGroupName == "grp-admins-t1", AdminGroupT1ObjectId,
+        OnEmergencyAccount, tostring(TargetAccountIds[0]),
+        ActorKey)
+| summarize arg_max(TimeGenerated, OperationName, Actor, ActorIP, CorrelationId),
+    FirstSeen = min(TimeGenerated), Records = dcount(Id),
+    Activities = make_set(OperationName, 20), GroupChangeKinds = make_set_if(GroupChangeKind, isnotempty(GroupChangeKind), 10),
+    TapIssued = countif(TapIssued), Results = make_set(Result, 5), Services = make_set(LoggedByService, 10),
+    Actors = make_set(Actor, 10), ActorIPs = make_set_if(ActorIP, isnotempty(ActorIP), 10),
+    ActorActivationNotes = make_set(ActorActivationNote, 10),
+    RowsByEmergencyAccount = countif(ByEmergencyAccount), RowsByApplication = countif(ActorIsApp),
+    TargetAccounts = make_set_if(TargetAccountText, isnotempty(TargetAccountText), 4),
+    AuditIds = make_set(Id, 50), CorrelationIds = make_set(CorrelationId, 50)
+    by WatchClass, WatchedObjectId
+| extend SuggestedSeverity = case(
+    WatchClass == "Change to grp-ca-emergency-access" and set_has_element(GroupChangeKinds, "Member or owner added"),
+        "High: member or owner added to grp-ca-emergency-access; an added member escapes every enforced policy that blocks or restricts sign-in",
+    WatchClass == "Change to grp-ca-emergency-access" and set_has_element(GroupChangeKinds, "Member removed or group deleted"),
+        "High: member removed from grp-ca-emergency-access, or the group deleted; the lockout backstop may be gone",
+    WatchClass == "Change to grp-ca-emergency-access",
+        "High: grp-ca-emergency-access changed; confirm the change record",
+    WatchClass startswith "Change to grp-admins" and set_has_element(GroupChangeKinds, "Member removed or group deleted"),
+        "High: member removed from a Tier 0 admin group, or the group deleted; affected admin accounts fall outside the phishing-resistant and PAW-only policies (CA-03, CA-04, CA-05)",
+    WatchClass startswith "Change to grp-admins" and set_has_element(GroupChangeKinds, "Member or owner added"),
+        "High: member or owner added to a Tier 0 admin group; confirm the change record (an added owner can change its membership with no Tier 0 activation)",
+    WatchClass startswith "Change to grp-admins",
+        "High: Tier 0 admin group changed; confirm the change record",
+    WatchClass == "Change made to an emergency access account" and TapIssued > 0,
+        "High: Temporary Access Pass issued for an emergency access account",
+    WatchClass == "Change made to an emergency access account",
+        "High: change made to an emergency access account; confirm a test or incident record",
+    "High: audit activity by an emergency access account; confirm a scheduled test or a declared emergency")
+| project TimeGenerated, WatchClass, SuggestedSeverity, WatchedObjectId, Records, Activities, GroupChangeKinds, TapIssued,
+    Actor, ActorIP, Actors, ActorIPs, ActorActivationNotes, RowsByEmergencyAccount, RowsByApplication, TargetAccounts,
+    Results, Services, OperationName, FirstSeen, CorrelationId, CorrelationIds, AuditIds

@@ -1,0 +1,111 @@
+// Reference query. Not deployed in any employer environment.
+// Title: One Microsoft Entra sign-in session seen from more than one country, or from a new network and a new client, within a short window (possible stolen session replay)
+// Status: untested template
+// ATT&CK: T1539 (Steal Web Session Cookie), T1550.004 (Use Alternate Authentication Material: Web Session Cookie); ATT&CK v19.2
+// Data sources: Microsoft Defender XDR advanced hunting, EntraIdSignInEvents (preview; Microsoft documents that it replaces AADSignInEventsBeta on 2026-10-19)
+// Licensing assumptions: Microsoft documents a Microsoft Entra ID P2 requirement for this table (scenario holds Entra ID P2 through Microsoft 365 E5); the risk event types used below are premium Entra ID Protection detections
+// Rule ID: DX-03 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High for a country change, Medium otherwise
+// Tactics: Credential Access (TA0006), Lateral Movement (TA0008)
+// Answers: detection-priorities.md item 5 (Priority 1); attack-paths.md AP-1 steps 5 and 6
+// Architecture context: PE-IDENTITY, PA-IDENTITY, PEP-SESSION-PROXY (CA-10), PIP-ID-RISK; residual risk RR-03; risk register R-01
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   Compensate for the acknowledged token-theft gap (RR-03): the EHR browser path and guest or unmanaged
+//   sessions are not enforced by continuous access evaluation, so a session captured by an
+//   adversary-in-the-middle page stays usable until it expires. Detection is the compensating control.
+//   This rule watches the replay of the session (AP-1 steps 5 and 6). The capture itself (step 4,
+//   T1557) is left to Entra ID Protection's own detection (Logic step 5).
+//
+// Logic (a heuristic designed for this pack, not a Microsoft-published detection)
+//   1. Successful sign-ins (ErrorCode 0) with a SessionId, from every address, Contoso egress included,
+//      so the legitimate half of a replayed session stays in the group.
+//   2. Grouped per account and SessionId in fixed time bins (ReplayWindow).
+//   3. A group is returned only when at least one of its sign-ins comes from outside TrustedEgressIPs.
+//      Strong signal: the same session from two or more countries in one bin.
+//      Medium signal: the same session from two or more IP addresses with two or more user agents.
+//   4. Boost when Entra ID Protection already tagged a sign-in in the group with anomalousToken,
+//      tokenIssuerAnomaly, or unfamiliarFeatures, which Microsoft's risk detection reference lists as
+//      sign-in risk detections. The reference lists unfamiliarFeatures as real-time, anomalousToken as
+//      real-time or offline, and tokenIssuerAnomaly as offline. An offline detection may be absent from
+//      the sign-in row when the row is ingested, and the boost then does not apply.
+//   5. Attacker in the Middle (attackerinTheMiddle) is not used. Microsoft's reference lists it only as a
+//      user risk detection, calculated offline, and documents no path for it into a sign-in row's
+//      RiskEventTypes. T1557 is credited to that native detection, not to this rule (coverage-map.md
+//      section 2).
+//   Interactive and non-interactive sign-ins are not split here. Microsoft's table reference describes
+//   LogonType with Windows logon types (interactive, remote interactive, network, batch, and service) that
+//   do not match Entra's interactive and non-interactive split, so the query does not use that column. The
+//   Sentinel tables SigninLogs and AADNonInteractiveUserSignInLogs allow the split if a later revision
+//   needs it.
+//
+// Known false positives
+//   - Mobile clinicians moving between hospital Wi-Fi and cellular networks (IP and sometimes country of
+//     the carrier egress change). Country changes near borders or through carrier roaming.
+//   - Consumer VPNs on personal devices used by affiliated physicians.
+//   - Traffic through Global Secure Access, where the observed address can be the service egress; the
+//     output counts those sign-ins (ThroughGSA) so an analyst can discount them.
+//
+// Tuning knobs (let statements below)
+//   ReplayWindow        bin size; shorter is more precise, longer catches slower replay.
+//   TrustedEgressIPs    Contoso egress and known provider addresses (documentation addresses shown). A
+//                       group needs at least one sign-in from outside them. Sign-ins from them still count
+//                       toward countries, addresses, and clients.
+//   RiskSignals         Entra ID Protection sign-in riskEventType values that raise confidence.
+//
+// Response notes
+//   Revoke the user's sessions and refresh tokens in Entra ID (PA-IDENTITY), terminate EHR browser sessions
+//   through the EHR administrative function (A-07, CAE does not reach the EHR), and follow the identity
+//   compromise playbook. Revocation of a clinician's session needs the clinical notification step (ADR-008).
+//
+// Validation notes
+//   Not run against any tenant. Validate in a lab tenant with a test account: sign in, then present the same
+//   session from a second network and client. Expected telemetry: two successful EntraIdSignInEvents rows
+//   with the same SessionId and different IPAddress values. Run it once with the first sign-in from an
+//   address listed in TrustedEgressIPs, and confirm that the group is still returned (Logic step 3). Record
+//   whether RiskEventTypes carries any RiskSignals value on those rows. Do not use real staff accounts.
+//   Microsoft Defender for Office 365 Attack simulation training covers the phishing delivery step for
+//   consenting test users (purple-team-plan.md exercises PX-07 and PX-08). PX-08 validates the session
+//   replay (T1539, T1550.004). T1557 is outside this rule (Logic step 5) and is not exercised.
+//
+// References
+//   https://attack.mitre.org/techniques/T1539/
+//   https://attack.mitre.org/techniques/T1550/004/
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-entraidsigninevents-table
+//   https://learn.microsoft.com/en-us/entra/id-protection/concept-identity-protection-risks
+//   https://learn.microsoft.com/en-us/security/operations/token-theft-playbook
+//
+let LookbackWindow = 1d;
+let ReplayWindow = 2h;
+// Contoso egress and approved provider addresses (RFC 5737 documentation addresses shown as placeholders)
+let TrustedEgressIPs = dynamic(["203.0.113.10", "203.0.113.11"]);
+// Sign-in risk detections only; attackerinTheMiddle is a user risk detection (Logic step 5)
+let RiskSignals = dynamic(["anomalousToken", "tokenIssuerAnomaly", "unfamiliarFeatures"]);
+EntraIdSignInEvents
+| where Timestamp > ago(LookbackWindow)
+| where ErrorCode == 0
+| where isnotempty(SessionId) and isnotempty(IPAddress)
+// Contoso egress rows stay in the group (Logic step 1); empty Country values are not counted as a country
+| summarize arg_max(Timestamp, ReportId, AccountUpn, AccountDisplayName, Application, ResourceDisplayName, IsManaged, IsCompliant, IsGuestUser),
+    FirstSeen = min(Timestamp),
+    DistinctCountries = dcountif(Country, isnotempty(Country)),
+    Countries = make_set_if(Country, isnotempty(Country), 10),
+    DistinctIPs = dcount(IPAddress),
+    IPs = make_set(IPAddress, 10),
+    DistinctUserAgents = dcount(UserAgent),
+    UserAgents = make_set(UserAgent, 5),
+    SignInsOutsideTrustedEgress = countif(IPAddress !in (TrustedEgressIPs)),
+    RiskTaggedSignIns = countif(RiskEventTypes has_any (RiskSignals)),
+    ThroughGSA = countif(IsSignInThroughGlobalSecureAccess)
+    by AccountObjectId, SessionId, TimeBin = bin(Timestamp, ReplayWindow)
+| where SignInsOutsideTrustedEgress > 0
+| where DistinctCountries > 1 or (DistinctIPs > 1 and DistinctUserAgents > 1)
+| extend SuggestedSeverity = case(
+    DistinctCountries > 1 and RiskTaggedSignIns > 0, "High: session used from more than one country and tagged by Entra ID Protection",
+    DistinctCountries > 1, "High: session used from more than one country",
+    RiskTaggedSignIns > 0, "Medium-high: new network and client for the session, tagged by Entra ID Protection",
+    "Medium: new network and client for the same session")
+| extend UnmanagedDevice = IsManaged == 0
+| project Timestamp, ReportId, AccountObjectId, AccountUpn, AccountDisplayName, SuggestedSeverity, SessionId, Countries, IPs, UserAgents,
+    SignInsOutsideTrustedEgress, RiskTaggedSignIns, ThroughGSA, Application, ResourceDisplayName, UnmanagedDevice, IsCompliant, IsGuestUser,
+    FirstSeen, TimeBin

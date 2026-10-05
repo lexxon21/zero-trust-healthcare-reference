@@ -1,0 +1,87 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Device code flow or authentication transfer sign-in, successful or blocked, outside the documented CA-20 exception
+// Status: untested template
+// ATT&CK: T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v19.2
+// Data sources: Microsoft Sentinel, SigninLogs and AADNonInteractiveUserSignInLogs (Microsoft Entra ID data connector)
+// Licensing assumptions: Microsoft Sentinel with the Entra ID connector including non-interactive sign-ins (scenario A-17); Entra ID P1 or P2 for sign-in log access (scenario holds P2)
+// Rule ID: SN-04 | Platform: Microsoft Sentinel scheduled analytics rule | Suggested severity: High on success, Medium on a blocked attempt
+// Tactics: Initial Access (TA0001), Persistence (TA0003)
+// Answers: detection-priorities.md item 16 (Priority 3); attack-paths.md AP-1 steps 2 and 3 (device code phishing variant)
+// Architecture context: CA-20 (block device code flow and authentication transfer), PE-IDENTITY; risk register R-01
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   CA-20 blocks both flows for everyone except a documented exception group of shared-room devices.
+//   Device code phishing campaigns list health among their targets (threat-model.md section 3), so any
+//   attempt deserves a look: a blocked attempt usually means someone entered a code from a phishing
+//   message, and a success means the policy has a gap or the exception was used.
+//
+// Logic
+//   1. Sign-ins where AuthenticationProtocol is deviceCode or authenticationTransfer, or where
+//      OriginalTransferMethod is deviceCodeFlow or authenticationTransfer (values from the Microsoft Graph
+//      signIn resource). OriginalTransferMethod also catches later refreshes of a protocol-tracked session.
+//   2. Interactive and non-interactive tables are combined; the non-interactive table stores LocationDetails
+//      as text, so it is converted before use.
+//   3. Accounts in the CA-20 exception are excluded; everything else is returned with its outcome.
+//   Microsoft documents error AADSTS530036 for refresh tokens blocked because of authentication flow
+//   checks; expect that code in ResultType when the block works on a protocol-tracked session.
+//
+// Known false positives
+//   - Shared-room devices in the CA-20 exception group that are missing from ExceptionAccounts.
+//   - Device registration that uses device code flow (Microsoft notes this for the Device Registration
+//     Service resource when an authentication flows policy targets all resources).
+//   - Administrators using command-line tools that sign in with device code from a PAW (should not occur
+//     under CA-20; record and remove).
+//
+// Tuning knobs (let statements below)
+//   ExceptionAccounts   lower-case user principal names in the CA-20 exception group (owner and expiry
+//                       recorded per P-5).
+//
+// Response notes
+//   Success outside the exception: revoke the user's refresh tokens, review the sign-in's application and
+//   resource, check mailbox and file access since the sign-in, and find the phishing message (EmailEvents
+//   in Defender XDR). Blocked attempt: confirm the block, then hunt for the lure across mailboxes. When the
+//   user is clinical staff, the clinical notification step comes before tokens are revoked (clinical
+//   safety gate, ADR-008; playbook decision point D5).
+//
+// Validation notes
+//   Not run against any workspace. Validate in a lab tenant with CA-20 in report-only, then enabled: start
+//   a device code sign-in for a test user from a lab device. Expected telemetry: a SigninLogs row with
+//   AuthenticationProtocol deviceCode and, when enforced, a Conditional Access failure.
+//
+// References
+//   https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-authentication-flows
+//   https://learn.microsoft.com/en-us/graph/api/resources/signin?view=graph-rest-beta
+//   https://attack.mitre.org/techniques/T1078/004/
+//
+let LookbackWindow = 1h;
+// Lower-case UPNs of the shared-room accounts in the CA-20 exception group (placeholder)
+let ExceptionAccounts = dynamic(["room-device-placeholder@contoso.example"]);
+let Flows = dynamic(["deviceCode", "authenticationTransfer"]);
+let TransferMethods = dynamic(["deviceCodeFlow", "authenticationTransfer"]);
+let InteractiveSignins =
+    SigninLogs
+    | where TimeGenerated > ago(LookbackWindow)
+    | where AuthenticationProtocol in~ (Flows) or OriginalTransferMethod in~ (TransferMethods)
+    | extend Country = tostring(LocationDetails.countryOrRegion), DeviceOs = tostring(DeviceDetail.operatingSystem), SignInKind = "Interactive"
+    | project TimeGenerated, UserPrincipalName, UserId, AppDisplayName, ResourceDisplayName, IPAddress, Country, DeviceOs,
+        AuthenticationProtocol, OriginalTransferMethod, ResultType, ResultDescription, ConditionalAccessStatus, SignInKind, CorrelationId;
+let NonInteractiveSignins =
+    AADNonInteractiveUserSignInLogs
+    | where TimeGenerated > ago(LookbackWindow)
+    | where AuthenticationProtocol in~ (Flows) or OriginalTransferMethod in~ (TransferMethods)
+    | extend Location = todynamic(LocationDetails), Device = todynamic(DeviceDetail)
+    | extend Country = tostring(Location.countryOrRegion), DeviceOs = tostring(Device.operatingSystem), SignInKind = "Non-interactive"
+    | project TimeGenerated, UserPrincipalName, UserId, AppDisplayName, ResourceDisplayName, IPAddress, Country, DeviceOs,
+        AuthenticationProtocol, OriginalTransferMethod, ResultType, ResultDescription, ConditionalAccessStatus, SignInKind, CorrelationId;
+union InteractiveSignins, NonInteractiveSignins
+| where tolower(UserPrincipalName) !in (ExceptionAccounts)
+| extend Outcome = iff(ResultType == "0", "Success", strcat("Failure ", ResultType))
+| summarize arg_max(TimeGenerated, IPAddress, Country, DeviceOs, AppDisplayName, ResourceDisplayName, ResultDescription, CorrelationId),
+    FirstSeen = min(TimeGenerated), Attempts = count(), Outcomes = make_set(Outcome, 10), SignInKinds = make_set(SignInKind, 2),
+    Protocols = make_set(AuthenticationProtocol, 4), TransferMethodsSeen = make_set(OriginalTransferMethod, 4)
+    by UserPrincipalName, UserId
+| extend SuggestedSeverity = iff(set_has_element(Outcomes, "Success"), "High: flow completed despite CA-20, check the exception and policy state",
+    "Medium: blocked attempt, likely a device code phishing lure reached this user")
+| project TimeGenerated, UserPrincipalName, UserId, SuggestedSeverity, Attempts, Outcomes, Protocols, TransferMethodsSeen, SignInKinds,
+    IPAddress, Country, DeviceOs, AppDisplayName, ResourceDisplayName, ResultDescription, FirstSeen, CorrelationId

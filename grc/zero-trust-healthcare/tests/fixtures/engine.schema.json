@@ -1,0 +1,24 @@
+{
+  "$comment": "Test fixture for validate-crosswalk.ps1. Exercises type arrays, deep equality for const, enum, and uniqueItems, one-item enum and required arrays, $ref, and string length counted in characters (code points), not UTF-16 units.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nullable_ok", "nullable_null", "nullable_bad", "objects_unique", "objects_dup", "const_ok", "const_bad", "enum_ok", "enum_bad", "single_ok", "single_bad", "maxlen_ok", "maxlen_bad"],
+  "properties": {
+    "nullable_ok": { "type": ["string", "null"] },
+    "nullable_null": { "type": ["string", "null"] },
+    "nullable_bad": { "type": ["string", "null"] },
+    "objects_unique": { "type": "array", "uniqueItems": true, "items": { "type": "object" } },
+    "objects_dup": { "type": "array", "uniqueItems": true, "items": { "type": "object" } },
+    "const_ok": { "const": { "a": "1", "b": ["2", "3"] } },
+    "const_bad": { "const": { "a": "1", "b": ["2", "3"] } },
+    "enum_ok": { "enum": [["p", "q"], "r"] },
+    "enum_bad": { "enum": [["p", "q"], "r"] },
+    "single_ok": { "$ref": "#/definitions/single" },
+    "single_bad": { "$ref": "#/definitions/single" },
+    "maxlen_ok": { "type": "string", "maxLength": 1 },
+    "maxlen_bad": { "type": "string", "maxLength": 1 }
+  },
+  "definitions": {
+    "single": { "type": "object", "required": ["only"], "properties": { "only": { "enum": ["x"] } } }
+  }
+}

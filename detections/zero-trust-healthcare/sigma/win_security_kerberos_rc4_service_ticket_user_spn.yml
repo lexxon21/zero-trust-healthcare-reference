@@ -1,0 +1,54 @@
+# Reference rule. Not deployed in any employer environment.
+# Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+# Rule ID: SG-05 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Answers: detection-priorities.md item 6 (Priority 2); attack-paths.md AP-4 step 6 and AP-5 step 3
+# Required telemetry: Windows Security event 4769 from every domain controller (audit subcategory Audit Kerberos
+#   Service Ticket Operations), collected into the SIEM (PIP-SIEM) or read by Defender for Identity.
+# Credit: the logic follows SigmaHQ rule "Suspicious Kerberos RC4 Ticket Encryption"
+#   (id 496a0e47-0a33-4dca-b009-9e6ca3591f39) by Florian Roth (Nextron Systems), licensed under the Detection
+#   Rule License (DRL) 1.1 (https://github.com/SigmaHQ/Detection-Rule-License); link in references. Differs:
+#   requires Status 0x0 where the SigmaHQ rule requires a TicketOptions value, and also excludes krbtgt.
+# Conversion note: not expected to convert cleanly to the Defender XDR backend. Defender XDR's native advanced
+#   hunting schema has no table of raw Windows Security events such as 4769, and the microsoft_xdr pipeline maps
+#   only to native Defender XDR tables, so it has nothing to map this rule to; a conversion run on 2026-10-04
+#   (pySigma-backend-kusto 1.0.1) stopped with an error and produced no query, as predicted. If a conversion
+#   run produces a query on another table, discard it. Defender XDR coverage for this behavior is DX-05
+#   (Defender for Identity Kerberoasting alerts). A Sentinel conversion needs a SecurityEvent query that reads
+#   the ticket fields from EventData; once the Sentinel workspace is onboarded to the Defender portal, that
+#   query can also run in advanced hunting.
+# Tuning: under ADR-005 service accounts move to AES-only Kerberos, so RC4 tickets for user-based service
+#   accounts should trend to zero. Record legacy enclave (Z-LEGACY) service accounts that still need RC4 as
+#   dated exceptions and exclude them by ServiceName.
+# Validation: not run. In an isolated lab domain, request a service ticket for a test service account that
+#   still allows RC4; expect event 4769 with TicketEncryptionType 0x17. Public library: Atomic Red Team tests
+#   mapped to T1558.003 (operator selects them; purple-team-plan.md exercise PX-04).
+title: Kerberos Service Ticket Issued With RC4 Encryption for a User-Based Service Account
+id: 9a3c5e71-6b2d-4f08-8c1e-2d4b7a9f0e65
+status: experimental
+description: Reference rule. Detects successful Kerberos service ticket requests (Windows Security event 4769) issued with RC4-HMAC encryption (ticket encryption type 0x17) for a service that is not a computer account or the krbtgt account. Microsoft recommends monitoring for ticket encryption types other than 0x11 and 0x12, and RC4 tickets for user-based service accounts are a common Kerberoasting indicator. Written for the fictional Contoso Regional Health reference architecture and not deployed in any employer environment. Logic follows SigmaHQ rule "Suspicious Kerberos RC4 Ticket Encryption" by Florian Roth (Nextron Systems), licensed under DRL 1.1.
+references:
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4769
+    - https://attack.mitre.org/techniques/T1558/003/
+    - https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_security_susp_rc4_kerberos.yml
+author: Florian Roth (Nextron Systems); modified by Jacob Welch
+date: 2026-10-04
+tags:
+    - attack.credential-access
+    - attack.t1558.003
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4769
+        TicketEncryptionType: '0x17'
+        Status: '0x0'
+    filter_computer_accounts:
+        ServiceName|endswith: '$'
+    filter_krbtgt:
+        ServiceName: 'krbtgt'
+    condition: selection and not 1 of filter_*
+falsepositives:
+    - Legacy enclave applications whose service accounts still support only RC4 (dated exceptions under ADR-005)
+    - Older clients or appliances that advertise only RC4
+level: medium

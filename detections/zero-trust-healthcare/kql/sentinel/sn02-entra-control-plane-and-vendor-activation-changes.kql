@@ -1,0 +1,172 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Microsoft Entra control-plane change (Tier 0 role assignment, Conditional Access or named location change, domain federation or sync change, cross-tenant access change) or a vendor PIM-for-Groups activation outside expected hours
+// Status: untested template
+// ATT&CK: T1098.003 (Account Manipulation: Additional Cloud Roles), T1556.009 (Modify Authentication Process: Conditional Access Policies), T1556.007 (Modify Authentication Process: Hybrid Identity), T1484.002 (Domain or Tenant Policy Modification: Trust Modification), T1199 (Trusted Relationship), T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v19.2
+// Data sources: Microsoft Sentinel, AuditLogs (Microsoft Entra ID data connector)
+// Licensing assumptions: Microsoft Sentinel with the Entra ID connector (scenario A-17); PIM and PIM for Groups audit events require Entra ID P2 (scenario holds P2)
+// Rule ID: SN-02 | Platform: Microsoft Sentinel scheduled analytics rule | Suggested severity: High for trust, sync, and policy changes, any assignment or activation of a never-assigned role, and permanent Tier 0 assignments outside PIM; Medium for other Tier 0 role assignments and activations, scoped Tier 0 assignments, and vendor activations
+// Tactics: Persistence (TA0003), Privilege Escalation (TA0004), Defense Impairment (TA0112), Initial Access (TA0001)
+// Answers: detection-priorities.md item 10 (Priority 2), the cloud half of item 9, and the PIM activation part of item 15; attack-paths.md AP-5 steps 6 to 8 and AP-3 step 3
+// Architecture context: PE-IDENTITY (Conditional Access set CA-01 to CA-22), IGA-ENTRA (PIM, PIM for Groups), IDS-SYNC, IDS-PARTNER, the vendor session groups grp-vendor-ehr-session and grp-vendor-biomed-<vendor>-session (03 section 7; flows F-06 and F-07); risk register R-04 and R-05
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   After a cloud foothold, durable access comes from changing the control plane: adding a role, editing
+//   Conditional Access, trusting a new federation or partner, or flipping directory sync settings. The
+//   architecture already says Sentinel alerts on these (03-identity-and-access.md section 4); this is the
+//   query behind that statement. It also watches the vendor path (AP-3): a PIM-for-Groups activation of a
+//   vendor session group outside the hours vendors normally work.
+//
+// Logic
+//   Activity names come from Microsoft's Entra audit activity reference:
+//   - Role changes: "Add member to role", "Add eligible member to role", "Add member to role outside of PIM
+//     (permanent)", and the two scoped forms the reference lists, "Add scoped member to role" and "Add
+//     member to role scoped over Restricted Management Administrative Unit", matched by a text match on the
+//     target resources to the Tier 0 Entra roles in 03-identity-and-access.md section 4 (Global
+//     Administrator, Privileged Role Administrator, Privileged Authentication Administrator, Conditional
+//     Access Administrator, Security Administrator, Hybrid Identity Administrator, Domain Name
+//     Administrator, Intune Administrator, Application Administrator, and Cloud Application
+//     Administrator), plus every PIM activation of those roles.
+//   - Scope: 03 section 4 places Application Administrator and Cloud Application Administrator in Tier 0
+//     when assigned at tenant scope, and treats an assignment scoped to one application that is not Tier 0
+//     as Tier 1. The rule does not tell the two apart. Microsoft's role assignment reference records scope
+//     as directoryScopeId ("/" for the tenant, "/" followed by an application's object ID for one
+//     application), but the audit activity reference lists activity names only, so which activity and
+//     which target properties an app-scoped assignment logs is left to the lab (purple-team-plan.md PX-17
+//     records both). The rule alerts on an assignment of either role under any activity above, scoped forms
+//     included, and an app-scoped assignment to an application that is not Tier 0 is closed against its
+//     record.
+//   - Never-assigned roles: the same role activities for the roles that 03-identity-and-access.md section 4
+//     says are never assigned: Partner Tier1 Support and Partner Tier2 Support (Microsoft's role reference
+//     says "Do not use" for both), Windows 365 Administrator, and External Identity Provider
+//     Administrator. Any assignment is High.
+//   - Policy changes: Conditional Access policy, named location, authentication context, continuous access
+//     evaluation, and security defaults activities.
+//   - Trust and sync changes: "Set domain authentication", "Set federation settings on domain",
+//     "Set DirSyncEnabled flag", "Set DirSync feature", and four of the nine CrossTenantAccessSettings
+//     activities in the reference: "Add a partner to cross-tenant access setting", "Update a partner
+//     cross-tenant access setting", "Delete partner specific cross-tenant access setting", and "Update the
+//     company default cross-tenant access setting".
+//   - Vendor activations: "Add member to role completed (PIM activation)" for any vendor session group, EHR
+//     or biomedical (VendorSessionGroupPattern), outside ExpectedVendorHoursUtc. The audit activity
+//     reference lists this PIM for Groups form under Category GroupManagement, but the rule identifies the
+//     row by the group name, not by Category: Microsoft's Graph directoryAudit reference documents category
+//     values such as GroupManagement, while its Azure Monitor AuditLogs table reference says Audit is the
+//     only supported value.
+//   Changes to grp-ca-emergency-access, grp-admins-t0, and grp-admins-t1, and audit activity by or on the
+//   emergency access accounts, are SN-07's. SN-02 still alerts on every Conditional Access policy change,
+//   including a change to which group a policy targets or excludes (03 sections 3 and 5).
+//
+// Known false positives
+//   - Planned changes by the Conditional Access team; match against change tickets (P-5) before closing.
+//   - PIM activations by Tier 0 administrators doing approved work (Tier 0 activation needs approval from
+//     one of two named approvers, so the useful question is whether the approval matches a ticket).
+//   - Vendor emergencies at night with a Contoso owner's documented approval (the system owner for the EHR
+//     vendor, clinical engineering for a biomedical vendor).
+//
+// Tuning knobs (let statements below)
+//   Tier0RolePattern         regular expression of the Tier 0 Entra role names in 03 section 4. The Tier 0
+//                            row there also names Defender roles that can run live response on all
+//                            devices, Azure roles that can write to the resources hosting Tier 0 managed
+//                            identities, and Active Directory Domain Admins and Enterprise Admins. None of
+//                            those is an Entra directory role, and this rule does not watch them
+//                            (coverage-map.md section 3, item 10).
+//   ScopedRoleActivities     the two scoped role activities, labeled separately so the responder checks
+//                            the assignment's scope.
+//   NeverAssignedRolePattern regular expression of roles the design never assigns (03 section 4).
+//   VendorSessionGroupPattern  regular expression for the PIM-for-Groups vendor session groups. 03 section 7
+//                              names grp-vendor-ehr-session and one grp-vendor-biomed-<vendor>-session group
+//                              per biomedical vendor, all following grp-vendor-*-session, so one pattern
+//                              covers both. A group named outside that convention is not matched.
+//   ExpectedVendorHoursUtc   start and end hour (UTC) of normal vendor activity.
+//
+// Response notes
+//   Unplanned Tier 0 or trust changes: treat as a suspected Tier 0 compromise and follow the identity
+//   compromise playbook's Tier 0 branch from a Tier 0 PAW. An assignment of a never-assigned role has no
+//   planned form: remove it and investigate the actor as for an unplanned Tier 0 change. An assignment of
+//   Application Administrator or Cloud Application Administrator: confirm its scope against the ticket. At
+//   tenant scope it is Tier 0 work under a Tier 0 change record. Scoped to one application, it is Tier 1
+//   only when that application is not Tier 0; scoped to a Tier 0 workload identity (the application owner
+//   registry, 03 section 6), handle it as an unplanned Tier 0 change, because its holder can add a
+//   credential to that application and act as it (03 section 4). A Privileged Authentication
+//   Administrator activation that no ticket explains also calls for a review of the credential changes
+//   made in the window: SN-07 alerts on any change to the emergency access accounts, but changes to other
+//   Tier 0 accounts show only in AuditLogs. Unplanned vendor activation: end the activation,
+//   end the broker session in PEP-VENDOR-BROKER, and call the vendor through the contact on file, not one
+//   supplied in the session. For a biomedical vendor, tell clinical engineering, which approves those
+//   activations (F-07); if the session reaches a device in clinical use, the clinical safety gate applies
+//   (playbook decision point D5).
+//
+// Validation notes
+//   Not run against any workspace. Validate in a lab tenant, each change made by an authorized
+//   administrator. Role, policy, and trust branches (purple-team-plan.md exercise PX-17): assign a role
+//   that Tier0RolePattern lists, edit a report-only Conditional Access policy, and change a federation or
+//   cross-tenant access setting. PX-17 gives Privileged Authentication Administrator and Security
+//   Administrator runs of their own, assigns Application Administrator scoped to a single lab application
+//   and records the activity name and target properties that assignment logs and whether SN-02 alerted,
+//   and records an assignment of a privileged role outside both lists as a coverage gap, not a miss. Its
+//   never-assigned run exercises the never-assigned branch for each role it assigns; a role in
+//   NeverAssignedRolePattern that the lab does not assign stays unexercised. Its exclusion-group and
+//   admin-group steps are SN-07's. Vendor activation branch (exercise PX-11): activate PIM for Groups
+//   membership in a vendor session group at an off-hours time, once with an EHR group name and once with
+//   a biomedical group name, so the pattern is tested on both. Expected telemetry: one AuditLogs row per
+//   change, with an OperationName from the RoleActivities, PolicyActivities, or TrustActivities lists
+//   below, and "Add member to role completed (PIM activation)" for each vendor activation; record the
+//   Category value the lab shows on that row (see Logic).
+//
+// References
+//   https://learn.microsoft.com/en-us/entra/identity/monitoring-health/reference-audit-activities
+//   https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference
+//   https://learn.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0
+//   https://learn.microsoft.com/en-us/graph/api/resources/directoryaudit?view=graph-rest-1.0
+//   https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/auditlogs
+//   https://attack.mitre.org/techniques/T1098/003/
+//   https://attack.mitre.org/techniques/T1556/009/
+//   https://attack.mitre.org/techniques/T1484/002/
+//
+let LookbackWindow = 1h;
+// The Tier 0 Entra roles in 03 section 4
+let Tier0RolePattern = @"(?i)(Global Administrator|Privileged Role Administrator|Privileged Authentication Administrator|Conditional Access Administrator|Security Administrator|Hybrid Identity Administrator|Domain Name Administrator|Intune Administrator|Cloud Application Administrator|Application Administrator)";
+// Roles the design never assigns (03 section 4): any assignment alerts
+let NeverAssignedRolePattern = @"(?i)(Partner Tier1 Support|Partner Tier2 Support|Windows 365 Administrator|External Identity Provider Administrator)";
+// The two scoped role activities in the audit activity reference; labeled so the responder checks scope (Logic)
+let ScopedRoleActivities = dynamic(["Add scoped member to role", "Add member to role scoped over Restricted Management Administrative Unit"]);
+let RoleActivities = dynamic(["Add member to role", "Add eligible member to role", "Add member to role outside of PIM (permanent)",
+    "Add member to role completed (PIM activation)", "Add scoped member to role",
+    "Add member to role scoped over Restricted Management Administrative Unit"]);
+let PolicyActivities = dynamic(["Add Conditional Access policy", "Update Conditional Access policy", "Delete Conditional Access policy",
+    "Add named location", "Update named location", "Delete named location", "Add AuthenticationContextClassReference",
+    "Update AuthenticationContextClassReference", "Delete AuthenticationContextClassReference", "Update continuous access evaluation",
+    "Update security defaults"]);
+let TrustActivities = dynamic(["Set domain authentication", "Set federation settings on domain", "Set DirSyncEnabled flag", "Set DirSync feature",
+    "Add a partner to cross-tenant access setting", "Update a partner cross-tenant access setting", "Delete partner specific cross-tenant access setting",
+    "Update the company default cross-tenant access setting"]);
+// Every vendor session group: grp-vendor-ehr-session and grp-vendor-biomed-<vendor>-session (03 section 7)
+let VendorSessionGroupPattern = @"(?i)grp-vendor-[a-z0-9-]+-session";
+let ExpectedVendorHoursUtc = dynamic([12, 23]);
+AuditLogs
+| where TimeGenerated > ago(LookbackWindow)
+| where OperationName in~ (RoleActivities) or OperationName in~ (PolicyActivities) or OperationName in~ (TrustActivities)
+| extend TargetText = tostring(TargetResources),
+         Actor = coalesce(tostring(InitiatedBy.user.userPrincipalName), tostring(InitiatedBy.app.displayName)),
+         ActorIP = tostring(InitiatedBy.user.ipAddress),
+         HourUtc = datetime_part("hour", TimeGenerated)
+| extend ChangeClass = case(
+    OperationName in~ (TrustActivities), "Trust or sync change",
+    OperationName in~ (PolicyActivities), "Conditional Access or location change",
+    OperationName =~ "Add member to role completed (PIM activation)" and TargetText matches regex VendorSessionGroupPattern, "Vendor PIM-for-Groups activation",
+    OperationName in~ (RoleActivities) and TargetText matches regex NeverAssignedRolePattern, "Never-assigned role assignment",
+    OperationName in~ (ScopedRoleActivities) and TargetText matches regex Tier0RolePattern, "Scoped assignment of a Tier 0 role",
+    OperationName in~ (RoleActivities) and TargetText matches regex Tier0RolePattern, "Tier 0 role assignment or activation",
+    "")
+| where isnotempty(ChangeClass)
+| where not(ChangeClass == "Vendor PIM-for-Groups activation" and HourUtc between (toint(ExpectedVendorHoursUtc[0]) .. toint(ExpectedVendorHoursUtc[1])))
+| extend SuggestedSeverity = case(
+    ChangeClass == "Trust or sync change", "High: federation, domain authentication, sync, or cross-tenant trust changed",
+    ChangeClass == "Never-assigned role assignment", "High: a role the design never assigns was assigned or activated (03 section 4)",
+    ChangeClass == "Scoped assignment of a Tier 0 role", "Medium: scoped assignment of a Tier 0 role, confirm the scope and the ticket",
+    ChangeClass == "Tier 0 role assignment or activation" and OperationName =~ "Add member to role outside of PIM (permanent)", "High: permanent Tier 0 role assigned outside PIM",
+    ChangeClass == "Tier 0 role assignment or activation", "Medium: Tier 0 role change or activation, confirm the ticket and approvers",
+    ChangeClass == "Conditional Access or location change", "High: Conditional Access or named location changed, confirm the change ticket",
+    "Medium: vendor session group activated outside expected hours")
+| project TimeGenerated, ChangeClass, SuggestedSeverity, OperationName, Category, Result, Actor, ActorIP, TargetResources, AdditionalDetails, CorrelationId

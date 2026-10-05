@@ -1,0 +1,113 @@
+// Reference query. Not deployed in any employer environment.
+// Title: Exchange Online inbox rule or mailbox setting that forwards, redirects, deletes, or hides mail, scored higher when it filters on payment keywords
+// Status: untested template
+// ATT&CK: T1564.008 (Hide Artifacts: Email Hiding Rules), T1114.003 (Email Collection: Email Forwarding Rule); ATT&CK v19.2
+// Data sources: Microsoft Defender XDR advanced hunting, CloudAppEvents (Microsoft Defender for Cloud Apps with the Microsoft 365 app connector and "Microsoft 365 activities" selected)
+// Licensing assumptions: Microsoft Defender for Cloud Apps within the scenario's Defender XDR stack (Microsoft 365 E5); the Microsoft 365 app connector must be on or the table stays empty for Exchange events
+// Rule ID: DX-04 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High with payment keywords, Medium otherwise
+// Tactics: Stealth (TA0005), Collection (TA0009)
+// Answers: detection-priorities.md item 4 (Priority 1, single-signal half); attack-paths.md AP-2 steps 5 and 6 and AP-1 step 7
+// Architecture context: RES-M365, SVC-EMAIL, PIP-XDR; the full AP-2 chain is Sentinel rule SN-01; risk register R-01 and R-02
+// Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+//
+// Purpose
+//   Find the mailbox change that turns account access into payment fraud in the AP-2 path: a rule that
+//   forwards or redirects mail outside Contoso, deletes it, or moves it to a folder the user never opens,
+//   especially when the rule only acts on payment, banking, or payroll messages.
+//
+// Logic
+//   1. CloudAppEvents for Application "Microsoft Exchange Online" and the rule-related ActionType values
+//      Microsoft uses in its inbox-manipulation alert playbook: New-InboxRule, Set-InboxRule,
+//      UpdateInboxRules, and Set-Mailbox.
+//   2. RawEventData.Parameters (a Name and Value list) is turned into one property bag per event.
+//      Parameter names come from the New-InboxRule and Set-Mailbox cmdlet references.
+//   3. Flags: forwarding or redirect to a domain outside Contoso, delete or soft delete, move to a
+//      low-visibility folder, mark as read, and a keyword filter that matches payment terms.
+//   4. UpdateInboxRules (rules changed from the Outlook client) does not carry the same Parameters list, so
+//      those events are returned at low severity for review instead of being parsed.
+//
+// Known false positives
+//   - Approved forwarding to a business associate mailbox (for example the revenue-cycle outsourcer,
+//     EXT-RCM-BA) documented in the business associate agreement; add the domain to InternalDomains only
+//     after compliance confirms it.
+//   - Users filing newsletters or alerts into folders; executive assistants managing delegated mailboxes.
+//   - Mailbox migrations and shared mailbox setup by Exchange administrators.
+//
+// Tuning knobs (let statements below)
+//   InternalDomains     accepted Contoso domains in lower case (placeholder values shown).
+//   PaymentKeywords     terms that indicate payment diversion intent; extend with payer and bank names.
+//   HidingFolders       folder names an attacker uses to hide replies.
+//
+// Response notes
+//   Disable the rule, reset the account per the identity compromise playbook, and check for a recent MFA
+//   method change (SN-01). Payment diversion recovery depends on speed: notify finance and the bank
+//   relationship owner at once when PaymentKeywordFilter is true. When the account belongs to clinical
+//   staff, the clinical notification step comes before the reset (clinical safety gate, ADR-008; playbook
+//   decision point D5).
+//
+// Validation notes
+//   Not run against any tenant. Validate with a lab mailbox: create a rule that moves messages containing
+//   "invoice" to an RSS folder and marks them read, and a second rule that forwards to an external test
+//   domain. Expected telemetry: CloudAppEvents rows with ActionType New-InboxRule and the rule settings in
+//   RawEventData.Parameters (purple-team-plan.md exercise PX-10).
+//   Internet service provider column: not projected, because Microsoft's sources disagree on its
+//   spelling. The Defender XDR CloudAppEvents schema page spells it Isp, while the query in Microsoft's
+//   inbox-manipulation alert playbook and the Azure Monitor CloudAppEvents reference use ISP. Kusto
+//   column names are case-sensitive, so a wrong spelling stops the query. The lab run confirms which
+//   spelling resolves; add that column to the final project afterward if analysts want it.
+//
+// References
+//   https://attack.mitre.org/techniques/T1564/008/
+//   https://attack.mitre.org/techniques/T1114/003/
+//   https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-cloudappevents-table
+//   https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/cloudappevents
+//   https://learn.microsoft.com/en-us/defender-xdr/alert-grading-playbook-inbox-manipulation-rules
+//   https://learn.microsoft.com/en-us/powershell/module/exchangepowershell/new-inboxrule?view=exchange-ps
+//   https://learn.microsoft.com/en-us/powershell/module/exchangepowershell/set-mailbox?view=exchange-ps
+//
+let LookbackWindow = 1h;
+// Accepted Contoso mail domains, lower case (placeholders on a reserved TLD)
+let InternalDomains = dynamic(["contoso.example", "health.contoso.example"]);
+let PaymentKeywords = dynamic(["invoice", "payment", "remittance", "ACH", "wire", "bank", "deposit", "payroll", "EFT"]);
+// Single words, matched as whole terms (for example "Conversation" matches a "Conversation History" folder)
+let HidingFolders = dynamic(["RSS", "Feeds", "Subscriptions", "Conversation", "Archive", "Junk"]);
+let RuleEvents =
+    CloudAppEvents
+    | where Timestamp > ago(LookbackWindow)
+    | where Application == "Microsoft Exchange Online"
+    | where ActionType in ("New-InboxRule", "Set-InboxRule", "UpdateInboxRules", "Set-Mailbox");
+let ParsedRules =
+    RuleEvents
+    | where ActionType != "UpdateInboxRules"
+    | mv-apply Parameter = RawEventData.Parameters on (
+        summarize RuleParams = make_bag(bag_pack(tostring(Parameter.Name), tostring(Parameter.Value)))
+      )
+    | extend ForwardTarget = tolower(strcat(tostring(RuleParams.ForwardTo), ";", tostring(RuleParams.ForwardAsAttachmentTo), ";",
+                                           tostring(RuleParams.RedirectTo), ";", tostring(RuleParams.ForwardingSmtpAddress), ";",
+                                           tostring(RuleParams.ForwardingAddress)))
+    | extend ForwardDomains = extract_all(@"@([a-z0-9.\-]+)", ForwardTarget)
+    | extend ExternalForwardDomains = set_difference(ForwardDomains, InternalDomains)
+    | extend ForwardsExternally = array_length(ExternalForwardDomains) > 0,
+             DeletesMail = tostring(RuleParams.DeleteMessage) =~ "True" or tostring(RuleParams.SoftDeleteMessage) =~ "True",
+             MarksRead = tostring(RuleParams.MarkAsRead) =~ "True",
+             MoveFolder = tostring(RuleParams.MoveToFolder),
+             KeywordFilter = strcat(tostring(RuleParams.SubjectContainsWords), " ", tostring(RuleParams.BodyContainsWords), " ",
+                                    tostring(RuleParams.SubjectOrBodyContainsWords))
+    | extend MovesToHidingFolder = isnotempty(MoveFolder) and MoveFolder has_any (HidingFolders),
+             PaymentKeywordFilter = KeywordFilter has_any (PaymentKeywords)
+    | where ForwardsExternally or DeletesMail or MovesToHidingFolder or (MarksRead and isnotempty(MoveFolder))
+    | extend SuggestedSeverity = case(
+        (ForwardsExternally or DeletesMail or MovesToHidingFolder) and PaymentKeywordFilter, "High: hides or forwards payment-related mail",
+        ForwardsExternally, "Medium: forwards or redirects outside Contoso",
+        "Medium: deletes or hides mail")
+    | extend RuleSummary = bag_pack("ExternalForwardDomains", ExternalForwardDomains, "DeletesMail", DeletesMail,
+                                    "MovesToHidingFolder", MovesToHidingFolder, "MoveFolder", MoveFolder, "MarksRead", MarksRead,
+                                    "KeywordFilter", KeywordFilter, "PaymentKeywordFilter", PaymentKeywordFilter);
+let OutlookClientRules =
+    RuleEvents
+    | where ActionType == "UpdateInboxRules"
+    | extend SuggestedSeverity = "Low: rule changed from the Outlook client; review RawEventData for actions",
+             RuleSummary = dynamic({});
+union ParsedRules, OutlookClientRules
+| project Timestamp, ReportId, AccountObjectId, AccountDisplayName, ActionType, SuggestedSeverity, RuleSummary,
+    IPAddress, CountryCode, UserAgent, RawEventData

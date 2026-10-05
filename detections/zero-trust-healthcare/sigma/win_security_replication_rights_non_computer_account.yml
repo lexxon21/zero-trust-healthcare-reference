@@ -1,0 +1,69 @@
+# Reference rule. Not deployed in any employer environment.
+# Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
+# Rule ID: SG-06 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Answers: detection-priorities.md item 7 (Priority 2); attack-paths.md AP-5 step 4
+# Required telemetry: Windows Security event 4662 from every domain controller (audit subcategory Audit Directory
+#   Service Access) with a SACL on the domain object that audits the replication control access rights.
+# Credit: the logic follows SigmaHQ rule "Active Directory Replication from Non Machine Account - DcSync Indicator"
+#   (id 17d619c1-e020-4347-957e-1d1207455c93) by Roberto Rodriguez @Cyb3rWard0g, licensed under the Detection
+#   Rule License (DRL) 1.1 (https://github.com/SigmaHQ/Detection-Rule-License); link in references. Differs:
+#   adds the ObjectServer and AccessMask conditions, uses three of its four GUIDs, omits its NT AUT and Window
+#   Manager exclusions, and pairs with DX-06, which keeps the MSOL_ connector account visible.
+# Conversion note: not expected to convert cleanly to the Defender XDR backend. Defender XDR's native advanced
+#   hunting schema has no table of raw Windows Security events such as 4662, and the microsoft_xdr pipeline maps
+#   only to native Defender XDR tables; a conversion run on 2026-10-04 (pySigma-backend-kusto 1.0.1) stopped
+#   with an error and produced no query, as predicted. Defender XDR coverage for this behavior is DX-06
+#   (IdentityDirectoryEvents) and DX-05 (Defender for Identity DCSync alerts). A Sentinel version queries
+#   SecurityEvent, which can also be queried from advanced hunting once the Sentinel workspace is onboarded to
+#   the Defender portal.
+# Tuning and known gap: password hash synchronization (assumption A-01) needs the AD DS Connector account to hold
+#   Replicate Directory Changes and Replicate Directory Changes All, so that account replicates constantly and is
+#   filtered here by its express-install MSOL_ prefix (replace with the custom account name if one is used).
+#   An attacker who controls that account is therefore invisible to this rule; DX-06 covers that case by
+#   requiring the connector account to replicate only from the IDS-SYNC servers.
+# Validation: not run. In an isolated lab domain, grant a test user the replication rights, request replication
+#   from a lab workstation, then remove the rights; expect event 4662 with the rights GUIDs in Properties and the
+#   test user in SubjectUserName (purple-team-plan.md exercise PX-05).
+#   AccessMask form: SigmaHQ issue #4895 reported that the string form '0x100' in SigmaHQ's Mimikatz DC Sync
+#   rule did not match in THOR APT Scanner 10.7.12 while the unquoted form did, and SigmaHQ closed it on
+#   2025-10-19 as an apparent THOR parser issue. The Sentinel target, SecurityEvent, types AccessMask as a
+#   string holding a hexadecimal mask (Microsoft's table reference), so this rule keeps the quoted form;
+#   confirm in the lab that the stored value reads 0x100.
+title: Directory Replication Rights Used by an Account That Is Not a Computer Account
+id: e5f0a2c8-3b7d-4c19-9a46-8e1d2b5c7f30
+status: experimental
+description: Reference rule. Detects use of the Active Directory replication control access rights (Replicating Directory Changes, Replicating Directory Changes All, Replicating Directory Changes In Filtered Set) recorded in Windows Security event 4662 by an account that is not a computer account, the DCSync pattern for extracting password hashes. Written for the fictional Contoso Regional Health reference architecture and not deployed in any employer environment. Logic follows SigmaHQ rule "Active Directory Replication from Non Machine Account - DcSync Indicator" by Roberto Rodriguez @Cyb3rWard0g, licensed under DRL 1.1.
+references:
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4662
+    - https://learn.microsoft.com/en-us/windows/win32/adschema/r-ds-replication-get-changes-all
+    - https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-accounts-permissions
+    - https://attack.mitre.org/techniques/T1003/006/
+    - https://github.com/SigmaHQ/sigma/blob/master/rules/windows/builtin/security/win_security_ad_replication_non_machine_account.yml
+    - https://github.com/SigmaHQ/sigma/issues/4895
+    - https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/securityevent
+author: Roberto Rodriguez @Cyb3rWard0g; modified by Jacob Welch
+date: 2026-10-04
+tags:
+    - attack.credential-access
+    - attack.t1003.006
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4662
+        ObjectServer: 'DS'
+        AccessMask: '0x100'
+        Properties|contains:
+            - '1131f6aa-9c07-11d1-f79f-00c04fc2dcd2'
+            - '1131f6ad-9c07-11d1-f79f-00c04fc2dcd2'
+            - '89e95b76-444d-4c62-991a-0facbeda640c'
+    filter_computer_accounts:
+        SubjectUserName|endswith: '$'
+    filter_sync_connector:
+        SubjectUserName|startswith: 'MSOL_'
+    condition: selection and not 1 of filter_*
+falsepositives:
+    - Directory backup or identity management products that read secrets through replication (record as dated exceptions)
+    - An Entra Connect AD DS Connector account created with a custom name and not yet added to the filter
+level: high
