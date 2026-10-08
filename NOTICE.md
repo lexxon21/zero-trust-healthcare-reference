@@ -8,7 +8,7 @@ The repository's own licenses cover original content only: the [MIT License](LIC
 
 ## MITRE ATT&CK
 
-- **Used:** technique and tactic IDs and names from MITRE ATT&CK Enterprise v19.2, in the threat model, the detection rules (header lines and Sigma tags), the coverage map, and the incident response playbook, with occasional short quotations of technique descriptions.
+- **Used:** technique and tactic IDs and names from MITRE ATT&CK Enterprise v19.2, in the threat model, the detection rules (header lines and Sigma tags), the coverage map, the incident response playbooks, and the ransomware tabletop exercise kit, with occasional short quotations of technique descriptions.
 - **Terms:** MITRE's Terms of Use license ATT&CK for research, development, and commercial use, on condition that copies reproduce MITRE's copyright designation and the license. Both follow, as published on MITRE's Terms of Use page:
 
   The MITRE Corporation (MITRE) hereby grants you a non-exclusive, royalty-free license to use ATT&CK® for research, development, and commercial purposes. Any copy you make for such purposes is authorized provided that you reproduce MITRE's copyright designation and this license in any such copy.
@@ -19,7 +19,7 @@ The repository's own licenses cover original content only: the [MIT License](LIC
 
 ## NIST publications
 
-- **Used:** NIST Cybersecurity Framework (CSF) 2.0 subcategory identifiers throughout, and the CSF 2.0 subcategory outcome statements reproduced in `grc/zero-trust-healthcare/crosswalk.yaml` (`metadata.csf_subcategories`); the component model and section references of NIST SP 800-207 in the architecture; NIST SP 800-61 Rev. 3 as the structure of the incident response playbook; and other NIST publications where they are cited.
+- **Used:** NIST Cybersecurity Framework (CSF) 2.0 subcategory identifiers throughout, and the CSF 2.0 subcategory outcome statements reproduced in `grc/zero-trust-healthcare/crosswalk.yaml` (`metadata.csf_subcategories`); the component model and section references of NIST SP 800-207 in the architecture; NIST SP 800-61 Rev. 3 as the structure of the incident response playbooks; and other NIST publications where they are cited.
 - **Terms:** NIST states that works authored by NIST employees are not subject to copyright protection within the United States, that foreign rights are reserved, and that to the extent NIST may assert rights outside the United States, the public is granted a royalty-free, worldwide right to reprint them. NIST asks reprints to carry its recommended citation followed by "Republished courtesy of the National Institute of Standards and Technology."
 - **Credit:** the CSF 2.0 outcome text in `crosswalk.yaml` comes from National Institute of Standards and Technology, The NIST Cybersecurity Framework (CSF) 2.0, NIST CSWP 29, February 26, 2024, https://doi.org/10.6028/NIST.CSWP.29. Republished courtesy of the National Institute of Standards and Technology.
 
@@ -30,8 +30,8 @@ The repository's own licenses cover original content only: the [MIT License](LIC
 
 ## HHS, the HIPAA rules, and other US government sources
 
-- **Used:** citations to and short quotations from 45 CFR Parts 160 and 164 (the HIPAA Security, Privacy, and Breach Notification Rules) as published in the eCFR; Federal Register documents, including the HIPAA Security Rule notice of proposed rulemaking (90 FR 898, January 6, 2025), which is a proposed rule and not final; and publications of HHS, the FBI, CISA, and the FDA cited in the threat model and the notification clock matrix.
-- **Terms:** publications of federal agencies are works of the United States Government, for which copyright protection under Title 17 is not available (17 U.S.C. 105). Advisories issued jointly with non-federal partners, such as AA25-203A (with MS-ISAC), are cited and paraphrased only. Every source is cited in the document that uses it.
+- **Used:** citations to and short quotations from 45 CFR Parts 160 and 164 (the HIPAA Security, Privacy, and Breach Notification Rules) as published in the eCFR; Federal Register documents, including the HIPAA Security Rule notice of proposed rulemaking (90 FR 898, January 6, 2025), which is a proposed rule and not final; publications of HHS, the FBI, CISA, and the FDA cited in the threat model and the notification clock matrix; and, in the ransomware playbook and tabletop exercise kit, CISA's #StopRansomware Guide and Tabletop Exercise Packages, the FBI Internet Crime Complaint Center (IC3) ransomware page, the U.S. Department of the Treasury Office of Foreign Assets Control (OFAC) Updated Advisory on Potential Sanctions Risks for Facilitating Ransomware Payments (September 21, 2021), HHS Update #4 (Revised, May 16, 2017), and FEMA's Homeland Security Exercise and Evaluation Program (HSEEP) doctrine (January 2020), whose structure for a discussion-based exercise the tabletop kit follows.
+- **Terms:** publications of federal agencies are works of the United States Government, for which copyright protection under Title 17 is not available (17 U.S.C. 105). Advisories issued jointly with non-federal partners, such as AA25-203A (with MS-ISAC), are cited and paraphrased only. CISA's #StopRansomware Guide is likewise a joint publication (CISA, the FBI, the NSA, and MS-ISAC), so this repository does not treat it as a U.S. government work: the ransomware playbook paraphrases it and quotes two short passages from it, each attributed where it appears. Every source is cited in the document that uses it.
 
 ## PCI Security Standards Council
 

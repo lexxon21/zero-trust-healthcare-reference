@@ -2,12 +2,13 @@
 
 > **Reference work.** Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice.
 
-The detection pack responds to the 20 behaviors in `threat-models/zero-trust-healthcare/detection-priorities.md` for Contoso Regional Health (fictional). Coverage is partial for some of them and one is a gap, as `coverage-map.md` section 3 records. Item 19 is the emergency access monitoring that `architecture/zero-trust-healthcare/03-identity-and-access.md` section 5 requires (SN-06 and SN-07), and item 20 the admin-group monitoring that 03 sections 3 and 4 require (SN-07). The pack has 22 rules in three parts, and one playbook:
+The detection pack responds to the 20 behaviors in `threat-models/zero-trust-healthcare/detection-priorities.md` for Contoso Regional Health (fictional). Coverage is partial for some of them and one is a gap, as `coverage-map.md` section 3 records. Item 19 is the emergency access monitoring that `architecture/zero-trust-healthcare/03-identity-and-access.md` section 5 requires (SN-06 and SN-07), and item 20 the admin-group monitoring that 03 sections 3 and 4 require (SN-07). The pack has 22 rules in three parts, two incident response playbooks, and a tabletop exercise kit:
 
 - 9 Microsoft Defender XDR advanced hunting queries, the primary target.
 - 7 Microsoft Sentinel analytics queries, used where only Sentinel holds the source (Entra audit and sign-in logs, Office activity, Azure activity).
 - 6 Sigma rules for behaviors that Sigma expresses well.
-- One incident response playbook for identity compromise.
+- Two incident response playbooks, one for identity compromise and one for ransomware.
+- A tabletop exercise kit for the ransomware playbook.
 
 `coverage-map.md` shows technique-level coverage and the gaps. Technique references use MITRE ATT&CK Enterprise v19.2.
 
@@ -22,7 +23,7 @@ Every rule is an **untested template**. Each was written against Microsoft's pub
 | `kql/defender-xdr/` | Defender XDR advanced hunting queries. Each except DX-07 is written to work as a custom detection candidate (DX-05 at the every-12-hours or every-24-hours frequency); DX-07 is a daily hunting query only. Their headers explain why |
 | `kql/sentinel/` | Sentinel analytics queries: scheduled rules, plus SN-06, written to run as a near-real-time rule or a scheduled one |
 | `sigma/` | Sigma rules (status experimental) |
-| `playbooks/ir-identity-compromise.md` | Incident response playbook aligned to NIST SP 800-61 Rev. 3 |
+| `playbooks/` | Incident response playbooks for identity compromise and ransomware, aligned to NIST SP 800-61 Rev. 3, and a ransomware tabletop exercise kit |
 | `coverage-map.md` | Technique, data source, rule file, status, and attack path, plus the gaps |
 
 Every KQL file starts with the reference label and then the title, status, ATT&CK mapping, data sources, and licensing assumptions. After those come the purpose, logic, known false positives, tuning knobs, response notes (including the clinical safety gate), validation notes, and references.
@@ -56,11 +57,13 @@ Every Sigma file opens with comments that carry the reference label, the fiction
 | SG-05 | `sigma/win_security_kerberos_rc4_service_ticket_user_spn.yml` | Sigma, Windows Security log | RC4 Kerberos service tickets for user-based service accounts (event 4769) | 6 | AP-4, AP-5 | medium | untested template |
 | SG-06 | `sigma/win_security_replication_rights_non_computer_account.yml` | Sigma, Windows Security log | Replication control access rights used by an account that is not a computer account (event 4662) | 7 | AP-5 | high | untested template |
 
-## Playbook
+## Playbooks
 
 | File | Purpose | Status |
 |---|---|---|
-| `playbooks/ir-identity-compromise.md` | Decision points, escalation criteria, branch procedures, and notification steps for identity compromise, with the clinical safety gate, the HIPAA breach assessment, and the card data path. Regulatory clocks come from `grc/zero-trust-healthcare/notification-clocks.md` | Reference playbook, not exercised |
+| `playbooks/ir-identity-compromise.md` | Decision points D1 to D12, escalation criteria, branch procedures, and notification steps for identity compromise, with the clinical safety gate, the HIPAA breach assessment, and the card data path. Regulatory clocks come from `grc/zero-trust-healthcare/notification-clocks.md` | Reference playbook, not exercised |
+| `playbooks/ir-ransomware.md` | Decision points RD1 to RD17 for ransomware against clinical operations (AP-4): containment under the clinical safety gate, clinical downtime (ADR-008), restoration against the four recovery requirements (ADR-009), the breach analysis that starts from the presumption of breach, card data, law enforcement reporting, and the executive decision on a ransom demand, with no recommendation on payment. Recovery capability stays unverified until restores are tested (RR-11). Regulatory clocks come from `notification-clocks.md` | Reference playbook, not exercised |
+| `playbooks/tabletop-ransomware.md` | Facilitator-ready discussion exercise on the AP-4 scenario: objectives tied to 45 CFR 164.308(a)(7)(ii)(D) and to RD1 to RD17, fictional participant roles, ground rules, six timed injects with expected decisions and discussion questions, evaluation criteria, and an after-action report template. Strategy level only: no attack procedures, commands, tools, or payloads | Reference exercise kit, not run |
 
 ## Design choices worth noting
 

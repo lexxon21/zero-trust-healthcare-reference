@@ -6,10 +6,10 @@
 |---|---|
 | Status | Accepted (reference design). Requirements only: this record sets what recovery must achieve, not how. |
 | Date | 2026-10-04 |
-| Revised | 2026-10-04 |
+| Revised | 2026-10-07 |
 | Decision owners (fictional roles) | CISO, VP Infrastructure, Chief Medical Information Officer, Emergency Management lead, Identity Engineering lead |
 | Scope | The properties of every copy that Contoso Regional Health (fictional) would restore ePHI, clinical systems, or Tier 0 identity systems from (`SVC-BACKUP`). Products, topology, recovery time and point objectives, and restore order stay with Contoso (A-19). |
-| Related | `02-reference-architecture.md` sections 7, 11, and 13 (RR-11); ADR-004; ADR-008; the companion threat model (`threat-model.md` section 9 item 1, TM-A1) |
+| Related | `02-reference-architecture.md` sections 7, 11, and 13 (RR-11); ADR-004; ADR-008; the companion threat model (`threat-model.md` section 9 item 1, TM-A1); the companion ransomware playbook (`ir-ransomware.md` sections 3.1 and 6.5) |
 
 ## Context
 
@@ -73,7 +73,7 @@ Contoso's criticality analysis may add data sets. It may not drop the identity s
 - Recovery time and point objectives, and the restore order among clinical applications. Contoso owns them through its applications and data criticality analysis (164.308(a)(7)(ii)(E)), as ADR-008 already states.
 - Retention periods and test frequency.
 - Recovery of the cloud identity plane's own configuration (`PE-IDENTITY` policies, `PIP-DEVICE-MGMT` baselines) after a destructive Tier 0 compromise. It is a candidate for the recovery design.
-- Ransomware response steps. The companion detection pack records the missing ransomware playbook as an open item (`coverage-map.md` section 7).
+- Ransomware response steps. They are in the companion ransomware playbook (`ir-ransomware.md`, with its tabletop kit `tabletop-ransomware.md`), which uses these requirements as its recovery inputs. A playbook is not a recovery capability: recovery stays unverified (RR-11; `coverage-map.md` section 7).
 
 **Capability stays unverified.** These are requirements, not a capability. Until restore tests produce evidence against them, recovery capability is unverified (A-19, RR-11), and the threat model's impact bands for AP-4 and AP-5 stand (TM-A1).
 

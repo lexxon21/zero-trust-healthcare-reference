@@ -4,7 +4,7 @@
 # Contoso Regional Health (fictional): HIPAA Security Rule crosswalk.
 # Source rows: every standard and implementation specification in 45 CFR 164.308, 164.310, 164.312, 164.314, and 164.316.
 # Hub: NIST CSF 2.0. Also mapped: the reference architecture's components and documents, the detection pack's
-# rules and playbook where they support a row, and PCI DSS v4.0.1 for the Z-CDE segment only.
+# rules, incident response playbooks, and tabletop exercise kit where they support a row, and PCI DSS v4.0.1 for the Z-CDE segment only.
 #
 # Format rules, enforced by validate-crosswalk.ps1 (Windows PowerShell 5.1, no modules):
 #   2-space indentation; block mappings and block sequences only;
@@ -16,7 +16,7 @@ metadata:
   reference_label: "Reference work. Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice."
   scenario: "Contoso Regional Health (fictional)"
   project: "zero-trust-healthcare"
-  status: "Reference mapping, status as of 2026-10-04"
+  status: "Reference mapping, status as of 2026-10-07"
   prepared: "2026-10-04"
   statement: "A reference mapping for a fictional scenario, prepared for a public portfolio. It is not an audit, an assessment, an attestation, or an evaluation under 45 CFR 164.308(a)(8), and it certifies nothing. Relationship strengths are an analysis of the published texts."
   frameworks:
@@ -478,6 +478,9 @@ mappings:
       - doc: "detections"
         file: "playbooks/ir-identity-compromise.md"
         purpose: "Reference procedure to contain, eradicate, and recover from identity compromise: the contain and correct elements of this standard, for one incident class"
+      - doc: "detections"
+        file: "playbooks/ir-ransomware.md"
+        purpose: "Reference procedure to contain ransomware and data extortion under the clinical safety gate, eradicate it, and restore or rebuild (sections 6.2 to 6.5): the contain and correct elements of this standard, for a second incident class; its recovery steps depend on ADR-009 requirements that are not implemented"
     notes: ""
   - id: "XW-02"
     source:
@@ -1558,7 +1561,7 @@ mappings:
         locator: "45 CFR 164.308(a)(6)(i)"
     applicability: "applicable"
     coverage: "partial"
-    coverage_note: "Response mechanisms and clinical safety gates are designed (04 section 6, ADR-008). The detection pack's identity-compromise playbook is a reference procedure for one incident class and has not been exercised; ransomware and medical device incidents have no playbook yet. The incident response plan itself is organizational."
+    coverage_note: "Response mechanisms and clinical safety gates are designed (04 section 6, ADR-008). The detection pack's identity compromise and ransomware playbooks are reference procedures for two incident classes, and neither has been exercised; the ransomware tabletop kit has not been run, and medical device incidents have no playbook yet. The incident response plan itself is organizational."
     csf_targets:
       - id: "ID.IM-04"
         relationship: "partial"
@@ -1603,6 +1606,9 @@ mappings:
       - doc: "detections"
         file: "playbooks/ir-identity-compromise.md"
         purpose: "Reference procedure for identity compromise: decision points, severity and escalation, response branches, notification, and closure; not exercised"
+      - doc: "detections"
+        file: "playbooks/ir-ransomware.md"
+        purpose: "Reference procedure for ransomware and data extortion: decision points RD1 to RD17, severity and escalation, containment under the clinical safety gate, clinical downtime, recovery, notification, and closure; not exercised"
     notes: ""
   - id: "XW-21"
     source:
@@ -1618,7 +1624,7 @@ mappings:
         locator: "45 CFR 164.308(a)(6)(ii)"
     applicability: "applicable"
     coverage: "designed"
-    coverage_note: "Containment is designed per subject type: session revocation, endpoint isolation, NAC quarantine, and a clinical safety gate before any action on a medical device in use. Automatic attack disruption is configured to match: the medical device segments and named clinical accounts are excluded from its automatic actions, each exclusion owned and dated, so those containment decisions stay with people (ADR-008). The identity-compromise playbook adds reference steps to identify, contain, notify, and document identity incidents. Documenting incidents and outcomes remains procedural."
+    coverage_note: "Containment is designed per subject type: session revocation, endpoint isolation, NAC quarantine, and a clinical safety gate before any action on a medical device in use. Automatic attack disruption is configured to match: the medical device segments and named clinical accounts are excluded from its automatic actions, each exclusion owned and dated, so those containment decisions stay with people (ADR-008). The identity compromise and ransomware playbooks add reference steps to identify, contain, notify, and document incidents of those two classes. Documenting incidents and outcomes remains procedural."
     csf_targets:
       - id: "DE.AE-08"
         relationship: "partial"
@@ -1669,6 +1675,9 @@ mappings:
       - doc: "detections"
         file: "playbooks/ir-identity-compromise.md"
         purpose: "Identify (D1, from this pack's rule results), contain and eradicate (section 6), notify (section 7), and record every action in an incident timeline"
+      - doc: "detections"
+        file: "playbooks/ir-ransomware.md"
+        purpose: "Identify (RD1, from this pack's rule results and other triggers), scope (section 6.1), contain and eradicate (sections 6.2 to 6.4), notify (section 7), and record every action in one incident timeline (section 6)"
     notes: ""
   - id: "XW-22"
     source:
@@ -1722,7 +1731,10 @@ mappings:
         - doc: "architecture"
           file: "02-reference-architecture.md"
           section: "10"
-    detections: []
+    detections:
+      - doc: "detections"
+        file: "playbooks/ir-ransomware.md"
+        purpose: "Reference procedure for one occurrence that damages systems containing ePHI: when clinical downtime starts (RD5), whether the copies are intact (RD7), and restore or rebuild (RD8, RD9); Contoso's downtime procedures and emergency mode operation plan stay outside it (sections 3.1 and 6.3)"
     notes: ""
   - id: "XW-23"
     source:
@@ -1827,7 +1839,10 @@ mappings:
         - doc: "architecture"
           file: "03-identity-and-access.md"
           section: "5"
-    detections: []
+    detections:
+      - doc: "detections"
+        file: "playbooks/ir-ransomware.md"
+        purpose: "Reference restore decisions for a ransomware incident: confirm the copies from recovery-plane devices (RD7), choose a copy that predates the compromise and verify it before use (RD8), restore identity systems first and then the criticality order (RD9), and record restore evidence (section 6.5); every step depends on ADR-009 requirements that are not implemented"
     notes: ""
   - id: "XW-25"
     source:
@@ -1875,7 +1890,10 @@ mappings:
         - doc: "architecture"
           file: "02-reference-architecture.md"
           section: "10"
-    detections: []
+    detections:
+      - doc: "detections"
+        file: "playbooks/ir-ransomware.md"
+        purpose: "Reference downtime decisions during ransomware: when and where clinical downtime starts (RD5), the clinical consequence of each broad containment action (section 6.3), physical safeguards and reconciliation for downtime records (RR-13), and return from downtime (RD16); the emergency mode operation plan itself stays Contoso's"
     notes: ""
   - id: "XW-26"
     source:
@@ -1891,7 +1909,7 @@ mappings:
         locator: "45 CFR 164.308(a)(7)(ii)(D)"
     applicability: "applicable"
     coverage: "partial"
-    coverage_note: "ADR-008 sets failure-mode drills with clinical participation twice a year (example cadence), and WP-3.4 schedules them; those drills test continuity of access and restore nothing. ADR-009 decision 3 adds restore tests: from the immutable or offline copy into an isolated environment, passed only when the system owner confirms the application works, with evidence kept outside the recovery plane and measured restore times checked against Contoso's objectives. Test frequency and plan revision are Contoso's, and no restore has been tested (RR-11)."
+    coverage_note: "ADR-008 sets failure-mode drills with clinical participation twice a year (example cadence), and WP-3.4 schedules them; those drills test continuity of access and restore nothing. ADR-009 decision 3 adds restore tests: from the immutable or offline copy into an isolated environment, passed only when the system owner confirms the application works, with evidence kept outside the recovery plane and measured restore times checked against Contoso's objectives. Test frequency and plan revision are Contoso's, and no restore has been tested (RR-11). The detection pack's ransomware tabletop kit is a discussion exercise of the ransomware playbook's decisions, downtime and restore decisions included; it restores nothing, so it is not a restore test, and it has not been run."
     csf_targets:
       - id: "ID.IM-02"
         relationship: "partial"
@@ -1923,7 +1941,10 @@ mappings:
         - doc: "architecture"
           file: "05-ztmm-maturity-roadmap.md"
           section: "4"
-    detections: []
+    detections:
+      - doc: "detections"
+        file: "playbooks/tabletop-ransomware.md"
+        purpose: "Reference discussion exercise of the ransomware playbook's decisions, the downtime and restore decisions that invoke the emergency mode operation and disaster recovery plans included, with an after-action report template that routes changes back into the playbook and ADR-008 or ADR-009 (sections 1 and 10); it restores nothing, so it is not a restore test under ADR-009 decision 3, and it has not been run"
     notes: ""
   - id: "XW-27"
     source:
@@ -3824,6 +3845,9 @@ mappings:
       - doc: "detections"
         file: "playbooks/ir-identity-compromise.md"
         purpose: "Specifies the incident records to keep: a timeline of every action with time, actor, and result (section 6) and an after-action report (section 9)"
+      - doc: "detections"
+        file: "playbooks/ir-ransomware.md"
+        purpose: "Specifies the incident records to keep: a timeline of every action with time, actor, and result (section 6), and an after-action report covering the decisions at RD1 to RD17 with their inputs, the notices sent, and the measured restore times (section 9)"
     notes: ""
   - id: "XW-63"
     source:

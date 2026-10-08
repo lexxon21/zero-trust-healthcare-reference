@@ -17,9 +17,9 @@ This playbook covers a suspected or confirmed compromise of an identity at Conto
 | Application registration, service principal, or managed identity | AP-6 (illicit consent or workload identity abuse) | SN-03. Managed identity abuse has no trigger yet: managed identity sign-in monitoring is not built (`coverage-map.md` section 3, item 11) | C |
 | Hybrid or Tier 0 identity: `IDS-AD`, `IDS-SYNC`, `PIP-PKI`, privileged roles in `IDS-ENTRA`, the two tenant emergency access accounts and their exclusion group, `grp-ca-emergency-access`, and the admin targeting groups `grp-admins-t0` and `grp-admins-t1` | AP-5 (Tier 0 through the sync boundary), the identity steps of AP-4 | DX-05, DX-06, DX-07, SN-02, SN-05, SN-06, SN-07, SG-05, SG-06 | D |
 
-Out of scope here, and recorded as open items in `coverage-map.md` section 7:
+Out of scope here. The first item has its own playbook; `coverage-map.md` section 7 records the other two as open items:
 
-- The encryption, containment, and restoration steps of a ransomware incident beyond its identity actions. This pack has no ransomware playbook yet; DX-01, DX-02, and DX-09 route to Branch D for the identity side.
+- The encryption, containment, and restoration steps of a ransomware incident beyond its identity actions. They are in the companion ransomware playbook (`ir-ransomware.md`), which runs Branch D of this playbook for Tier 0 and Branch A for the account behind the activity (its decision point RD3).
 - Medical device containment beyond the clinical safety gate (AP-7, `04-segmentation.md` section 3).
 - Misuse of legitimate EHR access by authorized users (RR-01), which belongs to EHR privacy monitoring.
 

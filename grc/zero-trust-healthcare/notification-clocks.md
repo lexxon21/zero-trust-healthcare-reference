@@ -3,7 +3,7 @@
 > **Reference work.** Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice.
 
 This matrix lists the notification clocks that apply to Contoso Regional Health (fictional) when an incident may involve protected health information (PHI) or payment card data.
-- **What it supports.** The companion incident response playbook (`detections/zero-trust-healthcare/playbooks/ir-identity-compromise.md`) and the crosswalk rows for 45 CFR 164.308(a)(6) and 164.314(a)(2)(i) in `crosswalk.md`.
+- **What it supports.** The companion incident response playbooks for identity compromise and ransomware and the ransomware tabletop exercise kit (`ir-identity-compromise.md`, `ir-ransomware.md`, and `tabletop-ransomware.md` in `detections/zero-trust-healthcare/playbooks/`), and the crosswalk rows for 45 CFR 164.308(a)(6) and 164.314(a)(2)(i) in `crosswalk.md`.
 - **Sources.** Every clock cites its primary source, and all sources were checked on 2026-10-04 or 2026-10-07. Regulatory text was read through the eCFR versioner API (point in time 2026-09-30).
 
 ## 1. How to use this matrix
@@ -26,7 +26,7 @@ This matrix lists the notification clocks that apply to Contoso Regional Health 
   - Card brand rule: a brand's own rule, which reaches Contoso through its merchant agreement.
   - Not in force: a proposed rule.
   - Not final: a rule still in rulemaking.
-- **Counsel decides.** This matrix supports a playbook. It does not decide whether an incident is reportable, and contracts can set shorter clocks than the ones listed.
+- **Counsel decides.** This matrix supports the playbooks. It does not decide whether an incident is reportable, and contracts can set shorter clocks than the ones listed.
 - **Units.** Calendar days, business days, and hours are as each source states them.
 
 **Clock summary**
@@ -86,8 +86,10 @@ HHS guidance published with the interim final rule names encryption and destruct
 The guidance is cited from the Federal Register because hhs.gov blocks automated retrieval. Its current hhs.gov wording has not been re-read.
 
 **Ransomware.** Ransomware that encrypts ePHI is judged under the same 164.402 definitions:
-- A breach is presumed unless an exclusion applies, the PHI was secured, or a documented risk assessment shows a low probability of compromise.
+- A breach is presumed unless an exclusion applies or a documented risk assessment shows a low probability of compromise (section 2.1).
+- Whether the PHI was secured is a separate question from the presumption: it decides whether notice is owed, because the notice duties apply only to breaches of unsecured PHI (section 2.1).
 - In a May 2017 cyber threat update, HHS wrote: "As outlined in its guidance available on its website, OCR presumes a breach in the case of ransomware attack." (HHS Update #4 (Revised), May 16, 2017).
+- The same update addresses ePHI that was already encrypted when the attack occurred, and puts the proof on the entity: "If the data is not encrypted by the entity to at least NIST specifications when the ransomware attack is deployed, then OCR presumes a breach occurred, due to the ransomware attack. As such, the entity would need to prove, through forensic or other evidence, that the ePHI was encrypted when the attack occurred, and the ransomware containerized (or encrypted again) already-encrypted ePHI."
 - HHS's separate ransomware fact sheet is not quoted here, because its current text could not be retrieved.
 
 **Design note for Contoso.** The reference architecture sets an at-rest encryption requirement for every class of store that holds ePHI (`02-reference-architecture.md` section 7, Data at rest by data-store class; `crosswalk.md` section 8). Three points connect it to this section:
@@ -213,7 +215,7 @@ State breach notification laws vary, and some may apply alongside HIPAA. The sce
 |---|---|---|---|
 | 1 | Is there a possible compromise of PHI or card data? | Start one incident timeline. Record the earliest time any workforce member or agent knew, or with reasonable diligence would have known. That is HIPAA discovery; each card brand applies its own trigger | 2.4, 4 |
 | 2 | Could card data be involved (`Z-CDE`, `RES-POI`, the portal payment redirect, `EXT-PSP`, `EXT-P2PE`)? | Notify the acquirer immediately. Notify Visa within 3 calendar days and Discover within 48 hours. For Mastercard, notify the acquirer under the merchant agreement and Mastercard's rules (this matrix gives no Mastercard time limit). For American Express, follow the policy sections cited in section 4. Isolate rather than power off, unless a PFI directs otherwise | 4 |
-| 3 | Could PHI be involved? | Run and document the 164.402 four-factor risk assessment, including whether the PHI was secured under the HHS guidance. For ransomware, start from the presumption of breach | 2.1, 2.2 |
+| 3 | Could PHI be involved? | Run and document the 164.402 four-factor risk assessment, and decide whether the PHI was secured under the HHS guidance. For ransomware, start from the presumption of breach | 2.1, 2.2 |
 | 4 | Is it a breach of unsecured PHI? | Notify individuals, and the media where required (more than 500 residents of one State or jurisdiction affected), without unreasonable delay and no later than 60 calendar days after discovery. Notify HHS at the same time as individuals if 500 or more individuals are affected, or through the annual log otherwise | 2.3 |
 | 5 | Is a business associate involved? | Apply the agreement's reporting clock, request the 164.410(c) information, and ask counsel whether the business associate's knowledge is imputed to Contoso | 3 |
 | 6 | Has law enforcement asked for a delay? | Get the request in writing, or document an oral request and limit the delay to 30 days unless a written statement follows | 2.3 |
@@ -228,7 +230,7 @@ Companion files: `crosswalk.md` (sections 3 and 8), `risk-register.md` (impact s
 | 45 CFR Part 164 Subpart D (164.400 to 164.414), read through the eCFR versioner API at point in time 2026-09-30 | Office of the Federal Register, eCFR | https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-D | 2026-10-04 | primary |
 | 45 CFR 164.304 (security incident) and 164.314(a)(2)(i) (business associate contracts) | Office of the Federal Register, eCFR | https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C | 2026-10-04 | primary |
 | Breach Notification for Unsecured Protected Health Information, interim final rule, 74 FR 42740 (August 24, 2009); guidance at 74 FR 42742 to 42743 | Office of the Federal Register, via GPO govinfo | https://www.govinfo.gov/content/pkg/FR-2009-08-24/html/E9-20169.htm | 2026-10-04 | primary |
-| HHS Update #4 (Revised), May 16, 2017 | HHS, hosted by ASPR TRACIE | https://files.asprtracie.hhs.gov/documents/hhs-update-4-international-cyber-threat-to-healthcare-orgs.pdf?cb=4339 | 2026-10-04 | primary |
+| HHS Update #4 (Revised), May 16, 2017 | HHS, hosted by ASPR TRACIE | https://files.asprtracie.hhs.gov/documents/hhs-update-4-international-cyber-threat-to-healthcare-orgs.pdf?cb=4339 | 2026-10-07 | primary |
 | NIST SP 800-52 Rev. 2, Guidelines for the Selection, Configuration, and Use of Transport Layer Security (TLS) Implementations | NIST | https://csrc.nist.gov/pubs/sp/800/52/r2/final | 2026-10-04 | primary |
 | NIST SP 800-77 Rev. 1, Guide to IPsec VPNs | NIST | https://csrc.nist.gov/pubs/sp/800/77/r1/final | 2026-10-04 | primary |
 | NIST SP 800-88 Rev. 2, Guidelines for Media Sanitization | NIST | https://csrc.nist.gov/pubs/sp/800/88/r2/final | 2026-10-04 | primary |
