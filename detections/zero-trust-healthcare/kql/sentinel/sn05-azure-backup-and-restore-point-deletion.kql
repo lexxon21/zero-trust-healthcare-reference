@@ -47,8 +47,11 @@
 //   planning with the integrity checks that CSF 2.0 RC.RP-03 describes. A failed deletion gets the same
 //   response: ADR-009 decision 4 treats a refused attempt to delete a copy as preparation for the
 //   recovery-inhibition step of AP-4 or AP-5. These steps touch no clinical device; if the caller is a
-//   service identity that a clinical system depends on, the clinical safety gate (ADR-008; playbook
-//   decision point D5) applies before its access is removed.
+//   service identity that a clinical system depends on, the clinical safety gate (ADR-008; identity
+//   compromise playbook decision point D5) applies before its access is removed.
+//   This rule is a trigger for the ransomware playbook (ir-ransomware.md, section 1, AP-4 step 10, for
+//   Azure-native backup). Its section 4 rates a backup vault deletion SEV-1, and its RD7 reads the
+//   result when deciding whether the recovery copies are intact and out of the attacker's reach.
 //
 // Validation notes
 //   Not run against any workspace. Validate in a lab subscription: create a VM restore point collection

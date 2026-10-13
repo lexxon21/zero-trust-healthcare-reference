@@ -40,6 +40,10 @@
 //   it to the architectural observations in threat-model.md section 9, as purple-team-plan.md section 8
 //   does for architectural control gaps) and investigate the source workstation.
 //   Shared clinical workstations need the clinical notification step before isolation (ADR-008).
+//   This rule is a trigger for the ransomware playbook (ir-ransomware.md, section 1, AP-4 steps 7 and
+//   8). Its section 4 rates an executable written over SMB from another workstation SEV-2 and peer SMB
+//   with no file written SEV-3, and its section 6.4 records each result as a PEP-HOST control gap with
+//   an owner.
 //
 // Validation notes
 //   Not run against any tenant. Validate between two lab workstations: attempt an SMB connection from one

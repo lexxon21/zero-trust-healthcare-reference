@@ -61,6 +61,11 @@
 //     recovery as at risk and escalate per the identity compromise playbook (Branch D step 5). A copy
 //     that production credentials can reach also fails ADR-009 decision 2 (isolation from Tier 0
 //     administrative reach), so record it as a finding in its own right, even after containment.
+//   - Ransomware playbook (ir-ransomware.md): this rule is one of its triggers (section 1, AP-4 step
+//     10). Its section 4 sets severity from the result: one behavior on one workstation is SEV-2; two
+//     or more behaviors on one device, or any result on a server in Z-CLIN-APP, Z-LEGACY, or
+//     Z-CORP-APP that no change record explains, is SEV-1. Its RD7 reads the result when deciding
+//     whether the recovery copies are intact and out of the attacker's reach.
 //
 // Validation notes
 //   Not run against any tenant. To validate, execute recovery-inhibition behaviors on an isolated lab

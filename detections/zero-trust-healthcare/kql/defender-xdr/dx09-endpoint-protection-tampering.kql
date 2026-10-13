@@ -40,6 +40,10 @@
 //   A tampering attempt on a host that also shows DX-01 or DX-02 activity is an active ransomware
 //   precursor: escalate at once. Isolation follows the clinical safety gate (non-medical devices may be
 //   isolated automatically; clinical workstations need the clinical notification step).
+//   This rule is a trigger for the ransomware playbook (ir-ransomware.md, section 1, AP-4 step 9). Its
+//   section 4 rates a result SEV-2 together with any second signal from its section 1 on the same
+//   device or account, and a blocked attempt alone SEV-3. Its section 6.4 records each result as a
+//   tamper protection control gap with an owner.
 //
 // Validation notes
 //   Not run against any tenant. Validate on a lab device onboarded to Defender for Endpoint with tamper

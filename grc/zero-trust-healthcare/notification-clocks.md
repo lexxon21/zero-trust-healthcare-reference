@@ -118,7 +118,7 @@ The guidance is cited from the Federal Register because hhs.gov blocks automated
 
 Under 164.404(a)(2), "a breach shall be treated as discovered by a covered entity as of the first day on which such breach is known to the covered entity, or, by exercising reasonable diligence would have been known to the covered entity." The same paragraph continues: "A covered entity shall be deemed to have knowledge of a breach if such breach is known, or by exercising reasonable diligence would have been known, to any person, other than the person committing the breach, who is a workforce member or agent of the covered entity (determined in accordance with the federal common law of agency)."
 
-What follows for the playbook:
+What follows for the playbooks:
 - **Day 0 is the earliest such knowledge.** It is not the day the privacy office hears about it. Because the test includes what reasonable diligence would have revealed, a triage backlog is a timing risk, not a pause.
 - **60 days is the outer limit.** The primary test is without unreasonable delay.
 - **An agent's knowledge counts as Contoso's** (section 3).
@@ -209,7 +209,7 @@ Whether Contoso would be a CIRCIA covered entity cannot be determined until the 
 
 State breach notification laws vary, and some may apply alongside HIPAA. The scenario names no states, so this matrix lists none. For each incident, counsel maps the states involved and their clocks.
 
-## 6. Decision points for the incident response playbook
+## 6. Decision points for the incident response playbooks
 
 | Step | Question | If yes | Detail |
 |---|---|---|---|

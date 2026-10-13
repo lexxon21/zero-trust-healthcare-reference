@@ -77,7 +77,7 @@ Fictional roles, mapped to the example roles and responsibilities in SP 800-61 R
 | Compliance officer | Acquirer and card brand notices, and any change to how cards are taken during downtime (RD12) | Legal |
 | Counsel | Reportability, law enforcement contact (RD14), advice on RD15, business associate questions | Legal |
 | Communications lead | Patient, staff, and media communication, holding statements | Public affairs and media relations |
-| Finance lead | Cyber insurer contact if Contoso holds a policy (the scenario does not say); the financial inputs the executive decision group asks for at RD15 | Asset owners |
+| Finance lead | Cyber insurer contact if Contoso holds a policy (the scenario does not say); the financial inputs the executive decision group asks for at RD15 | Leadership (financial inputs) |
 | Vendor manager | Business associates, the EHR vendor's restore support, the P2PE provider and the payment service provider (RD13) | Asset owners (as business process owner for supplier relationships); coordinates the third parties under contract |
 
 ### 3.1 Preparation checks (standing work before any incident)

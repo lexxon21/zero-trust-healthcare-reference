@@ -1734,7 +1734,7 @@ mappings:
     detections:
       - doc: "detections"
         file: "playbooks/ir-ransomware.md"
-        purpose: "Reference procedure for one occurrence that damages systems containing ePHI: when clinical downtime starts (RD5), whether the copies are intact (RD7), and restore or rebuild (RD8, RD9); Contoso's downtime procedures and emergency mode operation plan stay outside it (sections 3.1 and 6.3)"
+        purpose: "Reference procedure for one kind of occurrence that damages systems containing ePHI: when clinical downtime starts (RD5), whether the copies are intact (RD7), and restore or rebuild (RD8, RD9); Contoso's downtime procedures and emergency mode operation plan stay outside it (sections 3.1 and 6.3)"
     notes: ""
   - id: "XW-23"
     source:

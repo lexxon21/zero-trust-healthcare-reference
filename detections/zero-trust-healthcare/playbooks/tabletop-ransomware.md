@@ -71,7 +71,7 @@ If the group must be small, the minimum is the incident commander, the clinical 
 
 ## 5. Logistics and timing
 
-Example timings for a four-hour session:
+Example timings for a four-hour session. The blocks take 3 hours 45 minutes with inject 6, or 3 hours 25 minutes without it, and the rest of the four hours is buffer.
 
 | Block | Time |
 |---|---|
@@ -131,7 +131,7 @@ Each inject has a situation to read aloud, notes for the facilitator only, the d
 
 **Situation.** The overnight analyst escalates to the on-call security operations manager. DX-01 has returned two behaviors each, shadow copy deletion and boot recovery turned off, on two PACS servers in `Z-CLIN-APP`, in the datacenter, that serve Hospital 2. Earlier, at 22:15, DX-09 reported attempts to turn off endpoint protection on three shared clinical workstations at Hospital 2, which tamper protection blocked; the alert was triaged as low priority and is still open. DX-08 shows SMB connections between `Z-CLIN-USER` workstations at Hospital 2 over the past week. No clinical complaints have come in.
 
-**Facilitator notes.** The DX-09 alert at 22:15 is the most recent open signal, not the first. DX-08's results from the past week came earlier, and inject 3 surfaces a Kerberoasting alert older still. Each bears on Day 0, because an alert that sat unworked in a queue can set an earlier Day 0 if reasonable diligence would have revealed the breach from it (playbook RD2). Attack disruption has not acted yet. The on-call clinical lead has to be reached at night.
+**Facilitator notes.** The DX-09 alert at 22:15 is the most recent of the earlier open signals in the situation, not the first. DX-08's results from the past week came earlier, and inject 3 surfaces a Kerberoasting alert older still. Each bears on Day 0, because an alert that sat unworked in a queue can set an earlier Day 0 if reasonable diligence would have revealed the breach from it (playbook RD2). Attack disruption has not acted yet. The on-call clinical lead has to be reached at night. If the group checks for Tier 0 signals at RD3, answer from the Tier 0 option. *(Tier 0 on.)* Reveal DX-06's result from 00:50 today, directory replication requested from a workstation, which is newer than the DX-09 alert. RD3 is then yes: identity playbook D4 and Branch D start now, at SEV-1, alongside Branch A for the account behind the activity, and inject 3 restates the DX-06 result as already known instead of adding it. *(Tier 0 off.)* No Tier 0 rule has a result newer than the Kerberoasting alert. Under either option, that alert, about ten days old, stays for inject 3 unless the group looks back past DX-05's 24-hour chain window for earlier single-stage results, as playbook section 6.1 step 4 asks; if it does, reveal it now, and inject 3 restates it as already known.
 
 **Expected decisions.** RD1: declare at SEV-1 (the staging pattern on servers in `Z-CLIN-APP`). RD2: open one timeline and decide Day 0. RD3: check for Tier 0 signals. RD4: decide whether to isolate the PACS servers now, which needs the incident commander and the clinical lead.
 

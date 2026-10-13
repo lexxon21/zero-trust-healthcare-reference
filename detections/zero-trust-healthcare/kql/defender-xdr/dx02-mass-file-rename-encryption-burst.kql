@@ -49,6 +49,11 @@
 //   clinical lead decides. Isolating a file or application server in Z-CLIN-APP is a clinical-impact
 //   decision for the incident commander. Start the identity compromise playbook for the account behind
 //   the activity: InitiatingProcessAccountName for local encryption, or RemoteAccounts for renames over SMB.
+//   This rule is a trigger for the ransomware playbook (ir-ransomware.md, section 1, AP-4 step 11). Its
+//   section 4 sets severity from where the result lands: SEV-2 on one workstation that attack disruption
+//   has already contained, SEV-1 when confirmed on any server or on workstations at more than one site.
+//   Its section 6.1 step 3 isolates the writing workstation before the server it writes to, where the
+//   clinical gate allows, and its RD3 hands the account named above to the identity playbook's Branch A.
 //
 // Validation notes
 //   Not run against any tenant. Validate on an isolated lab host with disposable test files: the

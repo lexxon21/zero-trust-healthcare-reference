@@ -2,7 +2,7 @@
 
 > **Reference work.** Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice.
 
-This file lists the third-party frameworks, identifier sets, names, and quoted material used in this repository, and the terms each comes with. Each source's terms were checked at the source on 2026-10-04 (table at the end).
+This file lists the third-party frameworks, identifier sets, names, and quoted material used in this repository, and the terms each comes with. Each source's terms were checked at the source on 2026-10-04 (table at the end), and on 2026-10-07 for the sources the ransomware playbook and tabletop kit added.
 
 The repository's own licenses cover original content only: the [MIT License](LICENSE) for code, and [CC BY 4.0](LICENSE-docs) for documentation and data (the README's License section lists the files each covers). Third-party material stays under its owner's terms. Naming an organization, product, or framework here or anywhere in the repository does not imply affiliation with, sponsorship by, or endorsement by its owner.
 
