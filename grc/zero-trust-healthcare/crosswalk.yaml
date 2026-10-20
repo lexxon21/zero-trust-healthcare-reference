@@ -16,7 +16,7 @@ metadata:
   reference_label: "Reference work. Fictional scenario built for a public portfolio. Not deployed in, derived from, or describing any employer environment. Not professional advice."
   scenario: "Contoso Regional Health (fictional)"
   project: "zero-trust-healthcare"
-  status: "Reference mapping, status as of 2026-10-07"
+  status: "Reference mapping, status as of 2026-10-20"
   prepared: "2026-10-04"
   statement: "A reference mapping for a fictional scenario, prepared for a public portfolio. It is not an audit, an assessment, an attestation, or an evaluation under 45 CFR 164.308(a)(8), and it certifies nothing. Relationship strengths are an analysis of the published texts."
   frameworks:
@@ -425,6 +425,12 @@ metadata:
       publisher: "HITRUST Alliance"
       url: "https://hitrustalliance.net/terms-of-use"
       checked: "2026-10-04"
+      quality: "primary"
+    - key: "SRC-RFC-9846"
+      title: "RFC 9846, The Transport Layer Security (TLS) Protocol Version 1.3 (July 2026; obsoletes RFC 8446), section 1, which lists integrity among the properties the channel should provide"
+      publisher: "IETF, RFC Editor"
+      url: "https://www.rfc-editor.org/rfc/rfc9846.html"
+      checked: "2026-10-20"
       quality: "primary"
 mappings:
 # ---------------------------------------------------------------- 45 CFR 164.308 Administrative safeguards
@@ -882,8 +888,8 @@ mappings:
         source: "SRC-ECFR-164-308"
         locator: "45 CFR 164.308(a)(3)(i)"
     applicability: "applicable"
-    coverage: "designed"
-    coverage_note: "Joiner, mover, and leaver events come from the systems of record; access is granted through access packages, PIM, and EHR roles, and enforced by the Conditional Access set."
+    coverage: "partial"
+    coverage_note: "Joiner, mover, and leaver events from the systems of record maintain the role-based groups that identity governance keeps (03 section 1; 03 section 3, Conventions); privileged roles are eligible-only through PIM, the two emergency access accounts excepted (03 section 4); EHR roles apply inside the EHR. The Conditional Access set enforces access. Access packages are used only for vendor and outsourcer access, by external identities and Contoso-managed vendor accounts (03 sections 1 and 7), none of them Contoso workforce (03 section 7). The termination gaps recorded at XW-10 bear on the standard's second clause, keeping workforce members without authorized access from obtaining it."
     csf_targets:
       - id: "PR.AA-05"
         relationship: "partial"
@@ -912,6 +918,12 @@ mappings:
         - doc: "architecture"
           file: "03-identity-and-access.md"
           section: "3"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "4"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "7"
     detections: []
     notes: ""
   - id: "XW-08"
@@ -928,7 +940,7 @@ mappings:
         locator: "45 CFR 164.308(a)(3)(ii)(A)"
     applicability: "applicable"
     coverage: "partial"
-    coverage_note: "Authorization runs through access packages, PIM approval, and EHR roles. Supervision in clinical areas is managerial. Vendor engineers are outside this row: under 45 CFR 160.103 they are their employers' workforce, and those employers are business associates (03 section 7), so the vendor model maps to 164.308(b)(1) (XW-29) and 164.314(a)(1) (XW-55), and the recorded broker sessions to audit controls (XW-48), as 03 section 9 and 02 section 12 also map them."
+    coverage_note: "Authorization runs through role-based groups maintained from the systems of record; PIM activation, with a justification and a ticket for every Tier 0 and Tier 1 activation, and approval for Tier 0, EHR security administration, and safety-critical consoles (03 section 4); and EHR roles. Supervision in clinical areas is managerial. Vendor engineers are outside this row: under 45 CFR 160.103 they are their employers' workforce, and those employers are business associates (03 section 7), so the vendor model maps to 164.308(b)(1) (XW-29) and 164.314(a)(1) (XW-55), and the recorded broker sessions to audit controls (XW-48), as 03 section 9 and 02 section 12 also map them."
     csf_targets:
       - id: "PR.AA-05"
         relationship: "partial"
@@ -1020,8 +1032,8 @@ mappings:
         source: "SRC-ECFR-164-308"
         locator: "45 CFR 164.308(a)(3)(ii)(C)"
     applicability: "applicable"
-    coverage: "designed"
-    coverage_note: "Leavers flow from IDS-SOR to IDS-AD and IDS-ENTRA, and sessions are revoked where continuous access evaluation applies. Kerberos tickets already issued stay valid until they expire, so the EHR session termination step in 02 section 9 matters on the local plane."
+    coverage: "partial"
+    coverage_note: "Leaver events from IDS-SOR end access in IDS-AD, which IDS-SYNC carries to IDS-ENTRA (A-01; 03 section 1; 03 section 9 maps leaver handling to this specification), and contractor end dates and lapsed physician privileges end access too; the design does not state whether accounts are disabled or deleted. Sessions are revoked where continuous access evaluation applies. Elsewhere they continue: Kerberos tickets already issued stay valid until they expire, and the federated EHR browser interface is not CAE-enforced (02 section 9), so EHR session termination, which 02 section 9 lists as an incident response step and a local-plane control rather than a leaver step, matters on both. Lifecycle automation does not end two kinds of access: dedicated admin accounts, whose leaver steps are Tier 0 work (03 section 1, Administrators; ADR-004, Consequences), and legacy applications that keep local accounts (05 section 3, Identity Stores)."
     csf_targets:
       - id: "PR.AA-01"
         relationship: "partial"
@@ -1056,6 +1068,18 @@ mappings:
         - doc: "architecture"
           file: "02-reference-architecture.md"
           section: "9"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "9"
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Assumptions"
+        - doc: "architecture"
+          file: "adr/ADR-004-privileged-access-tiering-and-pim.md"
+          section: "Consequences"
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "3"
     detections: []
     notes: ""
   - id: "XW-11"
@@ -1147,7 +1171,7 @@ mappings:
         locator: "45 CFR 164.308(a)(4)(ii)(B)"
     applicability: "applicable"
     coverage: "designed"
-    coverage_note: "Access is granted through access packages with approval and expiry, eligible-only PIM assignments, persona-targeted Conditional Access, and EHR roles."
+    coverage_note: "Workforce access is granted through role-based groups that identity governance maintains from the systems of record, eligible-only PIM assignments, persona-targeted Conditional Access, and EHR roles. Vendor and outsourcer access, for external identities and Contoso-managed vendor accounts, is granted through access packages approved by a Contoso sponsor, with an expiry, and vendor broker sessions through PIM for Groups activation approved by the Contoso system owner or clinical engineering (03 sections 1 and 7). Grants inside EHR roles and inside legacy applications' local accounts are application-level and outside the design (01, Out of scope; 05 section 3, Identity Stores)."
     csf_targets:
       - id: "PR.AA-05"
         relationship: "partial"
@@ -1194,6 +1218,15 @@ mappings:
         - doc: "architecture"
           file: "04-segmentation.md"
           section: "7"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "1"
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Out of scope"
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "3"
     detections:
       - doc: "detections"
         file: "kql/sentinel/sn03-oauth-consent-and-service-principal-credential-add.kql"
@@ -1497,8 +1530,8 @@ mappings:
         source: "SRC-ECFR-164-308"
         locator: "45 CFR 164.308(a)(5)(ii)(D)"
     applicability: "applicable"
-    coverage: "designed"
-    coverage_note: "The design reduces dependence on passwords (phishing-resistant methods by persona, certificate badges, a Temporary Access Pass only to register a method) and covers the passwords that remain: Windows LAPS, service accounts, and sealed AD recovery credentials."
+    coverage: "partial"
+    coverage_note: "The design reduces dependence on passwords (phishing-resistant methods by persona, certificate badges, a Temporary Access Pass only to register a method) and covers three sets of passwords that remain: Windows LAPS, service accounts, and sealed AD recovery credentials. Workforce AD passwords remain too. The accounts synchronize to Entra ID with password hash synchronization (A-01). A password is one factor of cloud sign-in until a persona's phishing-resistant rollout completes (03 section 2; 05 section 3, Identity: Authentication), and the whole on-site sign-in at shared clinical workstations until certificate badges arrive in phase 3 (05 section 1; WP-3.1). The design set states no policy for creating, changing, or safeguarding them, and no step that retires them after rollout."
     csf_targets:
       - id: "PR.AA-01"
         relationship: "partial"
@@ -1533,6 +1566,15 @@ mappings:
         - doc: "architecture"
           file: "03-identity-and-access.md"
           section: "6"
+        - doc: "architecture"
+          file: "01-scenario-and-assumptions.md"
+          section: "Assumptions"
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "1"
+        - doc: "architecture"
+          file: "05-ztmm-maturity-roadmap.md"
+          section: "3"
     detections:
       - doc: "detections"
         file: "kql/defender-xdr/dx05-mdi-tier0-credential-access-alert-chain.kql"
@@ -3429,7 +3471,7 @@ mappings:
         locator: "45 CFR 164.312(e)(2)(i)"
     applicability: "applicable"
     coverage: "partial"
-    coverage_note: "TLS and per-app tunnels give in-transit integrity on the designed paths. Some medical device protocols lack it, so device-class segments compensate (05 section 3, Traffic Encryption)."
+    coverage_note: "No architecture document maps a control to this specification or records the 45 CFR 164.306(d)(3) decision it requires as an addressable specification. Remote access through the application proxy and per-app ZTNA tunnels, the outsourcer's path included (F-09), is cited as encrypted per-app tunnels and TLS for 164.312(e)(2)(ii) (02 section 12; ADR-002, Compliance drivers). Integration engine interfaces use mutual TLS where both ends support it, cited with the workload identity controls for 164.312(d) (03 sections 6 and 9). Neither is cited for integrity. The crosswalk credits partial coverage from the protocol itself: RFC 9846 (TLS 1.3), section 1, lists integrity among the properties the channel should provide. The architecture fixes no TLS version and does not claim integrity, so the credit holds only on paths that negotiate TLS 1.3. Medical device protocols that lack encryption rely on device-class segments (05 section 3, Traffic Encryption); the design records no integrity measure for them."
     csf_targets:
       - id: "PR.DS-02"
         relationship: "partial"
@@ -3443,7 +3485,7 @@ mappings:
       components: ["PEP-ZTNA-BROKER", "PEP-APP-PROXY", "RES-INTEGRATION", "PEP-NET-ZONE"]
       zones: ["Z-IOMT"]
       policies: []
-      flows: []
+      flows: ["F-09"]
       residual_risks: ["RR-04"]
       artifacts:
         - doc: "architecture"
@@ -3452,8 +3494,20 @@ mappings:
         - doc: "architecture"
           file: "04-segmentation.md"
           section: "3"
+        - doc: "architecture"
+          file: "02-reference-architecture.md"
+          section: "12"
+        - doc: "architecture"
+          file: "adr/ADR-002-ztna-and-app-proxy-replace-vpn.md"
+          section: "Compliance drivers"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "6"
+        - doc: "architecture"
+          file: "03-identity-and-access.md"
+          section: "9"
     detections: []
-    notes: ""
+    notes: "Basis for crediting in-transit integrity on TLS 1.3 paths: SRC-RFC-9846."
   - id: "XW-54"
     source:
       framework: "hipaa-security-rule"
@@ -3468,7 +3522,7 @@ mappings:
         locator: "45 CFR 164.312(e)(2)(ii)"
     applicability: "applicable"
     coverage: "partial"
-    coverage_note: "Encrypted on user, remote, cloud, and partner paths. Where medical device protocols cannot encrypt, segmentation compensates; for an addressable specification, 45 CFR 164.306(d)(3) requires documenting that decision and any equivalent alternative measure."
+    coverage_note: "Encrypted per-app tunnels and TLS on the remote access paths, the outsourcer's path included (02 section 12; ADR-002, Compliance drivers); integration engine interfaces use mutual TLS where both ends support it (03 section 6). The design makes no in-transit encryption statement for private endpoints (F-13) or managed file transfer, and sets encryption of on-site clinical and WAN traffic only as a target where protocols allow (05 section 3, Traffic Encryption). Where medical device protocols cannot encrypt, segmentation compensates; for an addressable specification, 45 CFR 164.306(d)(3) requires documenting that decision and any equivalent alternative measure, and the design records none."
     csf_targets:
       - id: "PR.DS-02"
         relationship: "partial"
