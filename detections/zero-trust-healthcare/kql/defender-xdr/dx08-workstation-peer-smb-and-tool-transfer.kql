@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Workstation-to-workstation SMB traffic and executables written over SMB between workstations (lateral movement past host east-west blocking)
 // Status: untested template
-// ATT&CK: T1021.002 (Remote Services: SMB/Windows Admin Shares), T1570 (Lateral Tool Transfer); ATT&CK v19.2
+// ATT&CK: T1021.002 (Remote Services: SMB/Windows Admin Shares), T1570 (Lateral Tool Transfer); ATT&CK v20.0
 // Data sources: Microsoft Defender XDR advanced hunting, DeviceNetworkEvents and DeviceFileEvents (Microsoft Defender for Endpoint)
 // Licensing assumptions: Defender for Endpoint on Windows workstations in Z-CORP and Z-CLIN-USER (scenario A-05, Microsoft 365 E5)
 // Rule ID: DX-08 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High

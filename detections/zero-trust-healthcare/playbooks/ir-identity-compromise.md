@@ -6,7 +6,7 @@ This playbook covers a suspected or confirmed compromise of an identity at Conto
 
 - **Status: reference playbook.** It has not been exercised in a tabletop or a lab, and no organization has adopted it. Role names are fictional roles from the reference design.
 - **Regulatory clocks** come from the companion file `grc/zero-trust-healthcare/notification-clocks.md`, which cites each clock to its primary source. This playbook does not restate them beyond what a responder needs at the decision point, and counsel decides reportability.
-- **Technique references** use MITRE ATT&CK Enterprise v19.2.
+- **Technique references** use MITRE ATT&CK Enterprise v20.0.
 
 ## 1. Scope
 

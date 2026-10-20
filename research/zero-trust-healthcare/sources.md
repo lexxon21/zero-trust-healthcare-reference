@@ -39,7 +39,7 @@ This is the consolidated source list for the HIPAA Security Rule NPRM research n
 
 ## 2. Facts verified for the architecture set
 
-Sources in this section were first checked on 2026-10-03 unless their "Date checked" cell gives a later date. Titles marked "title rechecked" were confirmed again on 2026-10-04, and rows marked "rechecked 2026-10-04", "rechecked 2026-10-07", or "rechecked 2026-10-13" had their title and cited content confirmed again on that date.
+Sources in this section were first checked on 2026-10-03 unless their "Date checked" cell gives a later date. Titles marked "title rechecked" were confirmed again on 2026-10-04, and rows marked "rechecked 2026-10-04", "rechecked 2026-10-07", "rechecked 2026-10-13", or "rechecked 2026-10-20" had their title and cited content confirmed again on that date.
 
 ### 2.1 Microsoft Entra Global Secure Access and application proxy
 
@@ -133,7 +133,7 @@ Sources in this section were first checked on 2026-10-03 unless their "Date chec
 | Title | Publisher | URL | Date checked | Quality | Notes |
 |---|---|---|---|---|---|
 | Deprecated features in the Windows client | Microsoft Learn | https://learn.microsoft.com/en-us/windows/whats-new/deprecated-features | 2026-10-03 | Primary | Updated 2026-09-25. All NTLM versions deprecated (June 2024); NTLMv1 removed starting with Windows 11 version 24H2 and Windows Server 2025. |
-| KB5066470, Upcoming changes to NTLMv1 in Windows 11, version 24H2 and Windows Server 2025 | Microsoft Support | https://support.microsoft.com/en-us/topic/upcoming-changes-to-ntlmv1-in-windows-11-version-24h2-and-windows-server-2025-c0554217-cdbc-420f-b47c-e02b2db49b2e | 2026-10-03 (rechecked 2026-10-07) | Primary | Published 2025-08-29. The BlockNTLMv1SSO default moves from audit to enforce in October 2026; on 2026-10-07 the article still described the change as upcoming. Time-sensitive. |
+| KB5066470, Manage changes to NTLMv1 and prevent network issues in Windows 11 and Windows Server 2025 | Microsoft Support | https://support.microsoft.com/en-us/topic/upcoming-changes-to-ntlmv1-in-windows-11-version-24h2-and-windows-server-2025-c0554217-cdbc-420f-b47c-e02b2db49b2e | 2026-10-03 (rechecked 2026-10-20) | Primary | Published 2025-08-29; revised 2026-10-14 and retitled 2026-10-19 (the earlier title began "Upcoming changes to NTLMv1"). Since the October 13, 2026 Windows security update, the BlockNTLMv1SSO default is Enforce mode (1) where the registry value is not set and Credential Guard is disabled; Microsoft notes possible impact on Wi-Fi, Ethernet, and VPN connections that use MS-CHAPv2. The October 13, 2026 release notes for Windows 11 (KB5127648, https://support.microsoft.com/help/5127648) and Windows Server 2025 (KB5126646, https://support.microsoft.com/help/5126646) carry the change in a note added 2026-10-15. Time-sensitive. |
 
 ### 2.6 PCI Security Standards Council
 
@@ -180,7 +180,7 @@ Sources in this section were first checked on 2026-10-03 unless their "Date chec
 | HIPAA Security Rule NPRM | Not final. Listed under Long-Term Actions in the 2026 Unified Agenda, with final action planned for 07/2027; no review pending at OIRA. The status can change at any time. | Section 1 |
 | Global Secure Access B2B guest access | Public preview | Known Limitations for Global Secure Access |
 | CAE strict location enforcement | Public preview | Continuous access evaluation in Microsoft Entra |
-| BlockNTLMv1SSO enforce default | Scheduled for October 2026; the article still described the change as upcoming | KB5066470 |
+| BlockNTLMv1SSO enforce default | Shipped in the October 13, 2026 Windows security updates (KB5127648, KB5126646): where the registry value is not set and Credential Guard is disabled, the default is Enforce. Microsoft added the release note on 2026-10-15 and revised KB5066470 on 2026-10-14 and 2026-10-19 (checked 2026-10-20) | KB5066470; release notes |
 | Legacy ID Protection risk policies | The October 1, 2026 retirement date has passed; the page (updated 2026-04-28) does not say whether the retirement took place | Risk policies |
 | Token protection on Apple platforms | Documentation inconsistent: the supported-devices section is headed "Apple (Preview)", while the platform table says "Generally Available" | How Token Protection Enhances Conditional Access Policies |
 | Require risk remediation and authentication flows | No dated general availability entry found (checked 2026-10-03) | Microsoft Entra ID Protection risk-based access policies; Authentication flows as a condition in Conditional Access policy |

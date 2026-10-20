@@ -172,7 +172,7 @@ Decision record: ADR-005. SP 800-207 describes the enclave-based deployment (Sec
   - Assigned only to the groups that use enclave apps.
   - Limited to the domain controllers in the connectors' AD site.
   - Watched by Defender for Identity.
-- **NTLM.** Microsoft deprecated all NTLM versions in June 2024 and removed NTLMv1 starting with Windows 11 version 24H2 and Windows Server 2025. KB5066470 moves the BlockNTLMv1SSO setting from audit to enforce by default in October 2026. The enclave plan:
+- **NTLM.** Microsoft deprecated all NTLM versions in June 2024 and removed NTLMv1 starting with Windows 11 version 24H2 and Windows Server 2025. Per KB5066470, the October 2026 Windows security update (released October 13, 2026) moved the BlockNTLMv1SSO default from audit to enforce on devices where the registry value is not set and Credential Guard is disabled. The enclave plan:
   1. Audit NTLM use per application.
   2. Restrict NTLM, with per-application exceptions that have owners and expiry dates.
   3. Require AES Kerberos encryption types for service accounts.
@@ -310,7 +310,7 @@ PCI SSC published "PCI DSS Scoping and Segmentation Guidance for Modern Network 
 | Install the Global Secure Access Client for Android | Microsoft Learn | https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-install-android-client | 2026-10-04 | Primary |
 | Microsoft Entra licensing | Microsoft Learn | https://learn.microsoft.com/en-us/entra/fundamentals/licensing | 2026-10-04 | Primary |
 | Deprecated features in the Windows client | Microsoft Learn | https://learn.microsoft.com/en-us/windows/whats-new/deprecated-features | 2026-10-03 | Primary |
-| KB5066470, Upcoming changes to NTLMv1 in Windows 11, version 24H2 and Windows Server 2025 | Microsoft Support | https://support.microsoft.com/en-us/topic/upcoming-changes-to-ntlmv1-in-windows-11-version-24h2-and-windows-server-2025-c0554217-cdbc-420f-b47c-e02b2db49b2e | 2026-10-03 | Primary |
+| KB5066470, Manage changes to NTLMv1 and prevent network issues in Windows 11 and Windows Server 2025 | Microsoft Support | https://support.microsoft.com/en-us/topic/upcoming-changes-to-ntlmv1-in-windows-11-version-24h2-and-windows-server-2025-c0554217-cdbc-420f-b47c-e02b2db49b2e | 2026-10-03 (rechecked 2026-10-20) | Primary |
 | FDA Recognized Consensus Standards: ANSI/NEMA HN 1-2019 | U.S. FDA | https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfstandards/detail.cfm?standard__identification_no=43890 | 2026-10-03 | Primary |
 | Cybersecurity in Medical Devices Frequently Asked Questions | U.S. FDA | https://www.fda.gov/medical-devices/digital-health-center-excellence/cybersecurity-medical-devices-frequently-asked-questions-faqs | 2026-10-03 | Primary |
 | Point-to-Point Encryption standards page | PCI SSC | https://www.pcisecuritystandards.org/standards/point-to-point-encryption-p2pe/ | 2026-10-03 | Primary |

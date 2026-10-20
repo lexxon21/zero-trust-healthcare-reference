@@ -6,7 +6,7 @@ A purple team exercise plan for validating the detections and controls that answ
 
 This plan specifies behaviors and expected telemetry. It does not contain attack procedures, commands, payloads, or tooling configuration, and it is not an intrusion guide. Where a behavior needs to be executed to generate telemetry, the plan points to an existing, publicly maintained validation library by name. Selection and execution of specific tests is left to the operator, in an isolated lab the operator controls, in report-only or monitor-first mode, and never against live clinical systems or medical devices in patient use.
 
-Technique references use MITRE ATT&CK Enterprise v19.2, verified against MITRE's official ATT&CK STIX data.
+Technique references use MITRE ATT&CK Enterprise v20.0, verified against MITRE's official ATT&CK STIX data.
 
 ## 1. Objectives
 
@@ -143,7 +143,7 @@ Record one entry per behavior tested.
 Exercise ID:            PX-xx
 Date and window:        YYYY-MM-DD, start to end (lab or pre-production)
 Behavior:               <plain-language description>
-ATT&CK technique:       <technique ID and name>, v19.2
+ATT&CK technique:       <technique ID and name>, v20.0
 Attack path served:     AP-x
 Library and test ref:   <library name and the selected test identifier>
 Executed by / contact:  <operator> / <named control contact>
@@ -173,7 +173,7 @@ Owner and due date:     <name> / YYYY-MM-DD
 
 ## Sources
 
-Technique data: MITRE ATT&CK Enterprise v19.2, verified against MITRE's official ATT&CK STIX data. Threat-context sources are consolidated in `threat-model.md` section 10. The validation libraries in section 4 are listed below; this plan references them by name and does not reproduce their content.
+Technique data: MITRE ATT&CK Enterprise v20.0, verified against MITRE's official ATT&CK STIX data. Threat-context sources are consolidated in `threat-model.md` section 10. The validation libraries in section 4 are listed below; this plan references them by name and does not reproduce their content.
 
 | Title | Publisher | URL | Date checked | Quality |
 |---|---|---|---|---|

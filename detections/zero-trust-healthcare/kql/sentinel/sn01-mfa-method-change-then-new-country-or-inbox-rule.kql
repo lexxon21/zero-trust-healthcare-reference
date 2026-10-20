@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: MFA method registered or changed, then within 24 hours a sign-in from a country new for the user or a mail-hiding or forwarding rule (help-desk takeover chain)
 // Status: untested template
-// ATT&CK: T1098.005 (Account Manipulation: Device Registration), T1556.006 (Modify Authentication Process: Multi-Factor Authentication), T1564.008 (Hide Artifacts: Email Hiding Rules), T1114.003 (Email Collection: Email Forwarding Rule); ATT&CK v19.2
+// ATT&CK: T1098.005 (Account Manipulation: Device Registration), T1556.006 (Modify Authentication Process: Multi-Factor Authentication), T1564.008 (Hide Artifacts: Email Hiding Rules), T1114.003 (Email Collection: Email Forwarding Rule); ATT&CK v20.0
 // Data sources: Microsoft Sentinel, AuditLogs and SigninLogs (Microsoft Entra ID data connector), OfficeActivity (Microsoft 365 data connector, Exchange operations)
 // Licensing assumptions: Microsoft Sentinel workspace with the Entra ID and Microsoft 365 connectors (scenario A-17); Entra ID P1 or P2 for sign-in log access (scenario holds P2)
 // Rule ID: SN-01 | Platform: Microsoft Sentinel scheduled analytics rule, run every hour, query period 14 days (see Tuning knobs) | Suggested severity: High for the full chain, Medium for two links

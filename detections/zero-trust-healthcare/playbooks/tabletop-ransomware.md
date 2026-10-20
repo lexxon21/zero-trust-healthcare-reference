@@ -7,7 +7,7 @@ A facilitator-ready discussion exercise for Contoso Regional Health (fictional),
 - **Status: reference kit.** It has not been run, and no organization has adopted it. Every role is a fictional role from the reference design, and every number in an inject is an exercise value.
 - **Discussion only.** Nothing is touched: no system, account, live data, or real contact. The facilitator plays every outside party.
 - **Strategy-only boundary.** The scenario names adversary behavior at the level of MITRE ATT&CK technique names, as `attack-paths.md` does, plus the outcomes the pack's rules report (for example, files renamed in bulk over SMB). It contains no attack procedures, commands, tools, malware names, payloads, or real threat actor names, and none should be added. Technical questions about how a behavior is carried out go to the parking lot; lab validation of the rules belongs to `purple-team-plan.md`, which runs only in an isolated lab.
-- **Technique references** use MITRE ATT&CK Enterprise v19.2.
+- **Technique references** use MITRE ATT&CK Enterprise v20.0.
 
 ## 1. Purpose and fit
 

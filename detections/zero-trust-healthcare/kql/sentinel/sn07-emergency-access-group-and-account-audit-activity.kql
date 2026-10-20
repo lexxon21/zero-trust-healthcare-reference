@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Change to a Tier 0 group (the emergency access exclusion group grp-ca-emergency-access, or the admin targeting groups grp-admins-t0 and grp-admins-t1), or audit activity by or on either tenant emergency access account
 // Status: untested template
-// ATT&CK: T1556.006 (Modify Authentication Process: Multi-Factor Authentication), T1098.003 (Account Manipulation: Additional Cloud Roles), T1098 (Account Manipulation), T1531 (Account Access Removal), T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v19.2
+// ATT&CK: T1556.006 (Modify Authentication Process: Multi-Factor Authentication), T1098.003 (Account Manipulation: Additional Cloud Roles), T1098 (Account Manipulation), T1531 (Account Access Removal), T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v20.0
 // Data sources: Microsoft Sentinel, AuditLogs (Microsoft Entra ID data connector)
 // Licensing assumptions: Microsoft Sentinel with the Entra ID connector streaming audit logs (scenario A-17; Microsoft states that any Entra ID license is sufficient for log types other than sign-in logs); role-assignable groups need Entra ID P1, and the PIM activation rows read for enrichment need Entra ID P2 (scenario holds P2)
 // Rule ID: SN-07 | Platform: Microsoft Sentinel scheduled analytics rule, run every 5 minutes (not offered as NRT, see Logic 6) | Suggested severity: High for every result

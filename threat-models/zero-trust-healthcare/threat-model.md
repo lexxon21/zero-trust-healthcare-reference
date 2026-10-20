@@ -4,7 +4,7 @@
 
 This is the companion threat model for the Zero Trust reference architecture of Contoso Regional Health (fictional). It takes the finished architecture as the system under analysis and asks how a realistic adversary would get in, move, and reach what matters. It reuses the component and zone IDs frozen in `02-reference-architecture.md` section 11, and the residual risk IDs (RR-01 to RR-16) from section 13. The attack paths that follow from it are in `attack-paths.md`; the detection priorities, in three tiers, are in `detection-priorities.md`; the exercise design is in `purple-team-plan.md`.
 
-Technique references use MITRE ATT&CK Enterprise v19.2, the current sub-release as of the date below. Every technique ID, name, status, and tactic mapping was checked against MITRE's official ATT&CK STIX data for v19.2. v19 split the former Defense Evasion tactic into Stealth (TA0005) and Defense Impairment (TA0112), so some older mappings are remapped to their current IDs here (for example, log and tool tampering now sits under the Defense Impairment tactic rather than the former one).
+Technique references use MITRE ATT&CK Enterprise v20.0, the current sub-release as of the date below. Every technique ID, name, status, and tactic mapping was checked against MITRE's official ATT&CK STIX data for v20.0. v19 split the former Defense Evasion tactic into Stealth (TA0005) and Defense Impairment (TA0112), so some older mappings are remapped to their current IDs here (for example, log and tool tampering now sits under the Defense Impairment tactic rather than the former one).
 
 PCI DSS references are to v4.0.1. Sourced threat context was gathered on 2026-10-04 and is cited inline with a quality label.
 
@@ -327,7 +327,7 @@ A prioritized list of gaps the threat model surfaces for the architecture docume
 
 ## 10. Sources
 
-Technique data: MITRE ATT&CK Enterprise v19.2, verified against MITRE's official ATT&CK STIX data (attack.mitre.org), 2026-10-03 to 2026-10-04. The ATT&CK versions page listed v19.2 as the current version on 2026-10-04.
+Technique data: MITRE ATT&CK Enterprise v20.0. Verified against MITRE's official ATT&CK STIX data (attack.mitre.org) for v19.2 on 2026-10-03 to 2026-10-04, and rechecked for v20.0 on 2026-10-20, when every cited ID kept its name, status, and tactics. The ATT&CK versions page listed v20.0 as the current version on 2026-10-20.
 
 Threat context was gathered and quality-labeled on 2026-10-04. In the threat context table, two kinds of source carry the secondary label. The HIPAA Journal and CyberInsider rows relay HHS OCR figures whose primary pages could not be retrieved by automated means on 2026-10-04. This model also labels peer-reviewed analyses secondary. The two clinical studies measure effects at hospitals next to a health system under ransomware attack, not at the attacked hospitals, and the third analyzes breach filings made to HHS OCR.
 

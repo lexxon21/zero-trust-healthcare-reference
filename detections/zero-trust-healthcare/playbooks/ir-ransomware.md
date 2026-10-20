@@ -9,7 +9,7 @@ This playbook covers a suspected or confirmed ransomware or data extortion incid
 - **Triggers are untested templates.** Every rule this playbook names is an untested template (`coverage-map.md` section 1).
 - **Decision point IDs.** Decision points here are RD1 to RD17 ("ransomware decision"), so they never collide with D1 to D12 in the companion identity compromise playbook (`ir-identity-compromise.md`) or with the risk IDs R-01 to R-12. Where this playbook hands work to the identity playbook, it names that playbook's decision points and branches in full, for example "identity playbook D4 and Branch D".
 - **Regulatory clocks** come from the companion file `grc/zero-trust-healthcare/notification-clocks.md`, which cites each clock to its primary source. Counsel decides reportability.
-- **Technique references** use MITRE ATT&CK Enterprise v19.2.
+- **Technique references** use MITRE ATT&CK Enterprise v20.0.
 
 ## 1. Scope
 

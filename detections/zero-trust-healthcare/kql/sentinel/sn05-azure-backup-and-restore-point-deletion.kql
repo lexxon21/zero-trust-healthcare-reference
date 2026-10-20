@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Deletion of Azure backup items, backup vaults, restore points, or snapshots, and changes to Recovery Services vault security settings
 // Status: untested template
-// ATT&CK: T1490 (Inhibit System Recovery); ATT&CK v19.2
+// ATT&CK: T1490 (Inhibit System Recovery); ATT&CK v20.0
 // Data sources: Microsoft Sentinel, AzureActivity (Azure Activity data connector)
 // Licensing assumptions: Microsoft Sentinel with the Azure Activity connector for the subscriptions that hold Z-AZURE workloads; applies only where Azure Backup, Azure Backup vaults, snapshots, or restore points protect RES-AZ-WORKLOADS (SVC-BACKUP: requirements set in ADR-009, implementation not designed, A-19)
 // Rule ID: SN-05 | Platform: Microsoft Sentinel scheduled analytics rule | Suggested severity: High

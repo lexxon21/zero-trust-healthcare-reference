@@ -4,7 +4,7 @@
 
 This is the detection backlog, in three priority tiers, for the companion detection pack (`coverage-map.md` and `detections-index.md`), derived directly from the attack paths in `attack-paths.md` and the trust-boundary analysis in `threat-model.md`. Each item is concrete: the behavior to detect, the MITRE ATT&CK technique it covers, the data source a detection would query, why it sits in its tier, and which attack path it serves. The intent is that each item becomes one or more rules (Defender XDR advanced hunting, Sentinel analytics, or Sigma) with the architecture components as context. Every detection rule named in this document is an untested template as of 2026-10-04 (`coverage-map.md` section 1).
 
-Technique references use MITRE ATT&CK Enterprise v19.2, verified against MITRE's official ATT&CK STIX data. Data sources are named for the scenario stack: Microsoft Defender XDR advanced hunting tables, Microsoft Sentinel tables (including `SigninLogs`, `AADNonInteractiveUserSignInLogs`, `AuditLogs`, `OfficeActivity`, `SecurityEvent`), Microsoft Defender for Identity and Defender for Cloud Apps signals, and the network, EHR, and device logs that `PIP-SIEM` ingests under assumption A-17.
+Technique references use MITRE ATT&CK Enterprise v20.0, verified against MITRE's official ATT&CK STIX data. Data sources are named for the scenario stack: Microsoft Defender XDR advanced hunting tables, Microsoft Sentinel tables (including `SigninLogs`, `AADNonInteractiveUserSignInLogs`, `AuditLogs`, `OfficeActivity`, `SecurityEvent`), Microsoft Defender for Identity and Defender for Cloud Apps signals, and the network, EHR, and device logs that `PIP-SIEM` ingests under assumption A-17.
 
 ## How the tiers are set
 
@@ -20,7 +20,7 @@ Response actions attached to these detections must respect the architecture's cl
 
 ## Priority 1: build first
 
-| # | Behavior to detect | Technique (ATT&CK v19.2) | Data source | Rationale | Serves |
+| # | Behavior to detect | Technique (ATT&CK v20.0) | Data source | Rationale | Serves |
 |---|---|---|---|---|---|
 | 1 | Deletion of backups, shadow copies, or cloud restore points, and recovery inhibition | T1490 (Inhibit System Recovery) | DeviceProcessEvents, DeviceEvents, Azure activity logs | Last high-confidence signal before or during encryption; recovery capability is unverified (RR-11), so this is the most consequential single detection. Once a recovery product is chosen, ADR-009 decision 4 adds the recovery plane's own logs, where a denied attempt to delete a copy or shorten its retention is a sharper signal still | AP-4, AP-5 |
 | 2 | Rapid mass file modification or encryption consistent with ransomware | T1486 (Data Encrypted for Impact) | DeviceFileEvents, AlertInfo, AlertEvidence | Direct impact on clinical systems; pairs with attack disruption (apply the clinical gate before auto-isolation) | AP-4 |
@@ -30,7 +30,7 @@ Response actions attached to these detections must respect the architecture's cl
 
 ## Priority 2: build next
 
-| # | Behavior to detect | Technique (ATT&CK v19.2) | Data source | Rationale | Serves |
+| # | Behavior to detect | Technique (ATT&CK v20.0) | Data source | Rationale | Serves |
 |---|---|---|---|---|---|
 | 6 | Service-ticket request patterns consistent with Kerberoasting | T1558.003 (Steal or Forge Kerberos Tickets: Kerberoasting) | Defender for Identity alerts, IdentityDirectoryEvents, SecurityEvent | Credential access on the weaker-signal local plane (RR-02); common precursor to lateral movement and Tier 0 | AP-4, AP-5 |
 | 7 | Directory replication requested from a host that is not a domain controller | T1003.006 (OS Credential Dumping: DCSync) | Defender for Identity alerts, IdentityDirectoryEvents | High-fidelity Tier 0 objective; few false positives | AP-5 |
@@ -53,7 +53,7 @@ Response actions attached to these detections must respect the architecture's cl
 
 ## Priority 3: build to complete coverage
 
-| # | Behavior to detect | Technique (ATT&CK v19.2) | Data source | Rationale | Serves |
+| # | Behavior to detect | Technique (ATT&CK v20.0) | Data source | Rationale | Serves |
 |---|---|---|---|---|---|
 | 14 | Phishing delivery and the click or file open that follows | T1566.002 (Phishing: Spearphishing Link), T1566.001 (Phishing: Spearphishing Attachment), T1204.001 (User Execution: Malicious Link), T1204.002 (User Execution: Malicious File) | EmailEvents, UrlClickEvents, DeviceProcessEvents | Earliest chokepoint for AP-1, AP-4, and AP-6; high volume, so tune against business email | AP-1, AP-4, AP-6 |
 | 15 | Vendor or guest sign-in anomalies, PIM-for-Groups activation outside the expected pattern, and broker sessions to unusual hosts | T1199 (Trusted Relationship), T1078.004 (Valid Accounts: Cloud Accounts) | SigninLogs, AuditLogs, `PEP-VENDOR-BROKER` session logs | The partner path has the largest blast radius (EHR servers) under inbound trust (RR-06). Biomedical vendor activations need the same watch: each activation of a `grp-vendor-biomed-<vendor>-session` group, approved by clinical engineering, opens a session to imaging modalities that hold ePHI (F-07, A-13), and where the modality sits at a clinic no passive sensor sees the device side (RR-14). The shared pattern `grp-vendor-*-session` lets one rule match every vendor activation | AP-3 |

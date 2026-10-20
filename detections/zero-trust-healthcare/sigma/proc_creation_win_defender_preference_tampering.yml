@@ -1,6 +1,6 @@
 # Reference rule. Not deployed in any employer environment.
 # Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
-# Rule ID: SG-02 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Rule ID: SG-02 | Status: untested template (Sigma status experimental) | ATT&CK v20.0
 # Tag note: attack.defense-impairment is the ATT&CK v19 tactic Defense Impairment (TA0112), newer than the Sigma v2.1.0 tags appendix.
 # Answers: detection-priorities.md item 13 (Priority 2); attack-paths.md AP-4 step 9
 # Companion KQL: kql/defender-xdr/dx09-endpoint-protection-tampering.kql (adds tamper protection events and tamper alerts)

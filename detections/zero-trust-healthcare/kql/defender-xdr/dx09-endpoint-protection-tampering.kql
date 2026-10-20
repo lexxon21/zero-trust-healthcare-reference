@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Endpoint protection tampering: tamper protection events, tamper alerts, and command-line attempts to disable Defender Antivirus or add exclusions
 // Status: untested template
-// ATT&CK: T1685 (Disable or Modify Tools); ATT&CK v19.2
+// ATT&CK: T1685 (Disable or Modify Tools); ATT&CK v20.0
 // Data sources: Microsoft Defender XDR advanced hunting, DeviceEvents and DeviceProcessEvents (Defender for Endpoint), AlertInfo and AlertEvidence (Defender XDR alerts)
 // Licensing assumptions: Defender for Endpoint with tamper protection on workstations (scenario A-05, Microsoft 365 E5) and server licensing for the servers in PEP-HOST's zones, as in DX-01
 // Rule ID: DX-09 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High

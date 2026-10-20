@@ -12,10 +12,10 @@
 
 ## Context
 
-Some of Contoso Regional Health's (fictional) clinical applications authenticate only with Kerberos or NTLM. They cannot take part in Conditional Access directly, and some cannot be replaced quickly because the vendor controls the upgrade path. Verified facts (checked 2026-10-03):
+Some of Contoso Regional Health's (fictional) clinical applications authenticate only with Kerberos or NTLM. They cannot take part in Conditional Access directly, and some cannot be replaced quickly because the vendor controls the upgrade path. Verified facts (checked 2026-10-03; NTLMv1 default rechecked 2026-10-20):
 
 - **NTLM is deprecated.** Microsoft deprecated all NTLM versions (LANMAN, NTLMv1, and NTLMv2) in June 2024. NTLMv1 is removed starting with Windows 11 version 24H2 and Windows Server 2025.
-- **NTLMv1 enforcement is changing now.** Per KB5066470, the BlockNTLMv1SSO default changes from audit to enforce in October 2026.
+- **NTLMv1 enforcement changed in October 2026.** Per KB5066470, the October 2026 Windows security update (released October 13, 2026) changed the BlockNTLMv1SSO default from audit to enforce where the registry value is not set and Credential Guard is disabled.
 - **SP 800-207 has a model for this.** It describes the enclave-based deployment (Section 3.2.2) as suiting enterprises with legacy applications or on-premises data centers that cannot place a gateway in front of each resource.
 - **Remote Kerberos needs the domain controllers published.** Microsoft Entra Private Access can provide Kerberos SSO to on-premises resources, but only if domain controllers are published to clients as a private resource.
 - **Kerberos gating on domain controllers exists, with limits.** Microsoft Entra Private Access for Active Directory Domain Controllers (generally available January 2026) uses a sensor on each domain controller. The sensor can apply Conditional Access to Kerberos requests for configured service principal names. It accepts Kerberos requests only from connector addresses, installs in audit mode, and offers a break glass mode. Microsoft's documentation describes Kerberos interception. It does not describe gating NTLM.
@@ -85,7 +85,7 @@ Applications and Workloads: Application Access. Networks: Network Segmentation. 
 |---|---|---|---|---|
 | NIST SP 800-207, Zero Trust Architecture | NIST | https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-207.pdf | 2026-10-03 | Primary |
 | Deprecated features in the Windows client | Microsoft Learn | https://learn.microsoft.com/en-us/windows/whats-new/deprecated-features | 2026-10-03 | Primary |
-| KB5066470, Upcoming changes to NTLMv1 in Windows 11, version 24H2 and Windows Server 2025 | Microsoft Support | https://support.microsoft.com/en-us/topic/upcoming-changes-to-ntlmv1-in-windows-11-version-24h2-and-windows-server-2025-c0554217-cdbc-420f-b47c-e02b2db49b2e | 2026-10-03 | Primary |
+| KB5066470, Manage changes to NTLMv1 and prevent network issues in Windows 11 and Windows Server 2025 | Microsoft Support | https://support.microsoft.com/en-us/topic/upcoming-changes-to-ntlmv1-in-windows-11-version-24h2-and-windows-server-2025-c0554217-cdbc-420f-b47c-e02b2db49b2e | 2026-10-03 (rechecked 2026-10-20) | Primary |
 | Use Kerberos for single sign-on (SSO) with Microsoft Entra Private Access | Microsoft Learn | https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-kerberos-sso | 2026-10-03 | Primary |
 | Configure Microsoft Entra Private Access for Active Directory Domain Controllers | Microsoft Learn | https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-domain-controllers | 2026-10-03 | Primary |
 | Kerberos Constrained Delegation for single sign-on to your apps with application proxy | Microsoft Learn | https://learn.microsoft.com/en-us/entra/identity/app-proxy/how-to-configure-sso-with-kcd | 2026-10-03 | Primary |

@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Directory replication requested by a host that is not a domain controller, or by the wrong account from an Entra Connect server
 // Status: untested template
-// ATT&CK: T1003.006 (OS Credential Dumping: DCSync); ATT&CK v19.2
+// ATT&CK: T1003.006 (OS Credential Dumping: DCSync); ATT&CK v20.0
 // Data sources: Microsoft Defender XDR advanced hunting, IdentityDirectoryEvents (Microsoft Defender for Identity sensors on domain controllers)
 // Licensing assumptions: Microsoft Defender for Identity within the scenario's Defender XDR stack (Microsoft 365 E5), sensors on every domain controller
 // Rule ID: DX-06 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High

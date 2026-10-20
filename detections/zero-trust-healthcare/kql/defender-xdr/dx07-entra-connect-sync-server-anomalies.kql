@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Anomalous activity on Entra Connect sync servers (unexpected interactive logons, never-before-seen processes, ADSync module scripting) plus sync-identity alerts
 // Status: untested template
-// ATT&CK: T1556.007 (Modify Authentication Process: Hybrid Identity); ATT&CK v19.2
+// ATT&CK: T1556.007 (Modify Authentication Process: Hybrid Identity); ATT&CK v20.0
 // Data sources: Microsoft Defender XDR advanced hunting, DeviceLogonEvents and DeviceProcessEvents (Defender for Endpoint on the sync servers), AlertInfo (Defender for Identity and Defender XDR alerts)
 // Licensing assumptions: Signals 1 to 3 assume Defender for Endpoint with server licensing on the IDS-SYNC servers (for example Microsoft Defender for Servers), which the design does not yet state (threat-model.md TM-A4); signal 4 assumes Defender for Identity within the scenario's Defender XDR stack, whose sensors 03-identity-and-access.md section 4 places on those servers
 // Rule ID: DX-07 | Platform: Defender XDR advanced hunting, daily hunting query only, not a custom detection (see Tuning knobs) | Suggested severity: High

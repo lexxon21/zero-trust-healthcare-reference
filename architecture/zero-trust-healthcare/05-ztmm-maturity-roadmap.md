@@ -227,7 +227,7 @@ WP-3.3 and WP-3.6 have no prerequisite package in this roadmap, so they have no 
 - **Medical device enforcement is the longest chain and the most likely to slip.** It needs sensor baselines that cover maintenance cycles (WP-0.4) and clinical engineering ownership through governance (WP-0.1). Each device class then moves to enforcement inside clinical change windows (WP-2.4).
 - **User VPN retirement comes last in its chain.** It needs three things in place: web apps behind the application proxy (WP-1.3), vendors on the broker (WP-1.4), and non-web apps on ZTNA (WP-1.5), which in turn waits on a licensing decision.
 - **The badge program is the most expensive item and the most likely to be descoped.** If it is cut, the fallback is FIDO2 security keys on shared workstations. That fallback adds a cloud dependency at the point of care, so ADR-003 and ADR-008 would have to be revised, not just ADR-003.
-- **NTLM restriction can break applications without warning.** Microsoft's enforce-by-default change for BlockNTLMv1SSO (October 2026, KB5066470) may surface NTLMv1 dependencies before Contoso's own restriction work starts. The audit in WP-0.3 should look for them first.
+- **NTLM restriction can break applications without warning.** Microsoft's enforce-by-default change for BlockNTLMv1SSO (the October 13, 2026 Windows security update, per KB5066470) may surface NTLMv1 dependencies before Contoso's own restriction work starts. The audit in WP-0.3 should look for them first.
 
 ## 6. Measures
 
@@ -269,7 +269,7 @@ Targets, not results. Each measure has a phase in which it should hold.
 | Zero Trust Maturity Model landing page | CISA | https://www.cisa.gov/zero-trust-maturity-model | 2026-10-03 | Primary |
 | CISA Zero Trust Maturity Model pillar guidance (identity, devices, networks, applications and workloads, data) | Microsoft Learn | https://learn.microsoft.com/en-us/security/zero-trust/cisa-zero-trust-maturity-model-intro | 2026-10-03 | Secondary for CISA text, which Microsoft paraphrases in places |
 | NIST SP 800-207, Zero Trust Architecture | NIST | https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-207.pdf | 2026-10-03 | Primary |
-| KB5066470, Upcoming changes to NTLMv1 in Windows 11, version 24H2 and Windows Server 2025 | Microsoft Support | https://support.microsoft.com/en-us/topic/upcoming-changes-to-ntlmv1-in-windows-11-version-24h2-and-windows-server-2025-c0554217-cdbc-420f-b47c-e02b2db49b2e | 2026-10-03 | Primary |
+| KB5066470, Manage changes to NTLMv1 and prevent network issues in Windows 11 and Windows Server 2025 | Microsoft Support | https://support.microsoft.com/en-us/topic/upcoming-changes-to-ntlmv1-in-windows-11-version-24h2-and-windows-server-2025-c0554217-cdbc-420f-b47c-e02b2db49b2e | 2026-10-03 (rechecked 2026-10-20) | Primary |
 | Microsoft Entra licensing | Microsoft Learn | https://learn.microsoft.com/en-us/entra/fundamentals/licensing | 2026-10-03 | Primary |
 | Defender for IoT billing | Microsoft Learn | https://learn.microsoft.com/en-us/azure/defender-for-iot/organizations/billing | 2026-10-03 | Primary |
 | Use Microsoft Entra groups to manage role assignments (role-assignable property set only at creation) | Microsoft Learn | https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/groups-concept | 2026-10-04 | Primary |

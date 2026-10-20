@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Microsoft Entra control-plane change (Tier 0 role assignment, Conditional Access or named location change, domain federation or sync change, cross-tenant access change) or a vendor PIM-for-Groups activation outside expected hours
 // Status: untested template
-// ATT&CK: T1098.003 (Account Manipulation: Additional Cloud Roles), T1556.009 (Modify Authentication Process: Conditional Access Policies), T1556.007 (Modify Authentication Process: Hybrid Identity), T1484.002 (Domain or Tenant Policy Modification: Trust Modification), T1199 (Trusted Relationship), T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v19.2
+// ATT&CK: T1098.003 (Account Manipulation: Additional Cloud Roles), T1556.009 (Modify Authentication Process: Conditional Access Policies), T1556.007 (Modify Authentication Process: Hybrid Identity), T1484.002 (Domain or Tenant Policy Modification: Trust Modification), T1199 (Trusted Relationship), T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v20.0
 // Data sources: Microsoft Sentinel, AuditLogs (Microsoft Entra ID data connector)
 // Licensing assumptions: Microsoft Sentinel with the Entra ID connector (scenario A-17); PIM and PIM for Groups audit events require Entra ID P2 (scenario holds P2)
 // Rule ID: SN-02 | Platform: Microsoft Sentinel scheduled analytics rule | Suggested severity: High for trust, sync, and policy changes, any assignment or activation of a never-assigned role, and permanent Tier 0 assignments outside PIM; Medium for other Tier 0 role assignments and activations, scoped Tier 0 assignments, and vendor activations

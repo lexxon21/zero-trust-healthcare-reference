@@ -87,7 +87,7 @@ The versions in this table were checked 2026-10-03.
 | PCI DSS | v4.0.1, June 2024 | Applies to the CDE segment only |
 | PCI P2PE | v3.2, published 2025-06-30 | Relevant to the registration desk terminals |
 | HITRUST CSF | v11.9.0, released 2026-09-24 | Leadership is considering certification. This design set cites no HITRUST CSF identifiers; any HITRUST mapping is handled in the compliance crosswalk. |
-| MITRE ATT&CK | v19 (sub-release v19.2) | Used by the companion threat model and detection pack. This design set cites no technique IDs. |
+| MITRE ATT&CK | v20 (sub-release v20.0; rechecked 2026-10-20) | Used by the companion threat model and detection pack. This design set cites no technique IDs. |
 
 ## Out of scope
 

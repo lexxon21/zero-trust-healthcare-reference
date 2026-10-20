@@ -1,6 +1,6 @@
 # Reference rule. Not deployed in any employer environment.
 # Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
-# Rule ID: SG-05 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Rule ID: SG-05 | Status: untested template (Sigma status experimental) | ATT&CK v20.0
 # Answers: detection-priorities.md item 6 (Priority 2); attack-paths.md AP-4 step 6 and AP-5 step 3
 # Required telemetry: Windows Security event 4769 from every domain controller (audit subcategory Audit Kerberos
 #   Service Ticket Operations), collected into the SIEM (PIP-SIEM) or read by Defender for Identity.

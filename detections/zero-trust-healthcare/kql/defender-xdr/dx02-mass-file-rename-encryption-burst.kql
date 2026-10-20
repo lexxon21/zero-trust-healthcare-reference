@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Burst of extension-changing file renames by one process across many folders (data encryption for impact pattern)
 // Status: untested template
-// ATT&CK: T1486 (Data Encrypted for Impact); ATT&CK v19.2
+// ATT&CK: T1486 (Data Encrypted for Impact); ATT&CK v20.0
 // Data sources: Microsoft Defender XDR advanced hunting, DeviceFileEvents (Defender for Endpoint), AlertInfo and AlertEvidence (Defender XDR alerts)
 // Licensing assumptions: Defender for Endpoint on workstations (scenario A-05, Microsoft 365 E5) and separate server licensing for file and application servers (for example Microsoft Defender for Servers), as in DX-01
 // Rule ID: DX-02 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High

@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Exchange Online inbox rule or mailbox setting that forwards, redirects, deletes, or hides mail, scored higher when it filters on payment keywords
 // Status: untested template
-// ATT&CK: T1564.008 (Hide Artifacts: Email Hiding Rules), T1114.003 (Email Collection: Email Forwarding Rule); ATT&CK v19.2
+// ATT&CK: T1564.008 (Hide Artifacts: Email Hiding Rules), T1114.003 (Email Collection: Email Forwarding Rule); ATT&CK v20.0
 // Data sources: Microsoft Defender XDR advanced hunting, CloudAppEvents (Microsoft Defender for Cloud Apps with the Microsoft 365 app connector and "Microsoft 365 activities" selected)
 // Licensing assumptions: Microsoft Defender for Cloud Apps within the scenario's Defender XDR stack (Microsoft 365 E5); the Microsoft 365 app connector must be on or the table stays empty for Exchange events
 // Rule ID: DX-04 | Platform: Defender XDR advanced hunting, custom detection candidate | Suggested severity: High with payment keywords, Medium otherwise

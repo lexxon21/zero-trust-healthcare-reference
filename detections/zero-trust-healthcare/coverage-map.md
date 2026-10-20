@@ -4,7 +4,7 @@
 
 This map shows which behaviors from the threat model the detection pack can see, with which data source, in which rule file, and which attack path each rule answers. It also lists what the pack cannot see yet, so a reader can judge the gaps as well as the coverage. Inputs are `threat-models/zero-trust-healthcare/detection-priorities.md` (20 items; item 19 is the emergency access monitoring that `architecture/zero-trust-healthcare/03-identity-and-access.md` section 5 requires, and item 20 the admin-group monitoring that 03 sections 3 and 4 require) and `attack-paths.md` (AP-1 to AP-7). Component and zone IDs come from `architecture/zero-trust-healthcare/02-reference-architecture.md` section 11, and risk IDs from `grc/zero-trust-healthcare/risk-register.md`.
 
-Technique references use MITRE ATT&CK Enterprise v19.2, checked against MITRE's STIX data for that release. Where v19 renumbered a technique, the current ID is used (for example T1685 for tool tampering).
+Technique references use MITRE ATT&CK Enterprise v20.0, checked against MITRE's STIX data for that release. Where v19 renumbered a technique, the current ID is used (for example T1685 for tool tampering).
 
 ## 1. Status definitions
 
@@ -156,7 +156,7 @@ The identity compromise playbook (`playbooks/ir-identity-compromise.md` section 
 
 | Title | Publisher | URL | Date checked | Quality |
 |---|---|---|---|---|
-| MITRE ATT&CK Enterprise, version 19.2 (STIX data) | MITRE | https://attack.mitre.org/resources/versions/ | 2026-10-04 | primary |
+| MITRE ATT&CK Enterprise, version 20.0 (STIX data) | MITRE | https://attack.mitre.org/resources/versions/ | 2026-10-20 | primary |
 | Advanced hunting schema tables (DeviceProcessEvents, DeviceFileEvents, DeviceNetworkEvents, DeviceLogonEvents, DeviceEvents, CloudAppEvents, EntraIdSignInEvents, AlertInfo, AlertEvidence, Identity tables) | Microsoft Learn | https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-schema-tables | 2026-10-04 | primary |
 | Azure Monitor Logs reference: SigninLogs | Microsoft Learn | https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/signinlogs | 2026-10-04 | primary |
 | Azure Monitor Logs reference: AADNonInteractiveUserSignInLogs | Microsoft Learn | https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/aadnoninteractiveusersigninlogs | 2026-10-04 | primary |

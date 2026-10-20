@@ -8,7 +8,7 @@ The repository's own licenses cover original content only: the [MIT License](LIC
 
 ## MITRE ATT&CK
 
-- **Used:** technique and tactic IDs and names from MITRE ATT&CK Enterprise v19.2, in the threat model, the detection rules (header lines and Sigma tags), the coverage map, the incident response playbooks, and the ransomware tabletop exercise kit, with occasional short quotations of technique descriptions.
+- **Used:** technique and tactic IDs and names from MITRE ATT&CK Enterprise v20.0, in the threat model, the detection rules (header lines and Sigma tags), the coverage map, the incident response playbooks, and the ransomware tabletop exercise kit, with occasional short quotations of technique descriptions.
 - **Terms:** MITRE's Terms of Use license ATT&CK for research, development, and commercial use, on condition that copies reproduce MITRE's copyright designation and the license. Both follow, as published on MITRE's Terms of Use page:
 
   The MITRE Corporation (MITRE) hereby grants you a non-exclusive, royalty-free license to use ATT&CK® for research, development, and commercial purposes. Any copy you make for such purposes is authorized provided that you reproduce MITRE's copyright designation and this license in any such copy.

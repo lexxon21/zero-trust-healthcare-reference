@@ -1,6 +1,6 @@
 # Reference rule. Not deployed in any employer environment.
 # Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
-# Rule ID: SG-03 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Rule ID: SG-03 | Status: untested template (Sigma status experimental) | ATT&CK v20.0
 # Answers: detection-priorities.md item 14 (Priority 3, the file-open half); attack-paths.md AP-4 steps 1 and 2
 # Companion controls: SVC-EMAIL filtering upstream and PEP-HOST application control; the email delivery half of
 #   item 14 (EmailEvents, UrlClickEvents) is a coverage gap recorded in coverage-map.md.

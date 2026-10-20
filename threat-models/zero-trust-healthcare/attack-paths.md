@@ -6,7 +6,7 @@ Seven attack paths through the Contoso Regional Health (fictional) Zero Trust ar
 
 Companion files: `threat-model.md` (scope, assets, trust boundaries, STRIDE, threat actors, sources), `detection-priorities.md` (detection priorities in three tiers), `purple-team-plan.md` (validation design). Component, zone, policy, flow, and residual-risk IDs are from `02-reference-architecture.md`, `03-identity-and-access.md`, and `04-segmentation.md`.
 
-Technique references use MITRE ATT&CK Enterprise v19.2. Every ID, name, and tactic mapping was verified against MITRE's official ATT&CK STIX data for v19.2. v19 split the former Defense Evasion tactic into Stealth (TA0005) and Defense Impairment (TA0112); log and tool tampering is therefore T1685 and its sub-techniques, the current (not revoked) IDs. The help-desk call in AP-2 step 2 is mapped to T1566.004 (Phishing: Spearphishing Voice) under Initial Access, the technique the HHS HC3 alert names for this campaign (`threat-model.md` section 10). The employee impersonation the same alert describes is T1684.001 (Social Engineering: Impersonation), which v19 places under Stealth (TA0005); it is noted here rather than given a step of its own, so each step keeps one tactic.
+Technique references use MITRE ATT&CK Enterprise v20.0. Every ID, name, and tactic mapping was verified against MITRE's official ATT&CK STIX data for v20.0. v19 split the former Defense Evasion tactic into Stealth (TA0005) and Defense Impairment (TA0112); log and tool tampering is therefore T1685 and its sub-techniques, the current (not revoked) IDs. The help-desk call in AP-2 step 2 is mapped to T1566.004 (Phishing: Spearphishing Voice) under Initial Access, the technique the HHS HC3 alert names for this campaign (`threat-model.md` section 10). The employee impersonation the same alert describes is T1684.001 (Social Engineering: Impersonation), which v19 places under Stealth (TA0005); it is noted here rather than given a step of its own, so each step keeps one tactic.
 
 ## How to read a path
 
@@ -245,7 +245,7 @@ The variant reaches less data per session than the EHR path, so the path's ratin
 
 ## Sources
 
-Technique data: MITRE ATT&CK Enterprise v19.2, verified against MITRE's official ATT&CK STIX data. Threat-context sources, with publishers, URLs, dates checked, and quality labels, are consolidated in `threat-model.md` section 10. The inline citations in this file refer to those entries.
+Technique data: MITRE ATT&CK Enterprise v20.0, verified against MITRE's official ATT&CK STIX data. Threat-context sources, with publishers, URLs, dates checked, and quality labels, are consolidated in `threat-model.md` section 10. The inline citations in this file refer to those entries.
 
 ## Appendix: AP-5 steps 8a and 8b
 

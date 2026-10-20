@@ -1,13 +1,13 @@
 # Reference rule. Not deployed in any employer environment.
 # Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
-# Rule ID: SG-01 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Rule ID: SG-01 | Status: untested template (Sigma status experimental) | ATT&CK v20.0
 # Answers: detection-priorities.md item 1 (Priority 1); attack-paths.md AP-4 step 10
 # Companion KQL: kql/defender-xdr/dx01-recovery-inhibition-shadow-copy-backup-deletion.kql (adds per-device roll-up and severity)
 # Conversion note: written for the process_creation log source, which the pySigma Kusto backend's
 #   microsoft_xdr pipeline targets for Defender XDR advanced hunting. On 2026-10-04,
 #   "sigma convert -t kusto -p microsoft_xdr" (pySigma-backend-kusto 1.0.1) converted this rule to a
 #   DeviceProcessEvents query. The converted query has not been run against data.
-# Coverage: the utilities listed on the T1490 technique page (ATT&CK v19.2) except diskshadow.
+# Coverage: the utilities listed on the T1490 technique page (ATT&CK v20.0) except diskshadow.
 # Credit: the reagentc selection follows SigmaHQ rule "Windows Recovery Environment Disabled Via Reagentc"
 #   (id db1c21e4-cd66-4b4e-85ca-590f0780529c) by Daniel Koifman (KoifSec), Michael Vilshin, licensed under the
 #   Detection Rule License (DRL) 1.1 (https://github.com/SigmaHQ/Detection-Rule-License); link in references.

@@ -1,6 +1,6 @@
 # Reference rule. Not deployed in any employer environment.
 # Fictional scenario: Contoso Regional Health (fictional). Reference portfolio content.
-# Rule ID: SG-04 | Status: untested template (Sigma status experimental) | ATT&CK v19.2
+# Rule ID: SG-04 | Status: untested template (Sigma status experimental) | ATT&CK v20.0
 # Answers: detection-priorities.md item 18 (Priority 3, the endpoint half); attack-paths.md AP-5 steps 1 and 2, and the AP-4 enumeration that item 18 also serves
 # Companion KQL: kql/defender-xdr/dx05-mdi-tier0-credential-access-alert-chain.kql uses Defender for Identity
 #   reconnaissance alerts for the directory-side half of item 18.

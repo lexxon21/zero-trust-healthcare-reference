@@ -1,7 +1,7 @@
 // Reference query. Not deployed in any employer environment.
 // Title: Sign-in by either tenant emergency access (break-glass) account, interactive or non-interactive, successful or failed
 // Status: untested template
-// ATT&CK: T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v19.2
+// ATT&CK: T1078.004 (Valid Accounts: Cloud Accounts); ATT&CK v20.0
 // Data sources: Microsoft Sentinel, SigninLogs and AADNonInteractiveUserSignInLogs (Microsoft Entra ID data connector)
 // Licensing assumptions: Microsoft Sentinel with the Entra ID connector streaming interactive and non-interactive user sign-in logs (scenario A-17); Microsoft requires Entra ID P1 or P2 to ingest sign-in logs into Sentinel (scenario holds P2)
 // Rule ID: SN-06 | Platform: Microsoft Sentinel near-real-time (NRT) analytics rule, or a scheduled rule with the time settings below | Suggested severity: High for every result

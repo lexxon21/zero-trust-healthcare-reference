@@ -10,11 +10,11 @@ The detection pack responds to the 20 behaviors in `threat-models/zero-trust-hea
 - Two incident response playbooks, one for identity compromise and one for ransomware.
 - A tabletop exercise kit for the ransomware playbook.
 
-`coverage-map.md` shows technique-level coverage and the gaps. Technique references use MITRE ATT&CK Enterprise v19.2.
+`coverage-map.md` shows technique-level coverage and the gaps. Technique references use MITRE ATT&CK Enterprise v20.0.
 
 ## Status
 
-Every rule is an **untested template**. Each was written against Microsoft's published table schemas, the Sigma specification v2.1.0 (2025-08-02), and MITRE's v19.2 data, and none has been run against any tenant, workspace, or lab. Static checks last ran on 2026-10-05: all 16 KQL queries parse and pass semantic analysis with no errors or warnings (Microsoft's Kusto.Language library 12.4.1, against table schemas built from Microsoft Learn's Defender XDR and Azure Monitor table references), and all six Sigma rules pass `sigma check` (sigma-cli 3.1.0, pySigma 1.5.1). Severity values are suggestions for the reference design, and none of the rules carries tuning derived from real telemetry. `purple-team-plan.md` describes how a rule would move to lab-tested.
+Every rule is an **untested template**. Each was written against Microsoft's published table schemas, the Sigma specification v2.1.0 (2025-08-02), and MITRE's v19.2 data (their ATT&CK IDs, names, and tactics were rechecked against v20.0 on 2026-10-20, with no change), and none has been run against any tenant, workspace, or lab. Static checks last ran on 2026-10-05: all 16 KQL queries parse and pass semantic analysis with no errors or warnings (Microsoft's Kusto.Language library 12.4.1, against table schemas built from Microsoft Learn's Defender XDR and Azure Monitor table references), and all six Sigma rules pass `sigma check` (sigma-cli 3.1.0, pySigma 1.5.1). Severity values are suggestions for the reference design, and none of the rules carries tuning derived from real telemetry. `purple-team-plan.md` describes how a rule would move to lab-tested.
 
 ## Layout
 
